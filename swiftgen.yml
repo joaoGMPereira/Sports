@@ -1,0 +1,19 @@
+coredata:
+  inputs: Sports/Sports.xcdatamodeld
+  outputs:
+    templateName: swift5
+    output: Sports/Generated/CoreData.generated.swift
+    
+strings:
+  inputs:
+    - Sports/Resource/Strings.strings
+    
+  outputs:
+    - templateName: structured-swift5
+      output: Sports/Generated/Strings.generated.swift
+xcassets:
+  inputs:
+    - 'Sports/Assets.xcassets'
+  outputs:
+    - templateName: swift5
+      output: Sports/Generated/Assets.generated.swift

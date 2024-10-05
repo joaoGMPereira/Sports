@@ -1,0 +1,218 @@
+{% macro swiftifyMethodName name %}{{ name | replace:"(","_" | replace:")","" | replace:":","_" | replace:"`","" | snakeToCamelCase | lowerFirstWord }}{% endmacro %}
+{% macro methodThrowableErrorDeclaration method %}
+    var {% call swiftifyMethodName method.selectorName %}ThrowableError: Error?
+{% endmacro %}
+{% macro methodThrowableErrorUsage method %}
+        if let error = {% call swiftifyMethodName method.selectorName %}ThrowableError {
+            throw error
+        }
+{% endmacro %}
+{% macro methodReceivedParameters method %}
+    {%if method.parameters.count == 1 %}
+        {% call swiftifyMethodName method.selectorName %}ReceivedInvocations.append({% for param in method.parameters %}{{ param.name }}){% endfor %}
+    {% else %}
+    {% if not method.parameters.count == 0 %}
+        {% call swiftifyMethodName method.selectorName %}ReceivedInvocations.append(({% for param in method.parameters %}{{ param.name }}: {{ param.name }}{% if not forloop.last%}, {% endif %}{% endfor %}))
+    {% endif %}
+    {% endif %}
+{% endmacro %}
+{% macro methodClosureName method %}{% call swiftifyMethodName method.selectorName %}Closure{% endmacro %}
+{% macro closureReturnTypeName method %}{% if method.isOptionalReturnType %}{{ method.unwrappedReturnTypeName }}?{% else %}{{ method.returnTypeName }}{% endif %}{% endmacro %}
+{% macro methodClosureDeclaration method %}
+    var {% call methodClosureName method %}: (({% for param in method.parameters %}{{ param.typeName }}{% if not forloop.last %}, {% endif %}{% endfor %}) {% if method.throws %}throws {% endif %}-> {% if method.isInitializer %}Void{% else %}{% call closureReturnTypeName method %}{% endif %})?
+{% endmacro %}
+{% macro methodClosureCallParameters method %}{% for param in method.parameters %}{{ param.name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% endmacro %}
+{% macro fakeMethod method %}
+
+    // MARK: - {{ method.shortName|upperFirstLetter }}
+    {% if not method.returnTypeName.isVoid and not method.isInitializer %}
+    var {% call swiftifyMethodName method.selectorName %}ReturnValue: {{ '(' if method.returnTypeName.isClosure and not method.isOptionalReturnType }}{{ method.returnTypeName }}{{ ')' if method.returnTypeName.isClosure and not method.isOptionalReturnType }}
+    {% endif %}
+{% if method.isInitializer %}
+    required {{ method.name }} {
+    }
+{% else %}
+    func {{ method.name }}{{ ' throws' if method.throws }}{% if not method.returnTypeName.isVoid %} -> {{ method.returnTypeName }}{% endif %} {
+        {% if not method.returnTypeName.isVoid %}
+        return {% call swiftifyMethodName method.selectorName %}ReturnValue
+        {% endif %}
+    }
+{% endif %}
+{% endmacro %}
+{% macro spyMethod method %}
+
+    // MARK: - {{ method.shortName|upperFirstLetter }}
+    {% if not method.isInitializer %}
+    private(set) var {% call swiftifyMethodName method.selectorName %}CallsCount = 0
+    {% endif %}
+    {% if method.parameters.count == 1 %}
+    private(set) var {% call swiftifyMethodName method.selectorName %}ReceivedInvocations{% for param in method.parameters %}: [{{ '(' if param.isClosure }}{{ param.typeName.unwrappedTypeName }}{{ ')' if param.isClosure }}{%if param.typeName.isOptional%}?{%endif%}]{% endfor %} = []
+    {% elif not method.parameters.count == 0 %}
+    private(set) var {% call swiftifyMethodName method.selectorName %}ReceivedInvocations: [({% for param in method.parameters %}{{ param.name }}: {{ param.unwrappedTypeName if param.typeAttributes.escaping else param.typeName }}{{ ', ' if not forloop.last }}{% endfor %})] = []
+    {% endif %}
+    {% if not method.returnTypeName.isVoid and not method.isInitializer %}
+    var {% call swiftifyMethodName method.selectorName %}ReturnValue: {{ '(' if method.returnTypeName.isClosure and not method.isOptionalReturnType }}{{ method.returnTypeName }}{{ ')' if method.returnTypeName.isClosure and not method.isOptionalReturnType }}
+    {% endif %}
+
+{% if method.isInitializer %}
+    required {{ method.name }} {
+        {% call methodReceivedParameters method %}
+    }	
+{% else %}
+    func {{ method.name }}{{ ' throws' if method.throws }}{% if not method.returnTypeName.isVoid %} -> {{ method.returnTypeName }}{% endif %} {
+        {% call swiftifyMethodName method.selectorName %}CallsCount += 1
+        {% call methodReceivedParameters method %}
+        {% if not method.returnTypeName.isVoid %}
+        return {% call swiftifyMethodName method.selectorName %}ReturnValue
+        {% endif %}
+    }
+{% endif %}
+{% endmacro %}
+{% macro mockMethod method %}
+
+    // MARK: - {{ method.shortName|upperFirstLetter }}
+    {% if method.throws %}
+        {% call methodThrowableErrorDeclaration method %}
+    {% endif %}
+    {% if not method.isInitializer %}
+    private(set) var {% call swiftifyMethodName method.selectorName %}CallsCount = 0
+    {% endif %}
+    {% if method.parameters.count == 1 %}
+    private(set) var {% call swiftifyMethodName method.selectorName %}ReceivedInvocations{% for param in method.parameters %}: [{{ '(' if param.isClosure }}{{ param.typeName.unwrappedTypeName }}{{ ')' if param.isClosure }}{%if param.typeName.isOptional%}?{%endif%}]{% endfor %} = []
+    {% elif not method.parameters.count == 0 %}
+    private(set) var {% call swiftifyMethodName method.selectorName %}ReceivedInvocations: [({% for param in method.parameters %}{{ param.name }}: {{ param.unwrappedTypeName if param.typeAttributes.escaping else param.typeName }}{{ ', ' if not forloop.last }}{% endfor %})] = []
+    {% endif %}
+    {% if not method.returnTypeName.isVoid and not method.isInitializer %}
+    var {% call swiftifyMethodName method.selectorName %}ReturnValue: {{ '(' if method.returnTypeName.isClosure and not method.isOptionalReturnType }}{{ method.returnTypeName }}{{ ')' if method.returnTypeName.isClosure and not method.isOptionalReturnType }}
+    {% endif %}
+    {% call methodClosureDeclaration method %}
+
+{% if method.isInitializer %}
+    required {{ method.name }} {
+        {% call methodReceivedParameters method %}
+        {% call methodClosureName method %}?({% call methodClosureCallParameters method %})
+    }
+{% else %}
+    func {{ method.name }}{{ ' throws' if method.throws }}{% if not method.returnTypeName.isVoid %} -> {{ method.returnTypeName }}{% endif %} {
+        {% if method.throws %}
+        {% call methodThrowableErrorUsage method %}
+        {% endif %}
+        {% call swiftifyMethodName method.selectorName %}CallsCount += 1
+        {% call methodReceivedParameters method %}
+        {% if method.returnTypeName.isVoid %}
+        {% if method.throws %}try {% endif %}{% call methodClosureName method %}?({% call methodClosureCallParameters method %})
+        {% else %}
+        return {{ 'try ' if method.throws }}{% call methodClosureName method %}.map({ {{ 'try ' if method.throws }}$0({% call methodClosureCallParameters method %}) }) ?? {% call swiftifyMethodName method.selectorName %}ReturnValue
+        {% endif %}
+    }
+{% endif %}
+{% endmacro %}
+{% macro fakeOptionalVariable variable %}
+    var {% call mockedVariableName variable %}: {{ variable.typeName }}
+{% endmacro %}
+{% macro fakeNonOptionalArrayOrDictionaryVariable variable %}
+    var {% call mockedVariableName variable %}: {{ variable.typeName }} = {% if variable.isArray %}[]{% elif variable.isDictionary %}[:]{% endif %}
+{% endmacro %}
+{% macro fakeNonOptionalVariable variable %}
+    var {% call mockedVariableName variable %}: {{ variable.typeName }}
+{% endmacro %}
+{% macro spyOptionalVariable variable %}
+    var {% call mockedVariableName variable %}: {{ variable.typeName }}
+{% endmacro %}
+{% macro spyNonOptionalArrayOrDictionaryVariable variable %}
+    var {% call mockedVariableName variable %}: {{ variable.typeName }} = {% if variable.isArray %}[]{% elif variable.isDictionary %}[:]{% endif %}
+{% endmacro %}
+{% macro spyNonOptionalVariable variable %}
+    private var {% call underlyingMockedVariableName variable %}: {{ variable.typeName }}?
+    var {% call mockedVariableName variable %}: {{ variable.typeName }} {
+        get { return try! {% call underlyingMockedVariableName variable %}.safe() }
+        set(value) { {% call underlyingMockedVariableName variable %} = value }
+    }
+
+{% endmacro %}
+{% macro mockOptionalVariable variable %}
+    var {% call mockedVariableName variable %}: {{ variable.typeName }}
+{% endmacro %}
+{% macro mockNonOptionalArrayOrDictionaryVariable variable %}
+    var {% call mockedVariableName variable %}: {{ variable.typeName }} = {% if variable.isArray %}[]{% elif variable.isDictionary %}[:]{% endif %}
+{% endmacro %}
+{% macro mockNonOptionalVariable variable %}
+    private var {% call underlyingMockedVariableName variable %}: {{ variable.typeName }}?
+    var {% call mockedVariableName variable %}: {{ variable.typeName }} {
+        get { return try! {% call underlyingMockedVariableName variable %}.safe() }
+        set(value) { {% call underlyingMockedVariableName variable %} = value }
+    }
+
+{% endmacro %}
+{% macro underlyingMockedVariableName variable %}underlying{{ variable.name|upperFirstLetter }}{% endmacro %}
+{% macro mockedVariableName variable %}{{ variable.name }}{% endmacro %}
+
+{% for type in types.protocols %}{% if type.name != "AutoFake" %}
+private class {{ type.name }}Fake: {{ type.name }} {
+{% for variable in type.allVariables|!definedInExtension %}
+    {% if variable.isOptional %}{% call fakeOptionalVariable variable %}{% elif variable.isArray or variable.isDictionary %}{% call fakeNonOptionalArrayOrDictionaryVariable variable %}{% else %}{% call fakeNonOptionalVariable variable %}{% endif %}
+{% endfor %}
+{% for method in type.allMethods|!definedInExtension %}
+    {% call fakeMethod method %}
+{% endfor %}
+}
+{% endif %}{% endfor %}
+
+
+
+
+{% for type in types.protocols %}{% if type.name != "AutoSpy" %}
+// MARK: - {{ type.name }}AssertiveSpy
+private class {{ type.name }}AssertiveSpy: {{ type.name }} {
+    enum Messages: Equatable {
+      {% for method in type.allMethods|!definedInExtension %}
+        {% if method.parameters.count == 0 %}
+        case {{ method.shortName }}
+        {% else %}
+        case {{ method.shortName }}({% for param in method.parameters %}{{ param.typeName.name }}{% if not forloop.last %}, {% endif %}{% endfor %})
+        {% endif %}
+      {% endfor %}
+    }
+
+    private(set) var messages: [Messages] = []
+
+    {% for method in type.allMethods|!definedInExtension %}
+    func {{ method.name }}{{ ' throws' if method.throws }}{% if not method.returnTypeName.isVoid %} -> {{ method.returnTypeName }}{% endif %} {
+        {% if method.parameters.count == 0 %}
+        messages.append(.{{ method.callName }})
+        {% else %}
+        messages.append(.{{ method.callName }}({% for param in method.parameters %}{{ param.name }}{% if not forloop.last %}, {% endif %}{% endfor %}))
+        {% endif %}
+    }
+
+    {% endfor %}
+}
+{% endif %}{% endfor %}
+
+
+
+
+{% for type in types.protocols %}{% if type.name != "AutoSpy" %}
+private class {{ type.name }}Spy: {{ type.name }} {
+{% for variable in type.allVariables|!definedInExtension %}
+    {% if variable.isOptional %}{% call spyOptionalVariable variable %}{% elif variable.isArray or variable.isDictionary %}{% call spyNonOptionalArrayOrDictionaryVariable variable %}{% else %}{% call spyNonOptionalVariable variable %}{% endif %}
+{% endfor %}
+{% for method in type.allMethods|!definedInExtension %}
+    {% call spyMethod method %}
+{% endfor %}
+}
+{% endif %}{% endfor %}
+
+
+
+
+{% for type in types.protocols %}{% if type.name != "AutoMock" %}
+private class {{ type.name }}Mock: {{ type.name }} {
+{% for variable in type.allVariables|!definedInExtension %}
+    {% if variable.isOptional %}{% call mockOptionalVariable variable %}{% elif variable.isArray or variable.isDictionary %}{% call mockNonOptionalArrayOrDictionaryVariable variable %}{% else %}{% call mockNonOptionalVariable variable %}{% endif %}
+{% endfor %}
+{% for method in type.allMethods|!definedInExtension %}
+    {% call mockMethod method %}
+{% endfor %}
+}
+{% endif %}{% endfor %}

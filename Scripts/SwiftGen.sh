@@ -1,0 +1,1 @@
+[ -f ./swiftgen.yml ] && swiftgen || echo "No swiftgen.yml found"
