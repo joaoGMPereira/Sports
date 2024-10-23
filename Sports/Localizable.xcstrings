@@ -1,0 +1,41 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@ (%@x%@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ (%2$@x%3$@)"
+          }
+        }
+      }
+    },
+    "Dados Básicos" : {
+
+    },
+    "Data de criação" : {
+
+    },
+    "Data de encerramento" : {
+
+    },
+    "Exercícios" : {
+
+    },
+    "Feito: %@" : {
+
+    },
+    "Peso: %@, Rep: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Peso: %1$@, Rep: %2$@"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

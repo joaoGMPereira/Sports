@@ -7,9 +7,17 @@ packages:
   SFSafeSymbols:
     majorVersion: 5.2.0
     url: https://github.com/SFSafeSymbols/SFSafeSymbols.git
-  ComposableArchitecture:
-    majorVersion: 1.9.1
-    url: https://github.com/pointfreeco/swift-composable-architecture.git
+  HotSwiftUI:
+    majorVersion: 1.1.0
+    url: https://github.com/johnno1962/HotSwiftUI.git
+  DebugSwift:
+    majorVersion: 0.3.6
+    url: https://github.com/DebugSwift/DebugSwift.git
+  PopupView:
+    revision: c82f68dd56d9359e144ab0446f5866208e4a02e8
+    url: https://github.com/exyte/PopupView.git
+  DesignSystem:
+    path: Packages/DesignSystem
 
 configs:
   Debug: debug
@@ -29,7 +37,11 @@ targets:
       - sdk: UIKit.framework
       - sdk: Foundation.framework
       - package: SFSafeSymbols
-      - package: ComposableArchitecture
+      - package: HotSwiftUI
+      - package: DebugSwift
+      - package: PopupView
+      - package: DesignSystem
+        product: DesignSystem
 
     preBuildScripts:
       - path: ${SWIFTGEN_SH_PATH}
