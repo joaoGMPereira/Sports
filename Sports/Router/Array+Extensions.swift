@@ -21,10 +21,3 @@ extension Array {
         self = Array(self[..<Swift.min(index + 1, self.count)])
     }
 }
-
-
-extension Collection {
-    var isNotEmpty: Bool {
-        self.count > 0
-    }
-}

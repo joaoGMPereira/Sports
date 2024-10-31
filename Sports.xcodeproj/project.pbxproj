@@ -28,6 +28,10 @@
 		BB0AC9B6C8A5DF04A2135FE5 /* Router.swift in Sources */ = {isa = PBXBuildFile; fileRef = E59D938523EB0A477434D7E6 /* Router.swift */; };
 		D473EE26BB6C39CBE599B6F3 /* RoutableObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA3206609B302B0228B330EE /* RoutableObject.swift */; };
 		D866230B34E2593C134A1068 /* CommingSoonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49143C8F859B4FE43BEDCE4B /* CommingSoonView.swift */; };
+		E09162A52CD1B2C10022C782 /* HistoryExecutionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E09162A42CD1B2BD0022C782 /* HistoryExecutionsView.swift */; };
+		E09162A72CD1B4C10022C782 /* AddExecutionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E09162A62CD1B4BD0022C782 /* AddExecutionView.swift */; };
+		E09162A92CD1B5050022C782 /* TrainingsSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = E09162A82CD1B5000022C782 /* TrainingsSummary.swift */; };
+		E09162AB2CD1B53C0022C782 /* TrainingExecutionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E09162AA2CD1B5360022C782 /* TrainingExecutionView.swift */; };
 		E0E167572CBDCC9600F5B4C0 /* CreateTrainingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0E167562CBDCC8E00F5B4C0 /* CreateTrainingsView.swift */; };
 		E0E167592CBDCCEF00F5B4C0 /* CreateExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0E167582CBDCCEC00F5B4C0 /* CreateExerciseView.swift */; };
 		E0E1675D2CBDCD5900F5B4C0 /* DetailWorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0E1675C2CBDCD5200F5B4C0 /* DetailWorkoutView.swift */; };
@@ -67,6 +71,10 @@
 		CB27152775AE5B97DC740488 /* DesignSystem */ = {isa = PBXFileReference; lastKnownFileType = folder; name = DesignSystem; path = Packages/DesignSystem; sourceTree = SOURCE_ROOT; };
 		D8BC3B087A5AD34AE2CD8008 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		D9FEC6CE3A6B400FED050E62 /* Sports.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sports.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E09162A42CD1B2BD0022C782 /* HistoryExecutionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryExecutionsView.swift; sourceTree = "<group>"; };
+		E09162A62CD1B4BD0022C782 /* AddExecutionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddExecutionView.swift; sourceTree = "<group>"; };
+		E09162A82CD1B5000022C782 /* TrainingsSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainingsSummary.swift; sourceTree = "<group>"; };
+		E09162AA2CD1B5360022C782 /* TrainingExecutionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainingExecutionView.swift; sourceTree = "<group>"; };
 		E0E167562CBDCC8E00F5B4C0 /* CreateTrainingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateTrainingsView.swift; sourceTree = "<group>"; };
 		E0E167582CBDCCEC00F5B4C0 /* CreateExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateExerciseView.swift; sourceTree = "<group>"; };
 		E0E1675C2CBDCD5200F5B4C0 /* DetailWorkoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailWorkoutView.swift; sourceTree = "<group>"; };
@@ -97,7 +105,6 @@
 		0714D9BBF5B24E012C3725D0 /* CreateWorkout */ = {
 			isa = PBXGroup;
 			children = (
-				E0E1675A2CBDCD2B00F5B4C0 /* Models */,
 				E0E167552CBDCC7700F5B4C0 /* Subviews */,
 				814472485D6C75EF123AFE01 /* CreateWorkoutView.swift */,
 			);
@@ -140,6 +147,7 @@
 				D9F4B03F7EFE367B6E94685A /* Helpers */,
 				14CF25FA3BF6156DFBA7B747 /* Preview Content */,
 				CBD083016B698732F024A47E /* Router */,
+				E0E1675A2CBDCD2B00F5B4C0 /* Models */,
 				6A83351905FC9ED9E7EB370E /* Scenes */,
 			);
 			path = Sports;
@@ -155,9 +163,9 @@
 		6A83351905FC9ED9E7EB370E /* Scenes */ = {
 			isa = PBXGroup;
 			children = (
+				E09162AF2CD2D39D0022C782 /* Home */,
+				E09162AE2CD2D38E0022C782 /* CommingSoon */,
 				E0E1675B2CBDCD4700F5B4C0 /* DetailWorkout */,
-				49143C8F859B4FE43BEDCE4B /* CommingSoonView.swift */,
-				1E89C814352C065D664214BE /* HomeView.swift */,
 				0F2D70865787D5349D625F90 /* TabBar */,
 				0714D9BBF5B24E012C3725D0 /* CreateWorkout */,
 			);
@@ -222,6 +230,33 @@
 			path = Helpers;
 			sourceTree = "<group>";
 		};
+		E09162A32CD1B2B10022C782 /* Subviews */ = {
+			isa = PBXGroup;
+			children = (
+				E09162AA2CD1B5360022C782 /* TrainingExecutionView.swift */,
+				E09162A82CD1B5000022C782 /* TrainingsSummary.swift */,
+				E09162A62CD1B4BD0022C782 /* AddExecutionView.swift */,
+				E09162A42CD1B2BD0022C782 /* HistoryExecutionsView.swift */,
+			);
+			path = Subviews;
+			sourceTree = "<group>";
+		};
+		E09162AE2CD2D38E0022C782 /* CommingSoon */ = {
+			isa = PBXGroup;
+			children = (
+				49143C8F859B4FE43BEDCE4B /* CommingSoonView.swift */,
+			);
+			path = CommingSoon;
+			sourceTree = "<group>";
+		};
+		E09162AF2CD2D39D0022C782 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				1E89C814352C065D664214BE /* HomeView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
 		E0E167552CBDCC7700F5B4C0 /* Subviews */ = {
 			isa = PBXGroup;
 			children = (
@@ -242,6 +277,7 @@
 		E0E1675B2CBDCD4700F5B4C0 /* DetailWorkout */ = {
 			isa = PBXGroup;
 			children = (
+				E09162A32CD1B2B10022C782 /* Subviews */,
 				E0E1675C2CBDCD5200F5B4C0 /* DetailWorkoutView.swift */,
 			);
 			path = DetailWorkout;
@@ -372,6 +408,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E09162A52CD1B2C10022C782 /* HistoryExecutionsView.swift in Sources */,
 				0DE1E1868C361825B5CFABB1 /* AppTabView.swift in Sources */,
 				8EA07BB624EED1775DAD46A2 /* Array+Extensions.swift in Sources */,
 				D866230B34E2593C134A1068 /* CommingSoonView.swift in Sources */,
@@ -379,10 +416,13 @@
 				31D102D92F08D1258105AECD /* HomeView.swift in Sources */,
 				D473EE26BB6C39CBE599B6F3 /* RoutableObject.swift in Sources */,
 				BB0AC9B6C8A5DF04A2135FE5 /* Router.swift in Sources */,
+				E09162AB2CD1B53C0022C782 /* TrainingExecutionView.swift in Sources */,
 				3A489CA9CDDCF1DB16564A3B /* RoutingView.swift in Sources */,
 				E0E1675D2CBDCD5900F5B4C0 /* DetailWorkoutView.swift in Sources */,
+				E09162A92CD1B5050022C782 /* TrainingsSummary.swift in Sources */,
 				638E0E6D9D78D683569E3D56 /* SportsApp.swift in Sources */,
 				ACC0A53A8E5EED52B323C0FB /* TabRouter.swift in Sources */,
+				E09162A72CD1B4C10022C782 /* AddExecutionView.swift in Sources */,
 				F6556AF9C97F4D91320B43A3 /* WillDisappearHandler.swift in Sources */,
 				934CE5764BEE24DFE4DC21B6 /* Workout.swift in Sources */,
 				E0E167572CBDCC9600F5B4C0 /* CreateTrainingsView.swift in Sources */,

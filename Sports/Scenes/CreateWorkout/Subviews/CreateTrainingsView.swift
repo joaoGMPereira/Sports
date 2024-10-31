@@ -2,55 +2,53 @@ import DesignSystem
 import SwiftUI
 
 struct CreateTrainingsView: View {
-    let workout: Workout
-    @Binding var uniqueSerie: Serie?
-    @Binding var uniqueSerieEnabled: Bool
-    init(workout: Workout, uniqueSerie: Binding<Serie?>, uniqueSerieEnabled: Binding<Bool>) {
-        self.workout = workout
-        self._uniqueSerie = uniqueSerie
-        self._uniqueSerieEnabled = uniqueSerieEnabled
+    let trainingProgram: TrainingProgram
+    @Binding var uniqueSetPlan: SetPlan?
+    @Binding var uniqueSetPlanEnabled: Bool
+    init(trainingProgram: TrainingProgram, uniqueSetPlan: Binding<SetPlan?>, uniqueSetPlanEnabled: Binding<Bool>) {
+        self.trainingProgram = trainingProgram
+        self._uniqueSetPlan = uniqueSetPlan
+        self._uniqueSetPlanEnabled = uniqueSetPlanEnabled
     }
     
     var body: some View {
-        ForEach(workout.trainings) { training in
-            CreateTrainingView(training: training, uniqueSerie: $uniqueSerie, uniqueSerieEnabled: $uniqueSerieEnabled)
+        ForEach(trainingProgram.orderedWorkoutSessions) { workoutSession in
+            CreateTrainingView(workoutSession: workoutSession, uniqueSetPlan: $uniqueSetPlan, uniqueSetPlanEnabled: $uniqueSetPlanEnabled)
         }
+        .listRowSeparator(.hidden)
     }
 }
 
 struct CreateTrainingView: View {
-    @State private var training: Training
+    @State private var workoutSession: WorkoutSession
     @State private var name: String
-    @Binding var uniqueSerie: Serie?
-    @Binding var uniqueSerieEnabled: Bool
+    @Binding var uniqueSetPlan: SetPlan?
+    @Binding var uniqueSetPlanEnabled: Bool
     
-    init(training: Training, uniqueSerie: Binding<Serie?>, uniqueSerieEnabled: Binding<Bool>) {
-        self.training = training
-        self.name = training.name
-        self._uniqueSerie = uniqueSerie
-        self._uniqueSerieEnabled = uniqueSerieEnabled
+    init(workoutSession: WorkoutSession, uniqueSetPlan: Binding<SetPlan?>, uniqueSetPlanEnabled: Binding<Bool>) {
+        self.workoutSession = workoutSession
+        self.name = workoutSession.name
+        self._uniqueSetPlan = uniqueSetPlan
+        self._uniqueSetPlanEnabled = uniqueSetPlanEnabled
     }
     
     
     var body: some View {
         Section(header: TextField("Treino", text: $name)) {
-            if !training.exercises.isEmpty {
-                ForEach(training.exercises) { exercise in
-                    CreateExerciseView(exercise: exercise, uniqueSerie: $uniqueSerie, uniqueSerieEnabled: $uniqueSerieEnabled) { updated in
-                        print(exercise)
-                        print(updated)
-                        print(training.exercises)
-                    }
+            if !workoutSession.workoutExercises.isEmpty {
+                ForEach(workoutSession.workoutExercises.sorted(by: { $0.position ?? 0 < $1.position ?? 0})) { workoutExercise in
+                    CreateExerciseView(workoutExercise: workoutExercise, uniqueSetPlan: $uniqueSetPlan, uniqueSetPlanEnabled: $uniqueSetPlanEnabled)
                 }
                 .onDelete(perform: delete)
             }
             DSFillButton(title: "Adicionar Exercício") {
-                training.exercises.append(.init())
+                let biggerWorkoutExercisePosition = workoutSession.workoutExercises.sorted(by: { $0.position ?? 0 > $1.position ?? 0 }).first?.position ?? 0
+                workoutSession.workoutExercises.append(.init(position: biggerWorkoutExercisePosition + 1))
             }
         }
     }
     
     func delete(at offsets: IndexSet) {
-        training.exercises.remove(atOffsets: offsets)
+        workoutSession.workoutExercises.remove(atOffsets: offsets)
     }
 }

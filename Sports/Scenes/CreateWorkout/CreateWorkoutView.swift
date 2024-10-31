@@ -2,47 +2,55 @@ import DesignSystem
 import SwiftUI
 import SwiftData
 
-struct CreateWorkoutView: View {
+struct CreateTrainingProgramView: View {
     @State private var name: String = String()
     @State private var trainingDays: String = String()
-    @State private var showDatePicker = false
+    @State private var showDatePicker = true
     @State private var startDate = Date()
-    @State private var workout: Workout?
+    @State private var trainingProgram: TrainingProgram?
     @State var showPopover = false
-    @State private var series: String = String()
+    @State private var setPlans: String = String()
     @State private var minRep: String = String()
     @State private var maxRep: String = String()
-    @State private var uniqueSerieEnabled = false
+    @State private var uniqueSetPlanEnabled = false
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @State private var uniqueSerie: Serie? = nil
+    @State private var uniqueSetPlan: SetPlan? = nil
+    @Environment(ToastInfo.self) var toastInfo
     
     var body: some View {
         VStack {
             Form {
-                workoutView
-                if let workout {
+                trainingProgramView
+                if let trainingProgram {
                     CreateTrainingsView(
-                        workout: workout,
-                        uniqueSerie: $uniqueSerie,
-                        uniqueSerieEnabled: $uniqueSerieEnabled
+                        trainingProgram: trainingProgram,
+                        uniqueSetPlan: $uniqueSetPlan,
+                        uniqueSetPlanEnabled: $uniqueSetPlanEnabled
                     )
                 }
             }
-            if workout != nil {
+            if trainingProgram != nil {
                 DSFillButton(title: "Criar treino") {
-                    do {
-                        try modelContext.save()
-                        dismiss()
-                    } catch {
-                        print(error)
+                    let showExercisesError = trainingProgram?.hasExercisesEmpty ?? true
+                    if showExercisesError {
+                        toastInfo.showError(title: "Adicione pelo menos 1 exercicio por treino")
+                    }
+                    if toastInfo.isPresented == false {
+                        do {
+                            try modelContext.save()
+                            dismiss()
+                        } catch {
+                            print(error)
+                        }
                     }
                 }
+                .padding([.horizontal, .bottom], 20)
             }
         }
         .onWillDisappear {
-            if let workout, modelContext.hasChanges {
-                modelContext.delete(workout)
+            if let trainingProgram, modelContext.hasChanges {
+                modelContext.delete(trainingProgram)
             }
         }
         .navigationTitle("Criacao de Treino")
@@ -51,20 +59,25 @@ struct CreateWorkoutView: View {
         
     }
     
-    var workoutView: some View {
+    var trainingProgramView: some View {
         Section(header: Text("Dados Básicos")) {
             TextField("Nome", text: $name)
+                .listRowSeparator(.hidden)
             TextField("Dias de treino", text: $trainingDays)
+                .listRowSeparator(.hidden)
                 .keyboardType(.numberPad)
             DatePicker(
                 "Data de Inicio",
                 selection: $startDate,
                 displayedComponents: .date
             )
-            uniqueSerieView
+            .listRowSeparator(.hidden)
+            uniqueSetPlanView
             Button("Criar Tipos de Execuções") {
-                let convertedTrainingDays = Int(trainingDays) ?? 1
-                let trainings: [Training] = Array(
+                guard let convertedTrainingDays = Int(trainingDays), name.isNotEmpty else {
+                    return
+                }
+                let workoutSessions: [WorkoutSession] = Array(
                     0..<convertedTrainingDays
                 )
                     .map {
@@ -75,47 +88,74 @@ struct CreateWorkoutView: View {
                     .sorted { first, second in
                         first.name < second.name
                     }
-                let workout = Workout(
-                    title: name,
-                    startDate: startDate,
-                    trainings: trainings
-                )
-                self.workout = workout
-                modelContext.insert(workout)
+                updateTrainingProgram(with: workoutSessions)
             }
-            .disabled(uniqueSerieEnabled && uniqueSerie == nil)
-            .buttonStyle(FillButtonStyle(color: Asset.primary.swiftUIColor, isEnabled: !(uniqueSerieEnabled && uniqueSerie == nil)))
+            .disabled(
+                (
+                    uniqueSetPlanEnabled && uniqueSetPlan == nil
+                ) || trainingDays.isEmpty ||  name.isEmpty
+            )
+            .buttonStyle(
+                FillButtonStyle(
+                    color: Asset.primary.swiftUIColor,
+                    isEnabled: !(
+                        (
+                            uniqueSetPlanEnabled && uniqueSetPlan == nil
+                        ) || trainingDays.isEmpty ||  name.isEmpty
+                    )
+                )
+            )
         }
     }
     
-    var uniqueSerieView: some View {
+    var uniqueSetPlanView: some View {
         Group {
-            Toggle("Habilitar Serie unica", isOn: $uniqueSerieEnabled)
-            if uniqueSerieEnabled {
-                TextField("Series", text: $series)
+            Toggle("Habilitar série unica", isOn: $uniqueSetPlanEnabled)
+                .listRowSeparator(.hidden)
+                .onChange(of: uniqueSetPlanEnabled) {
+                    updateTrainingProgram()
+                }
+            if uniqueSetPlanEnabled {
+                TextField("Series", text: $setPlans)
                     .keyboardType(.numberPad)
-                    .onChange(of: series) {
-                        self.checkSerie()
+                    .onChange(of: setPlans) {
+                        self.checkSetPlan()
                     }
+                    .listRowSeparator(.hidden)
                 TextField("Repetições Minimas", text: $minRep)
                     .keyboardType(.numberPad)
                     .onChange(of: minRep) {
-                        self.checkSerie()
+                        self.checkSetPlan()
                     }
+                    .listRowSeparator(.hidden)
                 TextField("Repetições Máximas", text: $maxRep)
                     .keyboardType(.numberPad)
                     .onChange(of: maxRep) {
-                        self.checkSerie()
+                        self.checkSetPlan()
                     }
+                    .listRowSeparator(.hidden)
             }
         }
     }
     
-    func checkSerie() {
-        if series.isNotEmpty && minRep.isNotEmpty && maxRep.isNotEmpty {
-            uniqueSerie = .init(quantity: Int(series) ?? 0, minRep: Int(minRep) ?? 0, maxRep: Int(maxRep) ?? 0)
+    func updateTrainingProgram(with workoutSessions: [WorkoutSession] = []) {
+        let trainingProgram = TrainingProgram(
+            title: name,
+            startDate: startDate,
+            workoutSessions: workoutSessions
+        )
+        if let currentTrainingProgram = self.trainingProgram {
+            modelContext.delete(currentTrainingProgram)
+        }
+        self.trainingProgram = trainingProgram
+        modelContext.insert(trainingProgram)
+    }
+    
+    func checkSetPlan() {
+        if setPlans.isNotEmpty && minRep.isNotEmpty && maxRep.isNotEmpty {
+            uniqueSetPlan = .init(quantity: Int(setPlans) ?? 0, minRep: Int(minRep) ?? 0, maxRep: Int(maxRep) ?? 0)
         } else {
-            uniqueSerie = nil
+            uniqueSetPlan = nil
         }
     }
     

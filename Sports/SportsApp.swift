@@ -1,4 +1,5 @@
 import SwiftUI
+import DesignSystem
 import SwiftData
 import DebugSwift
 
@@ -20,22 +21,23 @@ struct SportsApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema(
             [
-                Workout.self,
-                Training.self,
-                SetExecution.self,
-                Execution.self,
-                ExecutionTraining.self,
-                ExecutionExercise.self,
-                Owner.self,
+                TrainingProgram.self,
+                WorkoutSession.self,
+                WorkoutExercise.self,
+                ExerciseSet.self,
+                TrainingLog.self,
+                ScheduledTraining.self,
+                PerformedExercise.self,
+                User.self,
                 Exercise.self,
-                Serie.self,
+                SetPlan.self,
                 CommingSoon.self
             ]
         )
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
+        
         do {
-            let context = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            let context = try ModelContainer(for: schema, migrationPlan: TrainingProgramMigrationPlan.self)
             context.mainContext.autosaveEnabled = false
             return context
         } catch {
@@ -43,14 +45,21 @@ struct SportsApp: App {
         }
     }()
     var tabRouter: TabRouter<TabRoute> = .init(selectedTab: .home)
+    @State var toastInfo: ToastInfo = .init(id: .init(), title: String())
+    @State var insets = EdgeInsets()
+    
     var body: some Scene {
         WindowGroup {
             AppTabView()
                 .onAppear {
-                   print(sharedModelContainer.mainContext.sqliteCommand)
+                    print(sharedModelContainer.mainContext.sqliteCommand)
+                    insets = InsetsManager.getInsets()
                 }
+                .topPopup(toastInfo: $toastInfo)
         }
+        .environment(\.safeAreaInsets, $insets)
         .environment(tabRouter)
+        .environment(toastInfo)
         .modelContainer(sharedModelContainer)
     }
 }
