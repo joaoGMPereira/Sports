@@ -4,19 +4,19 @@ public struct DSFillButton: View {
     var title: String
     var color: Color
     var isEnabled: Bool
-    var callback: () -> Void
+    var completion: () -> Void
     
-    public init(title: String, isEnabled: Bool = true, color: Color = Asset.primary.swiftUIColor, callback: @escaping () -> Void) {
+    public init(title: String, isEnabled: Bool = true, color: Color = Asset.primary.swiftUIColor, completion: @escaping () -> Void) {
         self.title = title
         self.isEnabled = isEnabled
         self.color = color
-        self.callback = callback
+        self.completion = completion
     }
     
     public var body: some View {
         Button(action: {
             if isEnabled {
-                callback()
+                completion()
             }
         })
         {
@@ -34,7 +34,7 @@ public struct DSContentButton: View {
     var color: Color
     var horizontalPadding: CGFloat
     var verticalPadding: CGFloat
-    var callback: () -> Void
+    var completion: () -> Void
      
     public init(
         title: String,
@@ -42,20 +42,20 @@ public struct DSContentButton: View {
         color: Color = Asset.primary.swiftUIColor,
         horizontalPadding: CGFloat = 8,
         verticalPadding: CGFloat = 8,
-        callback: @escaping () -> Void
+        completion: @escaping () -> Void
     ) {
         self.title = title
         self.isEnabled = isEnabled
         self.color = color
         self.horizontalPadding = horizontalPadding
         self.verticalPadding = verticalPadding
-        self.callback = callback
+        self.completion = completion
     }
     
     public var body: some View {
         Button(action: {
             if isEnabled {
-                callback()
+                completion()
             }
         })
         {
@@ -72,35 +72,41 @@ public struct DSContentButton: View {
 public struct DSBorderedButton: View {
     var title: String
     var isEnabled: Bool
+    var maxWidth: Bool
     var color: Color
     var horizontalPadding: CGFloat
     var verticalPadding: CGFloat
-    var callback: () -> Void
+    var completion: () -> Void
      
     public init(
         title: String,
         isEnabled: Bool = true,
+        maxWidth: Bool = false,
         color: Color = Asset.primary.swiftUIColor,
         horizontalPadding: CGFloat = 8,
         verticalPadding: CGFloat = 8,
-        callback: @escaping () -> Void
+        completion: @escaping () -> Void
     ) {
         self.title = title
+        self.maxWidth = maxWidth
         self.isEnabled = isEnabled
         self.color = color
         self.horizontalPadding = horizontalPadding
         self.verticalPadding = verticalPadding
-        self.callback = callback
+        self.completion = completion
     }
     
     public var body: some View {
         Button(action: {
             if isEnabled {
-                callback()
+                completion()
             }
         })
         {
             Text(title)
+                .applyIf(maxWidth, apply: {
+                    $0.frame(maxWidth: .infinity)
+                })
                 .padding(.horizontal, horizontalPadding)
                 .padding(.vertical, verticalPadding)
                 .cornerRadius(8)

@@ -35,19 +35,21 @@ struct SportsApp: App {
             ]
         )
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        let undoManager = UndoManager()
         
         do {
-            let context = try ModelContainer(for: schema, migrationPlan: TrainingProgramMigrationPlan.self)
+            let context = try ModelContainer(for: schema, configurations: modelConfiguration)
             context.mainContext.autosaveEnabled = false
+            context.mainContext.undoManager = UndoManager()
             return context
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }
     }()
     var tabRouter: TabRouter<TabRoute> = .init(selectedTab: .home)
-    @State var toastInfo: ToastInfo = .init(id: .init(), title: String())
+    @State var toast: ToastModel = .init()
     @State var insets = EdgeInsets()
-    
+            
     var body: some Scene {
         WindowGroup {
             AppTabView()
@@ -55,11 +57,11 @@ struct SportsApp: App {
                     print(sharedModelContainer.mainContext.sqliteCommand)
                     insets = InsetsManager.getInsets()
                 }
-                .topPopup(toastInfo: $toastInfo)
+                .toast(toast: $toast)
         }
         .environment(\.safeAreaInsets, $insets)
         .environment(tabRouter)
-        .environment(toastInfo)
+        .environment(toast)
         .modelContainer(sharedModelContainer)
     }
 }

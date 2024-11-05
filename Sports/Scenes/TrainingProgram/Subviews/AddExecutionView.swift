@@ -2,17 +2,19 @@ import DesignSystem
 import SwiftUI
 import SwiftData
 
-
 struct AddExecutionView: View {
     @Environment(\.modelContext) private var modelContext
-    @Environment(ToastInfo.self) var toastInfo
-    @State var trainingProgram: TrainingProgram
+    @Environment(ToastModel.self) var toast
+    @Binding var trainingProgram: TrainingProgram
+    @Binding var shouldResetView: Bool
     @State var selectedTraining: ScheduledTraining?
     @State var user: String = String()
     @State var selectedUser: User?
     @State private var filteredUsers: [User] = []
     @Query private var users: [User] = []
     @State private var showUsersPopover = false
+    @State private var selectedChip: String? = nil
+    
     var body: some View {
         Group {
             HStack {
@@ -40,7 +42,7 @@ struct AddExecutionView: View {
                             .top
                         )
                     ) {
-                        ChipGridView(chips: (filteredUsers.isEmpty ? users : filteredUsers).map { $0.name }) { user in
+                        ChipGridView(chips: .constant((filteredUsers.isEmpty ? users : filteredUsers).map { $0.name })) { user in
                             self.user = user
                             self.selectedUser = users.first(where: { $0.name == user })
                             DispatchQueue.main.async {
@@ -72,7 +74,12 @@ struct AddExecutionView: View {
                 }
             }
             .padding(.top, 4)
-            ChipGridView(chips: trainingProgram.workoutSessions.map { $0.name }, isSelectable: true) { training in
+            ChipGridView(
+                chips: .constant(trainingProgram.workoutSessions.map {
+                    $0.name
+                }),
+                chipSelected: $selectedChip,
+                isSelectable: true) { training in
                 showUsersPopover = false
                 if let selectedTraining = trainingProgram.workoutSessions.first(where: { $0.name == training }) {
                     let trainingLogSelectedTraining = ScheduledTraining(
@@ -94,6 +101,12 @@ struct AddExecutionView: View {
                     self.selectedTraining = nil
                 }
             }
+            .onChange(of: shouldResetView) {
+                if shouldResetView {
+                    selectedTraining = nil
+                    selectedChip = nil
+                }
+            }
             if let selectedTraining {
                 TrainingExecutionView(
                     scheduledTraining: .init(
@@ -108,7 +121,7 @@ struct AddExecutionView: View {
             }
             DSFillButton(title: "Salvar") {
                 guard let selectedUser else {
-                    toastInfo.showError(title: "escolha um executor")
+                    toast.showError(message: "Escolha um executor")
                     return
                 }
                 if let selectedTraining, selectedTraining.hasEmptyExecutions() == false {
@@ -125,6 +138,9 @@ struct AddExecutionView: View {
                         print("Failed to save trainingLog: \(error)")
                     }
                 }
+            }
+            .onChange(of: trainingProgram) {
+                print(trainingProgram)
             }
         }
         .listRowSeparator(.hidden)

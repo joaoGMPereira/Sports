@@ -11,7 +11,7 @@ public struct FillButtonStyle: ButtonStyle {
     
     public func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .frame(maxWidth: .infinity) // Ocupa a largura total disponível
+            .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
             .background(configuration.isPressed ? color.opacity(0.8) : color) // Feedback visual ao pressionar
             .foregroundColor(.white)

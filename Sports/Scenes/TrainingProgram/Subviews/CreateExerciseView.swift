@@ -10,19 +10,38 @@ enum StateSaving {
     case error
 }
 
+extension Optional<Int> {
+    var stringValue: String {
+        guard let self else { return "" }
+        return String(self)
+    }
+}
+
+struct CreateExerciseData {
+    let items: [String]
+    let hasJustName: Binding<Bool>
+    let name: String?
+    let setPlans: Int?
+    let minRep: Int?
+    let maxRep: Int?
+}
+
 struct CreateExerciseView: View {
-    @State private var workoutExercise: WorkoutExercise
-    @State private var name: String = String()
-    @State private var setPlans: String = String()
-    @State private var minRep: String = String()
-    @State private var maxRep: String = String()
-    @State private var isPressed = false
+    @State private var name: String
+    @State private var setPlans: String
+    @State private var minRep: String
+    @State private var maxRep: String
+    private var items: [String]
+    @State var filteredItems: [String] = []
     @State var state: StateSaving = .writing
-    @Binding var uniqueSetPlan: SetPlan?
-    @Binding var uniqueSetPlanEnabled: Bool
-    @Query private var items: [Exercise]
-    @State var filteredItems: [Exercise] = []
+    @Binding var hasJustName: Bool
     @State private var showPopover = false
+    var completion: ((
+        _ name: String,
+        _ setPlans: String,
+        _ minRep: String,
+        _ maxRep: String
+    ) -> Void)
     
     var image: SFSymbol {
         switch state {
@@ -51,13 +70,24 @@ struct CreateExerciseView: View {
     }
     
     init(
-        workoutExercise: WorkoutExercise,
-        uniqueSetPlan: Binding<SetPlan?>,
-        uniqueSetPlanEnabled: Binding<Bool>
+        data: CreateExerciseData,
+        completion: @escaping ((
+            _ name: String,
+            _ setPlans: String,
+            _ minRep: String,
+            _ maxRep: String
+        ) -> Void)
     ) {
-        self.workoutExercise = workoutExercise
-        self._uniqueSetPlan = uniqueSetPlan
-        self._uniqueSetPlanEnabled = uniqueSetPlanEnabled
+        _name = State(initialValue: data.name ?? String())
+        _setPlans = State(initialValue: data.setPlans.stringValue)
+        _minRep = State(initialValue: data.minRep.stringValue)
+        _maxRep = State(initialValue: data.maxRep.stringValue)
+        let hasFilledInfo = data.name.isNotEmpty && data.setPlans.stringValue.isNotEmpty && data.minRep.stringValue.isNotEmpty && data.maxRep.stringValue.isNotEmpty
+        _state = State(initialValue: hasFilledInfo ? .save : .writing)
+        
+        self.items = data.items
+        self._hasJustName = data.hasJustName
+        self.completion = completion
     }
     
     var body: some View {
@@ -83,8 +113,17 @@ struct CreateExerciseView: View {
                         .top
                     )
                 ) {
-                    ChipGridView(chips: (filteredItems.isEmpty ? items.filter({ $0.name.trimmingCharacters(in: .whitespaces).isNotEmpty }) : filteredItems).map { $0.name }) { section in
-                        self.name = section
+                    ChipGridView(
+                        chips: (
+                            .constant(filteredItems.isEmpty ? items.filter(
+                                {
+                                    $0.trimmingCharacters(
+                                        in: .whitespaces
+                                    ).isNotEmpty
+                                }) : filteredItems
+                        ))
+                    ) { item in
+                        self.name = item
                         DispatchQueue.main.async {
                             showPopover = false
                         }
@@ -94,7 +133,7 @@ struct CreateExerciseView: View {
                     .frame(minWidth: 50, minHeight: 80, maxHeight: 400)
                     .presentationCompactAdaptation(.popover)
                 }
-            if uniqueSetPlanEnabled == false {
+            if hasJustName == false {
                 TextField("Series", text: $setPlans)
                     .keyboardType(.numberPad)
                 TextField("Repetições Minimas", text: $minRep)
@@ -104,20 +143,13 @@ struct CreateExerciseView: View {
             }
             Button(state == .save ? "Editar" : "Salvar") {
                 var hasFilledInfo = name.isNotEmpty && setPlans.isNotEmpty && minRep.isNotEmpty && maxRep.isNotEmpty
-                if uniqueSetPlanEnabled {
-                    hasFilledInfo = name.isNotEmpty && uniqueSetPlan != nil
+                if hasJustName {
+                    hasFilledInfo = name.isNotEmpty
                 }
                 if hasFilledInfo {
                     if state == .writing || state == .error || state == .edit {
                         state = .save
-                        workoutExercise.exercise = items.first(where: { $0.name == name }) ?? .init(name: name)
-                        if let uniqueSetPlan {
-                            workoutExercise.setPlan = uniqueSetPlan
-                        } else {
-                            workoutExercise.setPlan?.quantity = Int(setPlans) ?? 0
-                            workoutExercise.setPlan?.minRep = Int(minRep) ?? 0
-                            workoutExercise.setPlan?.maxRep = Int(maxRep) ?? 0
-                        }
+                        completion(name, setPlans, minRep, maxRep)
                         return
                     }
                     
@@ -132,8 +164,8 @@ struct CreateExerciseView: View {
             }
             .buttonStyle(WithoutBackgroundPrimaryButtonStyle())
         }
-        .onChange(of: uniqueSetPlanEnabled, {
-            if uniqueSetPlanEnabled {
+        .onChange(of: hasJustName, {
+            if hasJustName {
                 self.setPlans = String()
                 self.minRep = String()
                 self.maxRep = String()
@@ -147,7 +179,7 @@ struct CreateExerciseView: View {
             filteredItems = []
             showPopover = false
         } else {
-            filteredItems = items.filter { $0.name.localizedCaseInsensitiveContains(text) &&  $0.name.trimmingCharacters(in: .whitespaces).isNotEmpty }
+            filteredItems = items.filter { $0.localizedCaseInsensitiveContains(text) &&  $0.trimmingCharacters(in: .whitespaces).isNotEmpty }
             showPopover = filteredItems.count > 0
         }
     }

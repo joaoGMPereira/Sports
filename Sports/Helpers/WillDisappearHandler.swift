@@ -36,16 +36,16 @@ struct WillDisappearHandler: UIViewControllerRepresentable {
 }
 
 struct WillDisappearModifier: ViewModifier {
-    let callback: () -> Void
+    let completion: () -> Void
     
     func body(content: Content) -> some View {
         content
-            .background(WillDisappearHandler(onWillDisappear: callback))
+            .background(WillDisappearHandler(onWillDisappear: completion))
     }
 }
 
 extension View {
     func onWillDisappear(_ perform: @escaping () -> Void) -> some View {
-        self.modifier(WillDisappearModifier(callback: perform))
+        self.modifier(WillDisappearModifier(completion: perform))
     }
 }

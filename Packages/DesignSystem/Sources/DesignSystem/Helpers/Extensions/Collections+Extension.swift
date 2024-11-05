@@ -33,3 +33,15 @@ public extension Collection {
     }
 }
 
+public extension Optional<Collection> {
+    var isNotEmpty: Bool {
+        self?.isNotEmpty ?? false
+    }
+}
+
+public extension Optional<String> {
+    var isNotEmpty: Bool {
+        self?.isNotEmpty ?? false
+    }
+}
+

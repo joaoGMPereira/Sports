@@ -51,7 +51,7 @@ enum TrainingProgramSchemaV2: VersionedSchema {
         }
         
         var hasExercisesEmpty: Bool {
-            workoutSessions.isEmpty || workoutSessions.contains(where: { $0.workoutExercises.isEmpty })
+            workoutSessions.isEmpty || workoutSessions.contains(where: { $0.workoutExercises.isEmpty || $0.workoutExercises.contains(where: { $0.setPlan == nil }) })
         }
         
         init(title: String, startDate: Date, endDate: Date? = nil, workoutSessions: [WorkoutSession], hasFinished: Bool = false) {
@@ -237,6 +237,11 @@ enum TrainingProgramSchemaV2: VersionedSchema {
         var quantity: Int?
         var minRep: Int?
         var maxRep: Int?
+        
+        var name: String? {
+            guard let quantity, let minRep, let maxRep else { return nil }
+            return "\(quantity) (\(minRep)x\(maxRep))"
+        }
         
         var exercise: Exercise?
         

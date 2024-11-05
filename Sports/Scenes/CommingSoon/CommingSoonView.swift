@@ -74,7 +74,7 @@ struct CommingSoonView: View {
     @State var dynamicText: String = String()
     @State var isDynamicText = false
     @State private var showPopover = false
-    @Environment(ToastInfo.self) var toastInfo
+    @Environment(ToastModel.self) var toast
     
     var body: some View {
         NavigationStack {
@@ -105,7 +105,7 @@ struct CommingSoonView: View {
                                 .top
                             )
                         ) {
-                            ChipGridView(chips: (filteredItems.isEmpty ? items : filteredItems).map { $0.title }) { section in
+                            ChipGridView(chips: .constant((filteredItems.isEmpty ? items : filteredItems).map { $0.title })) { section in
                                 self.sectionText = section
                                 DispatchQueue.main.async {
                                     showPopover = false
@@ -162,7 +162,7 @@ struct CommingSoonView: View {
     
     private func importData() {
         guard let json = UIPasteboard.general.string, let commingSoons: [CommingSoon] = json.toObject() else {
-            toastInfo.showError(title: "Falha ao Importar os Dados")
+            toast.showError(message: "Falha ao Importar os Dados")
             return
         }
         deleteAllCommingSoon()
@@ -172,7 +172,7 @@ struct CommingSoonView: View {
         }
         do {
             try modelContext.save()
-            toastInfo.showInfo(title: "Dados Importados")
+            toast.showInfo(message: "Dados Importados")
         } catch {
             print(error)
         }
@@ -181,10 +181,10 @@ struct CommingSoonView: View {
     
     private func exportData() {
         guard let json = items.json() else {
-            toastInfo.showError(title: "Falha ao Exportar os Dados")
+            toast.showError(message: "Falha ao Exportar os Dados")
             return
         }
-        toastInfo.showInfo(title: "Dados Exportados")
+        toast.showInfo(message: "Dados Exportados")
         UIPasteboard.general.string = json
     }
     

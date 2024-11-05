@@ -4,22 +4,18 @@ import SwiftData
 import SFSafeSymbols
 import SwiftUIIntrospect
 
-extension View {
-    func hideKeyboard() {
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-    }
-}
-
 struct UserKey: Hashable {
     let id: UUID
     let name: String
 }
 
 struct DetailTrainingProgramView: View {
-    var trainingProgram: TrainingProgram
+    @State var trainingProgram: TrainingProgram
+    @Environment(Router<TrainingProgramRoute>.self) var trainingProgrammingRouter
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @State private var isExpanded: Bool = true
+    @State private var shouldResetView = false
     
     init(trainingProgram: TrainingProgram) {
         self.trainingProgram = trainingProgram
@@ -42,7 +38,10 @@ struct DetailTrainingProgramView: View {
             
             if trainingProgram.hasFinished == false {
                 Section("Cadastrar Execução") {
-                    AddExecutionView(trainingProgram: trainingProgram)
+                    AddExecutionView(
+                        trainingProgram: $trainingProgram,
+                        shouldResetView: $shouldResetView
+                    )
                 }
             }
             Section("Meta dados") {
@@ -73,18 +72,27 @@ struct DetailTrainingProgramView: View {
                 }
             }
         }
+        .toolbar {
+            ToolbarItem {
+                Button(action: editTrainingProgram) {
+                    Label("Edit", systemImage: SFSymbol.pencil.rawValue)
+                }
+            }
+        }
         .navigationTitle(trainingProgram.title)
         .toolbar(.hidden, for: .tabBar)
         .onAppear {
-            let workoutExercises = trainingProgram.workoutSessions.flatMap { $0.workoutExercises }
-            for (index, workoutExercise) in (workoutExercises).enumerated() {
-                if workoutExercise.position == nil {
-                    workoutExercise.position = index
-                }
+            shouldResetView = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                shouldResetView = false
             }
-
-            try? modelContext.save()
-            print(workoutExercises)
         }
+        .onChange(of: trainingProgram) {
+            print(trainingProgram)
+        }
+    }
+    
+    func editTrainingProgram() {
+        trainingProgrammingRouter.navigate(to: .edit(.init(wrappedValue: $trainingProgram)))
     }
 }
