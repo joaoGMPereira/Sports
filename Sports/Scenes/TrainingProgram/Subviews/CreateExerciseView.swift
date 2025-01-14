@@ -27,8 +27,9 @@ struct CreateExerciseData {
 }
 
 struct CreateExerciseView: View {
+    @Environment(\.modelContext) private var modelContext
     @State private var name: String
-    @State private var setPlans: String
+    @State private var quantity: String
     @State private var minRep: String
     @State private var maxRep: String
     private var items: [String]
@@ -36,11 +37,13 @@ struct CreateExerciseView: View {
     @State var state: StateSaving = .writing
     @Binding var hasJustName: Bool
     @State private var showPopover = false
+    @State private var sheetModel = GridSheetModel(items: [])
+    @Query private var fetchedSetPlans: [SetPlan]
+    @State private var setPlan: SetPlan? = nil
+    
     var completion: ((
         _ name: String,
-        _ setPlans: String,
-        _ minRep: String,
-        _ maxRep: String
+        _ setPlan: SetPlan?
     ) -> Void)
     
     var image: SFSymbol {
@@ -59,13 +62,13 @@ struct CreateExerciseView: View {
     var color: Color {
         switch state {
         case .writing:
-                .primary
+            .primary
         case .save:
-                .green
+            .green
         case .edit:
-                .yellow
+            .yellow
         case .error:
-                .red
+            .red
         }
     }
     
@@ -73,13 +76,11 @@ struct CreateExerciseView: View {
         data: CreateExerciseData,
         completion: @escaping ((
             _ name: String,
-            _ setPlans: String,
-            _ minRep: String,
-            _ maxRep: String
+            _ setPlan: SetPlan?
         ) -> Void)
     ) {
         _name = State(initialValue: data.name ?? String())
-        _setPlans = State(initialValue: data.setPlans.stringValue)
+        _quantity = State(initialValue: data.setPlans.stringValue)
         _minRep = State(initialValue: data.minRep.stringValue)
         _maxRep = State(initialValue: data.maxRep.stringValue)
         let hasFilledInfo = data.name.isNotEmpty && data.setPlans.stringValue.isNotEmpty && data.minRep.stringValue.isNotEmpty && data.maxRep.stringValue.isNotEmpty
@@ -98,6 +99,7 @@ struct CreateExerciseView: View {
                     .foregroundStyle(color)
             }
             TextField("Nome", text: $name)
+                .textFieldStyle(DSStateTextFieldStyle(isEnabled: state != .save))
                 .onChange(of: name) {
                     self.applyFilter(with: name)
                 }
@@ -134,44 +136,83 @@ struct CreateExerciseView: View {
                     .presentationCompactAdaptation(.popover)
                 }
             if hasJustName == false {
-                TextField("Series", text: $setPlans)
-                    .keyboardType(.numberPad)
-                TextField("Repetições Minimas", text: $minRep)
-                    .keyboardType(.numberPad)
-                TextField("Repetições Máximas", text: $maxRep)
-                    .keyboardType(.numberPad)
+                Group {
+                    Button {
+                        sheetModel.set(items: fetchedSetPlans.compactMap { $0.name })
+                    } label: {
+                        HStack {
+                            Text("Escolher Série")
+                            Spacer()
+                            if let name = setPlan?.name {
+                                ChipView(label: name, isSelected: false, style: .small) { name in
+                                    setPlan = nil
+                                }
+                            }
+                            Image(systemSymbol: .chevronRight)
+                                .foregroundColor(.gray)
+                        }
+                    }
+                    .foregroundStyle(Color.primary)
+                }
             }
             Button(state == .save ? "Editar" : "Salvar") {
-                var hasFilledInfo = name.isNotEmpty && setPlans.isNotEmpty && minRep.isNotEmpty && maxRep.isNotEmpty
-                if hasJustName {
-                    hasFilledInfo = name.isNotEmpty
-                }
-                if hasFilledInfo {
-                    if state == .writing || state == .error || state == .edit {
-                        state = .save
-                        completion(name, setPlans, minRep, maxRep)
-                        return
-                    }
-                    
-                    if state == .save {
-                        state = .edit
-                        return
-                    }
-                    
-                } else {
-                    state = .error
-                }
+                setPlanAction()
             }
             .buttonStyle(WithoutBackgroundPrimaryButtonStyle())
         }
+        .gridSheet(
+            model: $sheetModel,
+            setPlanCreated: { quantity, minRep, maxRep in
+                guard let quantity = Int(quantity), let minRep = Int(minRep), let maxRep = Int(maxRep) else { return }
+                let selectedSetPlan = SetPlan(quantity: quantity, minRep: minRep, maxRep: maxRep)
+
+                modelContext.insert(selectedSetPlan)
+                try? modelContext.save()
+                sheetModel.set(items: fetchedSetPlans.compactMap { $0.name })
+            },
+            setPlanRemoved: { setPlan in
+                if let setPlan = self.fetchedSetPlans.first(where: { $0.name == setPlan }) {
+                    if setPlan.name == self.setPlan?.name {
+                        self.setPlan = nil
+                    }
+                    modelContext.delete(setPlan)
+                    try? modelContext.save()
+                    sheetModel.set(items: fetchedSetPlans.compactMap { $0.name })
+                }
+            }) { selectedSetPlan in
+                self.setPlan = self.fetchedSetPlans.first(where: { $0.name == selectedSetPlan })
+                self.sheetModel.dismiss()
+            }
         .onChange(of: hasJustName, {
             if hasJustName {
-                self.setPlans = String()
+                self.quantity = String()
                 self.minRep = String()
                 self.maxRep = String()
             }
         })
         .padding(4)
+    }
+    
+    private func setPlanAction() {
+        var hasFilledInfo = name.isNotEmpty && setPlan != nil
+        if hasJustName {
+            hasFilledInfo = name.isNotEmpty
+        }
+        if hasFilledInfo {
+            if state == .writing || state == .error || state == .edit {
+                state = .save
+                completion(name, setPlan)
+                return
+            }
+            
+            if state == .save {
+                state = .edit
+                return
+            }
+            
+        } else {
+            state = .error
+        }
     }
     
     private func applyFilter(with text: String) {

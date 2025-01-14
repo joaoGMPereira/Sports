@@ -116,7 +116,7 @@ enum TrainingProgramSchemaV2: VersionedSchema {
         
         var trainingLog: TrainingLog?
         
-        func hasEmptyExecutions() -> Bool {
+        func hasNotSavedExecutions() -> Bool {
             performedExercises.contains(where: { $0.exerciseSets.isEmpty })
         }
         

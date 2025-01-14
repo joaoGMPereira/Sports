@@ -59,13 +59,13 @@ struct CreateTrainingView: View {
                             minRep: workoutExercise.setPlan?.minRep,
                             maxRep: workoutExercise.setPlan?.maxRep
                         )
-                    ) { name, setPlans, minRep, maxRep in
+                    ) { name, selectedSetPlan in
                         workoutExercise.exercise = items.first(where: { $0.name == name }) ?? .init(name: name)
-                        if let uniqueSetPlan {
-                            workoutExercise.setPlan = uniqueSetPlan
-                        } else {
-                            workoutExercise.setPlan = .init(quantity: Int(setPlans) ?? 0, minRep: Int(minRep) ?? 0, maxRep: Int(maxRep) ?? 0)
+                        guard let uniqueSetPlan else {
+                            workoutExercise.setPlan = selectedSetPlan
+                            return
                         }
+                        workoutExercise.setPlan = uniqueSetPlan
                     }
                 }
                 .onDelete(perform: delete)

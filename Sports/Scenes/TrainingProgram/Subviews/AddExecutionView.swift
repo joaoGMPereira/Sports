@@ -124,7 +124,7 @@ struct AddExecutionView: View {
                     toast.showError(message: "Escolha um executor")
                     return
                 }
-                if let selectedTraining, selectedTraining.hasEmptyExecutions() == false {
+                if let selectedTraining, selectedTraining.hasNotSavedExecutions() == false {
                     trainingProgram.trainingLogs.append(
                         .init(
                             date: .now,
@@ -138,6 +138,15 @@ struct AddExecutionView: View {
                         print("Failed to save trainingLog: \(error)")
                     }
                 }
+                if selectedTraining == nil {
+                    toast.showError(message: "Escolha seu treino")
+                    return
+                }
+                
+                if selectedTraining?.hasNotSavedExecutions() == true {
+                    toast.showError(message: "Preencha todas suas execuções")
+                    return
+                }
             }
             .onChange(of: trainingProgram) {
                 print(trainingProgram)
@@ -150,6 +159,7 @@ struct AddExecutionView: View {
         if text.isEmpty {
             filteredUsers = []
             showUsersPopover = false
+            selectedUser = nil
         } else {
             filteredUsers = users.filter { $0.name.localizedCaseInsensitiveContains(text) }
             showUsersPopover = filteredUsers.count > 0

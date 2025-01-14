@@ -196,11 +196,11 @@ struct CreateSerieView: View {
             )
         )
         DSTextField(
-            text: $maxRep,
+            text: $minRep,
             placeholder: .constant(
                 "Repetições Minimas"
             ),
-            showError: $maxRepError,
+            showError: $minRepError,
             errorText: .constant(
                 "Preencha esse campo"
             )
@@ -211,11 +211,11 @@ struct CreateSerieView: View {
             )
         )
         DSTextField(
-            text: $minRep,
+            text: $maxRep,
             placeholder: .constant(
-                "Repetições Minimas"
+                "Repetições Máximas"
             ),
-            showError: $minRepError,
+            showError: $maxRepError,
             errorText: .constant(
                 "Preencha esse campo"
             )

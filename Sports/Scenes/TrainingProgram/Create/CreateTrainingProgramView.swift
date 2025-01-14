@@ -60,6 +60,7 @@ struct CreateTrainingProgramView: View {
                 if let currentTrainingProgram = self.trainingProgram {
                     modelContext.delete(currentTrainingProgram)
                 }
+
                 modelContext.insert(selectedSetPlan)
                 try? modelContext.save()
                 sheetModel.set(items: fetchedSetPlans.compactMap { $0.name })

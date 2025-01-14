@@ -73,9 +73,11 @@ struct DetailTrainingProgramView: View {
             }
         }
         .toolbar {
-            ToolbarItem {
-                Button(action: editTrainingProgram) {
-                    Label("Edit", systemImage: SFSymbol.pencil.rawValue)
+            if trainingProgram.hasFinished == false {
+                ToolbarItem {
+                    Button(action: editTrainingProgram) {
+                        Label("Edit", systemImage: SFSymbol.pencil.rawValue)
+                    }
                 }
             }
         }
