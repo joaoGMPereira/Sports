@@ -21,17 +21,12 @@ struct CreateExerciseData {
     let items: [String]
     let hasJustName: Binding<Bool>
     let name: String?
-    let setPlans: Int?
-    let minRep: Int?
-    let maxRep: Int?
+    let setPlan: SetPlan?
 }
 
 struct CreateExerciseView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var name: String
-    @State private var quantity: String
-    @State private var minRep: String
-    @State private var maxRep: String
     private var items: [String]
     @State var filteredItems: [String] = []
     @State var state: StateSaving = .writing
@@ -80,10 +75,9 @@ struct CreateExerciseView: View {
         ) -> Void)
     ) {
         _name = State(initialValue: data.name ?? String())
-        _quantity = State(initialValue: data.setPlans.stringValue)
-        _minRep = State(initialValue: data.minRep.stringValue)
-        _maxRep = State(initialValue: data.maxRep.stringValue)
-        let hasFilledInfo = data.name.isNotEmpty && data.setPlans.stringValue.isNotEmpty && data.minRep.stringValue.isNotEmpty && data.maxRep.stringValue.isNotEmpty
+        _setPlan = State(initialValue: data.setPlan)
+
+        let hasFilledInfo = data.name.isNotEmpty && data.setPlan != nil
         _state = State(initialValue: hasFilledInfo ? .save : .writing)
         
         self.items = data.items
@@ -185,9 +179,7 @@ struct CreateExerciseView: View {
             }
         .onChange(of: hasJustName, {
             if hasJustName {
-                self.quantity = String()
-                self.minRep = String()
-                self.maxRep = String()
+                self.setPlan = nil
             }
         })
         .padding(4)

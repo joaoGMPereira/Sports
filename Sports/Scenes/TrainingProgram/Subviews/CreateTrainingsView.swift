@@ -55,9 +55,7 @@ struct CreateTrainingView: View {
                                 }
                             ),
                             name: workoutExercise.exercise?.name ?? String(),
-                            setPlans: workoutExercise.setPlan?.quantity,
-                            minRep: workoutExercise.setPlan?.minRep,
-                            maxRep: workoutExercise.setPlan?.maxRep
+                            setPlan: workoutExercise.setPlan
                         )
                     ) { name, selectedSetPlan in
                         workoutExercise.exercise = items.first(where: { $0.name == name }) ?? .init(name: name)
