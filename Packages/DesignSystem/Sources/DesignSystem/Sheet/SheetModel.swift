@@ -3,8 +3,8 @@ import SwiftUI
 @Observable
 public final class GridSheetModel: Identifiable {
     public var id: UUID
-    var isPresented: Bool
-    var items: [String]
+    public var isPresented: Bool
+    public var items: [String]
     
     public init(isPresented: Bool = false, items: [String]) {
         self.id = .init()

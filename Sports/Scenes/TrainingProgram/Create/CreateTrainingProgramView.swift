@@ -94,6 +94,16 @@ struct CreateTrainingProgramView: View {
                 self.sheetModel.dismiss()
                 updateTrainingProgram()
             }
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    HStack {
+                        Spacer()
+                        Button("OK") {
+                            hideKeyboard()
+                        }
+                    }
+                }
+            }
     }
     
     var trainingProgramView: some View {

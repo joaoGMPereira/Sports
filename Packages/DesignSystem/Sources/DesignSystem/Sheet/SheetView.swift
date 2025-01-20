@@ -67,16 +67,6 @@ public extension View {
                 .isOpaque(true)
                 .backgroundColor(.black.opacity(0.4))
         }
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                HStack {
-                    Spacer()
-                    Button("OK") {
-                        hideKeyboard()
-                    }
-                }
-            }
-        }
     }
     
     func gridSheet(
@@ -86,11 +76,27 @@ public extension View {
         setPlanSelected: @escaping (String) -> Void
     ) -> some View {
         sheet(isPresented: model.isPresented) {
-            GridSearchView(
+            GridSetPlanSearchView(
                 items: model.items,
                 setPlanCreated: setPlanCreated,
                 setPlanRemoved: setPlanRemoved,
                 setPlanSelected: setPlanSelected
+            )
+        }
+    }
+    
+    func gridSheet(
+        model: Binding<GridSheetModel>,
+        created: @escaping (String) -> Void,
+        removed: @escaping (String) -> Void,
+        selected: @escaping (String) -> Void
+    ) -> some View {
+        sheet(isPresented: model.isPresented) {
+            GridSearchView(
+                items: model.items,
+                created: created,
+                removed: removed,
+                selected: selected
             )
         }
     }
@@ -100,9 +106,15 @@ public extension View {
             CreateSerieView(completion: completion)
         }
     }
+    
+    func createNameSheet(isPresented: Binding<Bool>, completion: @escaping (String) -> Void) -> some View {
+        sheet(isPresented: isPresented) {
+            CreateNameView(completion: completion)
+        }
+    }
 }
 
-struct GridSearchView: View {
+struct GridSetPlanSearchView: View {
     @State private var search = String()
     @State var filteredItems: [String]
     @Binding var items: [String]
@@ -163,6 +175,109 @@ struct GridSearchView: View {
     
     private func applyFilter(with text: String) {
         filteredItems = text.isEmpty ? items : items.filter { $0.localizedCaseInsensitiveContains(text) }
+    }
+}
+
+struct GridSearchView: View {
+    @State private var search = String()
+    @State var filteredItems: [String]
+    @Binding var items: [String]
+    @State private var value: String = String()
+    @State private var keyboardHeight: CGFloat = 0
+    @State private var enableSetPlan = false
+    var selected: (String) -> Void
+    var removed: (String) -> Void
+    var created: (String) -> Void
+    
+    init(
+        items: Binding<[String]>,
+        created: @escaping (String) -> Void,
+        removed: @escaping (String) -> Void,
+        selected: @escaping (String) -> Void
+    ) {
+        self._filteredItems = State(initialValue: items.wrappedValue)
+        self._items = items
+        self.removed = removed
+        self.selected = selected
+        self.created = created
+    }
+    
+    var body: some View {
+        VStack {
+            HStack {
+                TextField("Buscar", text: $search)
+                    .frame(height: 44)
+                    .onChange(of: search) {
+                        filteredItems = search.isEmpty ? items : items.filter({ $0.localizedLowercase.contains(search.localizedLowercase)})
+                    }
+                Spacer()
+                DSBorderedButton(title: "Criar Serie") {
+                    withAnimation {
+                        enableSetPlan.toggle()
+                    }
+                }
+            }
+            ChipGridView(chips: $filteredItems, onRemove: removed, onClick: selected)
+                .onChange(of: items) {
+                    withAnimation {
+                        self.filteredItems = items
+                    }
+                }
+        }
+        .padding([.bottom, .horizontal])
+        .safeAreaPadding(.bottom)
+        .createNameSheet(isPresented: $enableSetPlan) {
+            self.enableSetPlan = false
+            created($0)
+        }
+        .onAppear {
+            print(items)
+        }
+    }
+    
+    private func applyFilter(with text: String) {
+        filteredItems = text.isEmpty ? items : items.filter { $0.localizedCaseInsensitiveContains(text) }
+    }
+}
+
+struct CreateNameView: View {
+    @State private var value: String = String()
+    @State private var valueError = false
+    var completion: (String) -> Void
+    
+    init(completion: @escaping (String) -> Void) {
+        self.completion = completion
+    }
+    
+    var body: some View {
+        DSTextField(
+            text: $value,
+            placeholder: .constant(
+                "Nome"
+            ),
+            showError: $valueError,
+            errorText: .constant(
+                "Preencha esse campo"
+            )
+        )
+        .padding(
+            EdgeInsets(
+                horizontal: 20
+            )
+        )
+        
+        DSBorderedButton(title: "Criar", maxWidth: true) {
+            if value.isNotEmpty {
+                valueError = false
+                completion(value)
+            } else {
+                withAnimation(Animation.easeInOut) {
+                    valueError = value.isEmpty
+                }
+            }
+        }
+        .padding([.bottom, .horizontal])
+        .safeAreaPadding(.bottom)
     }
 }
 

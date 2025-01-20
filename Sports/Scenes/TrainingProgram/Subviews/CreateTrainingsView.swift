@@ -22,6 +22,7 @@ struct CreateTrainingsView: View {
 }
 
 struct CreateTrainingView: View {
+    @Environment(\.modelContext) private var modelContext
     @State private var workoutSession: WorkoutSession
     @State private var name: String
     @Binding var uniqueSetPlan: SetPlan?
@@ -56,15 +57,32 @@ struct CreateTrainingView: View {
                             ),
                             name: workoutExercise.exercise?.name ?? String(),
                             setPlan: workoutExercise.setPlan
-                        )
-                    ) { name, selectedSetPlan in
-                        workoutExercise.exercise = items.first(where: { $0.name == name }) ?? .init(name: name)
-                        guard let uniqueSetPlan else {
-                            workoutExercise.setPlan = selectedSetPlan
-                            return
+                        ),
+                        completion: {
+                            name,
+                            selectedSetPlan in
+                            workoutExercise.exercise = items.first(where: { $0.name == name }) ?? .init(name: name)
+                            guard let uniqueSetPlan else {
+                                workoutExercise.setPlan = selectedSetPlan
+                                return
+                            }
+                            workoutExercise.setPlan = uniqueSetPlan
+                        },
+                        exerciseCreateCompletion: {
+                            name in
+                            if items.first(where: { $0.name == name }) == nil {
+                                modelContext.insert(Exercise(name: name))
+                                try? modelContext.save()
+                            }
+                        },
+                        exerciseDeleteCompletion: {
+                            name in
+                            if let exercise = items.first(where: { $0.name == name }) {
+                                modelContext.delete(exercise)
+                                try? modelContext.save()
+                            }
                         }
-                        workoutExercise.setPlan = uniqueSetPlan
-                    }
+                    )
                 }
                 .onDelete(perform: delete)
             }

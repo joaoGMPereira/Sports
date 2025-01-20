@@ -32,13 +32,22 @@ struct CreateExerciseView: View {
     @State var state: StateSaving = .writing
     @Binding var hasJustName: Bool
     @State private var showPopover = false
-    @State private var sheetModel = GridSheetModel(items: [])
+    @State private var setPlanSheetModel = GridSheetModel(items: [])
+    @State private var exerciseSheetModel = GridSheetModel(items: [])
     @Query private var fetchedSetPlans: [SetPlan]
     @State private var setPlan: SetPlan? = nil
     
     var completion: ((
         _ name: String,
         _ setPlan: SetPlan?
+    ) -> Void)
+    
+    var exerciseCreateCompletion: ((
+        _ name: String
+    ) -> Void)
+    
+    var exerciseDeleteCompletion: ((
+        _ name: String
     ) -> Void)
     
     var image: SFSymbol {
@@ -57,13 +66,13 @@ struct CreateExerciseView: View {
     var color: Color {
         switch state {
         case .writing:
-            .primary
+                .primary
         case .save:
-            .green
+                .green
         case .edit:
-            .yellow
+                .yellow
         case .error:
-            .red
+                .red
         }
     }
     
@@ -72,17 +81,25 @@ struct CreateExerciseView: View {
         completion: @escaping ((
             _ name: String,
             _ setPlan: SetPlan?
+        ) -> Void),
+        exerciseCreateCompletion: @escaping ((
+            _ name: String
+        ) -> Void),
+        exerciseDeleteCompletion: @escaping ((
+            _ name: String
         ) -> Void)
     ) {
         _name = State(initialValue: data.name ?? String())
         _setPlan = State(initialValue: data.setPlan)
-
+        
         let hasFilledInfo = data.name.isNotEmpty && data.setPlan != nil
         _state = State(initialValue: hasFilledInfo ? .save : .writing)
         
         self.items = data.items
         self._hasJustName = data.hasJustName
         self.completion = completion
+        self.exerciseCreateCompletion = exerciseCreateCompletion
+        self.exerciseDeleteCompletion = exerciseDeleteCompletion
     }
     
     var body: some View {
@@ -92,62 +109,43 @@ struct CreateExerciseView: View {
                 Image(systemSymbol: image)
                     .foregroundStyle(color)
             }
-            TextField("Nome", text: $name)
-                .textFieldStyle(DSStateTextFieldStyle(isEnabled: state != .save))
-                .onChange(of: name) {
-                    self.applyFilter(with: name)
-                }
-                .simultaneousGesture(
-                    TapGesture()
-                        .onEnded {
-                            self.showPopover = items.isNotEmpty
+            Button {
+                exerciseSheetModel.set(items: items)
+            } label: {
+                HStack {
+                    Text("Escolher Exercício")
+                    Spacer()
+                    if self.name.isNotEmpty {
+                        ChipView(label: name, isSelected: false, style: .small) { name in
+                            self.name = ""
                         }
-                )
-                .popover(
-                    isPresented: $showPopover,
-                    attachmentAnchor: .point(
-                        .top
-                    )
-                ) {
-                    ChipGridView(
-                        chips: (
-                            .constant(filteredItems.isEmpty ? items.filter(
-                                {
-                                    $0.trimmingCharacters(
-                                        in: .whitespaces
-                                    ).isNotEmpty
-                                }) : filteredItems
-                        ))
-                    ) { item in
-                        self.name = item
-                        DispatchQueue.main.async {
-                            showPopover = false
-                        }
-                        hideKeyboard()
                     }
-                    .padding()
-                    .frame(minWidth: 50, minHeight: 80, maxHeight: 400)
-                    .presentationCompactAdaptation(.popover)
+                    Image(systemSymbol: .chevronRight)
+                        .foregroundColor(.gray)
                 }
+            }
+            .foregroundStyle(Color.primary)
+            .padding(.vertical, 16)
+            .buttonStyle(WithoutBackgroundPrimaryButtonStyle())
             if hasJustName == false {
-                Group {
-                    Button {
-                        sheetModel.set(items: fetchedSetPlans.compactMap { $0.name })
-                    } label: {
-                        HStack {
-                            Text("Escolher Série")
-                            Spacer()
-                            if let name = setPlan?.name {
-                                ChipView(label: name, isSelected: false, style: .small) { name in
-                                    setPlan = nil
-                                }
+                Button {
+                    setPlanSheetModel.set(items: fetchedSetPlans.compactMap { $0.name })
+                } label: {
+                    HStack {
+                        Text("Escolher Série")
+                        Spacer()
+                        if let name = setPlan?.name {
+                            ChipView(label: name, isSelected: false, style: .small) { name in
+                                setPlan = nil
                             }
-                            Image(systemSymbol: .chevronRight)
-                                .foregroundColor(.gray)
                         }
+                        Image(systemSymbol: .chevronRight)
+                            .foregroundColor(.gray)
                     }
-                    .foregroundStyle(Color.primary)
                 }
+                .foregroundStyle(Color.primary)
+                .padding(.bottom, 16)
+                .buttonStyle(WithoutBackgroundPrimaryButtonStyle())
             }
             Button(state == .save ? "Editar" : "Salvar") {
                 setPlanAction()
@@ -155,14 +153,14 @@ struct CreateExerciseView: View {
             .buttonStyle(WithoutBackgroundPrimaryButtonStyle())
         }
         .gridSheet(
-            model: $sheetModel,
+            model: $setPlanSheetModel,
             setPlanCreated: { quantity, minRep, maxRep in
                 guard let quantity = Int(quantity), let minRep = Int(minRep), let maxRep = Int(maxRep) else { return }
                 let selectedSetPlan = SetPlan(quantity: quantity, minRep: minRep, maxRep: maxRep)
-
+                
                 modelContext.insert(selectedSetPlan)
                 try? modelContext.save()
-                sheetModel.set(items: fetchedSetPlans.compactMap { $0.name })
+                setPlanSheetModel.set(items: fetchedSetPlans.compactMap { $0.name })
             },
             setPlanRemoved: { setPlan in
                 if let setPlan = self.fetchedSetPlans.first(where: { $0.name == setPlan }) {
@@ -171,18 +169,38 @@ struct CreateExerciseView: View {
                     }
                     modelContext.delete(setPlan)
                     try? modelContext.save()
-                    sheetModel.set(items: fetchedSetPlans.compactMap { $0.name })
+                    setPlanSheetModel.set(items: fetchedSetPlans.compactMap { $0.name })
                 }
             }) { selectedSetPlan in
                 self.setPlan = self.fetchedSetPlans.first(where: { $0.name == selectedSetPlan })
-                self.sheetModel.dismiss()
+                self.setPlanSheetModel.dismiss()
             }
-        .onChange(of: hasJustName, {
-            if hasJustName {
-                self.setPlan = nil
-            }
-        })
-        .padding(4)
+            .gridSheet(
+                model: $exerciseSheetModel,
+                created: { name in
+                    self.name = name
+                    self.exerciseSheetModel.dismiss()
+                    self.exerciseCreateCompletion(name)
+                    exerciseSheetModel.items.append(name)
+                },
+                removed: { name in
+                    if let name = self.items.first(where: { $0 == name }) {
+                        if name == self.name {
+                            self.name = ""
+                        }
+                        self.exerciseDeleteCompletion(name)
+                        exerciseSheetModel.items.removeAll(where: { $0 == name })
+                    }
+                }) { name in
+                    self.name = name
+                    self.exerciseSheetModel.dismiss()
+                }
+                .onChange(of: hasJustName, {
+                    if hasJustName {
+                        self.setPlan = nil
+                    }
+                })
+                .padding(4)
     }
     
     private func setPlanAction() {
