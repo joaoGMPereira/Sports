@@ -1,7 +1,6 @@
 import DesignSystem
-import SwiftUI
 import SwiftData
-
+import SwiftUI
 struct CreateTrainingsView: View {
     let trainingProgram: TrainingProgram
     @Binding var uniqueSetPlan: SetPlan?
