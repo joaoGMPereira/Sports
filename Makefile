@@ -18,10 +18,14 @@ certificates: ## Install/Update certificates
 generate: ## Generate projects, wåorkspace and install pods
 	@$(MAKE) generatesources
 	@$(MAKE) generateprojects
+	@$(MAKE) generateworkspace
 	@./Scripts/Generate/postGenerate.sh $(open)
 	
 generateprojects: ## Generate only .xcodeproj projects using Xcodegen
 	@. ./Scripts/asyncGenerateProjects.sh;
+	
+generateworkspace: ## Generate only .xcodeproj projects using Xcodegen
+	@. ./Scripts/generateWorkspace.sh;
 
 generatesources: ## Generate source files with Swiftgen and Sourcery
 	@./Scripts/generateResources.sh

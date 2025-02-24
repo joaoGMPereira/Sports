@@ -1,8 +1,0 @@
-xcassets:
-  inputs:
-    - 'Sources/DesignSystem/Resources/Assets.xcassets'
-  outputs:
-    - templatePath: ./template.stencil
-      output: Sources/DesignSystem/Generated/Assets.generated.swift
-      params:
-        publicAccess: true

@@ -1,0 +1,122 @@
+import Dependencies
+import SwiftUI
+import ZenithCore
+
+struct ZenithCoreSampleView: View {
+    @Dependency(\.themeConfigurator) var themeConfigurator
+    @Dependency(\.themeConfigurator.theme.fonts) var fonts
+    @Dependency(\.themeConfigurator.theme.colors) var colors
+    var body: some View {
+        NavigationView {
+            List {
+                Section(
+                    header: Text("Themes").font(fonts.bigBold.font).foregroundStyle(colors.textPrimary)
+                ) {
+                    ForEach(ThemeName.allCases) { theme in
+                        Button(theme.rawValue) {
+                            themeConfigurator.change(theme)
+                        }
+                        .font((fonts.small.font))
+                        .tint(colors.textPrimary)
+                    }
+                }.listRowBackground(colors.backgroundSecondary)
+                Section(
+                    header: Text("Fonts").font(fonts.bigBold.font).foregroundStyle(colors.textPrimary)
+                ) {
+                    FontExampleView()
+                }.listRowBackground(colors.backgroundSecondary)
+                Section(
+                    header: Text("Colors").font(fonts.bigBold.font).foregroundStyle(colors.textPrimary)
+                ) {
+                    ColorExampleView()
+                }.listRowBackground(colors.backgroundSecondary)
+                Section(
+                    header: Text("Spacing").font(fonts.bigBold.font).foregroundStyle(colors.textPrimary)
+                ) {
+                    SpacingExampleView()
+                }.listRowBackground(colors.backgroundSecondary)
+            }
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("Sample")
+                        .font(fonts.mediumBold.font)
+                        .foregroundColor(colors.textPrimary)
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .scrollContentBackground(.hidden)
+            .background(colors.background)
+        }
+    }
+}
+
+// MARK: - Fonts Example
+struct FontExampleView: View {
+    @Dependency(\.themeConfigurator.theme.fonts) var fonts
+    @Dependency(\.themeConfigurator.theme.colors) var colors
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ForEach(FontName.allCases, id: \.rawValue) { font in
+                Text(font.rawValue)
+                    .foregroundStyle(colors.textPrimary)
+                    .font(fonts.font(by: font)?.font)
+            }
+        }
+        .padding()
+    }
+}
+
+// MARK: - Colors Example
+struct ColorExampleView: View {
+    @Dependency(\.themeConfigurator.theme.fonts) var fonts
+    @Dependency(\.themeConfigurator.theme.colors) var colors
+    
+    var body: some View {
+        VStack {
+            ForEach(ColorName.allCases, id: \.rawValue) { color in
+                HStack {
+                    Text(color.rawValue)
+                        .foregroundStyle(colors.textPrimary)
+                        .font(fonts.small.font)
+                        .frame(width: 100, alignment: .leading)
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(colors.color(by: color) ?? .clear)
+                        .frame(width: 40, height: 20)
+                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black.opacity(0.1)))
+                }
+            }
+        }
+        .padding()
+    }
+}
+
+// MARK: - Spacing Example
+struct SpacingExampleView: View {
+    @Dependency(\.themeConfigurator.theme.fonts) var fonts
+    @Dependency(\.themeConfigurator.theme.colors) var colors
+    @Dependency(\.themeConfigurator.theme.spacings) var spacings
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ForEach(SpacingName.allCases, id: \.rawValue) { spacing in
+                HStack {
+                    Text(spacing.rawValue)
+                        .foregroundStyle(colors.textPrimary)
+                        .frame(width: 100, alignment: .leading)
+                    Rectangle()
+                        .fill(colors.textSecondary)
+                        .frame(width: spacings.spacing(by: spacing), height: 10)
+                }
+            }
+        }
+        .padding()
+    }
+}
+
+// MARK: - Preview
+struct ZenithCoreSampleView_Previews: PreviewProvider {
+    static var previews: some View {
+        ZenithCoreSampleView()
+    }
+}

@@ -1,0 +1,111 @@
+name: KettleGym
+
+options:
+  xcodeVersion: '9999'
+  
+packages:
+  SFSafeSymbols:
+    majorVersion: 5.2.0
+    url: https://github.com/SFSafeSymbols/SFSafeSymbols.git
+  HotSwiftUI:
+    majorVersion: 1.1.0
+    url: https://github.com/johnno1962/HotSwiftUI.git
+  DebugSwift:
+    majorVersion: 0.3.6
+    url: https://github.com/DebugSwift/DebugSwift.git
+  swift-dependencies:
+    majorVersion: 1.7.0
+    url: https://github.com/pointfreeco/swift-dependencies.git
+  PopupView:
+    revision: c82f68dd56d9359e144ab0446f5866208e4a02e8
+    url: https://github.com/exyte/PopupView.git
+  Zenith:
+    path: ../Packages/Zenith
+  ZenithCore:
+    path: ../Packages/ZenithCore
+  ZenithCoreInterface:
+    path: ../Packages/ZenithCoreInterface
+
+configs:
+  Debug: debug
+  Release: release
+configFiles:
+  Debug: Configs/BaseDebug.xcconfig
+  Release: Configs/BaseRelease.xcconfig
+
+targets:
+  KettleGym:
+    type: application
+    platform: iOS
+    settings:
+      IPHONEOS_DEPLOYMENT_TARGET: ${IOS_DEPLOY_TARGET}
+    sources: [KettleGym]
+    dependencies:
+      - sdk: UIKit.framework
+      - sdk: Foundation.framework
+      - package: SFSafeSymbols
+      - package: HotSwiftUI
+      - package: DebugSwift
+      - package: swift-dependencies
+        product: Dependencies
+      - package: PopupView
+      - package: Zenith
+        product: Zenith
+      - package: ZenithCoreInterface
+        product: ZenithCoreInterface
+      - package: ZenithCore
+        product: ZenithCore
+
+    preBuildScripts:
+      - path: ${SWIFTGEN_SH_PATH}
+        name: SwiftGen
+
+  KettleGymTests:
+    type: bundle.unit-test
+    platform: iOS
+    settings:
+      SWIFT_VERSION: ${IOS_TESTS_SWIFT_VERSION}
+      IPHONEOS_DEPLOYMENT_TARGET: ${IOS_TESTS_DEPLOY_TARGET}
+    sources: [KettleGymTests]
+    dependencies:
+      - target: KettleGym
+
+schemes:
+  KettleGym-Dev:
+    build:
+      targets:
+        KettleGym: all
+        KettleGymTests: [test]
+    run:
+      config: Debug
+    profile:
+      config: Debug
+    analyze:
+      config: Debug
+    archive:
+      config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: true
+      targets:
+        - name: KettleGymTests
+          randomExecutionOrder: true
+
+  KettleGym:
+    build:
+      targets:
+        KettleGym: all
+    run:
+      config: Release
+    profile:
+      config: Release
+    analyze:
+      config: Release
+    archive:
+      config: Release
+    test:
+      config: Release
+      gatherCoverageData: true
+      targets:
+        - name: KettleGymTests
+          randomExecutionOrder: true

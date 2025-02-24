@@ -1,0 +1,51 @@
+name: ZenithCoreSample
+
+options:
+  xcodeVersion: '9999'
+  
+packages:
+  swift-dependencies:
+    version: 1.7.0
+    url: https://github.com/pointfreeco/swift-dependencies.git
+  ZenithCore:
+    path: ../Packages/ZenithCore
+
+configs:
+  Debug: debug
+  Release: release
+configFiles:
+  Debug: Configs/BaseDebug.xcconfig
+  Release: Configs/BaseRelease.xcconfig
+
+targets:
+  ZenithCoreSample:
+    type: application
+    platform: iOS
+    settings:
+      IPHONEOS_DEPLOYMENT_TARGET: ${IOS_DEPLOY_TARGET}
+    sources: [Packages/ZenithCoreSample]
+    dependencies:
+      - sdk: UIKit.framework
+      - sdk: Foundation.framework
+      - package: ZenithCore
+        product: ZenithCore
+      - package: swift-dependencies
+        product: Dependencies
+
+    preBuildScripts:
+      - path: ${SWIFTGEN_SH_PATH}
+        name: SwiftGen
+
+schemes:
+  ZenithCoreSample:
+    build:
+      targets:
+        ZenithCoreSample: all
+    run:
+      config: Debug
+    profile:
+      config: Debug
+    analyze:
+      config: Debug
+    archive:
+      config: Debug
