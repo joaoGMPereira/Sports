@@ -1,20 +1,7 @@
 import SwiftUI
 import ZenithCoreInterface
 
-public struct AnyViewModifier: ViewModifier {
-    private let modifier: (AnyView) -> AnyView
-
-    public init<M: ViewModifier>(_ modifier: M) {
-        self.modifier = { AnyView($0.modifier(modifier)) }
-    }
-
-    public func body(content: Content) -> some View {
-        modifier(AnyView(content))
-    }
-}
-
 public protocol TextStyle: ViewModifier, Identifiable where ID == String {
-    var name: String { get }
 }
 
 public extension Text {
@@ -23,74 +10,107 @@ public extension Text {
     }
 }
 
-public struct SmallPrimaryTextStyle: TextStyle, ViewModifier {
-    public let id: String
-    public var name = String(describing:Self.self)
+public extension TextStyle where Self == BaseTextStyle {
+    static func small(_ color: TextStyleColor) -> Self { Self(color: color, fontName: .small) }
+    static func medium(_ color: TextStyleColor) -> Self { Self(color: color, fontName: .medium) }
+    static func mediumBold(_ color: TextStyleColor) -> Self { Self(color: color, fontName: .mediumBold) }
+    static func bigBold(_ color: TextStyleColor) -> Self { Self(color: color, fontName: .bigBold) }
+}
+
+public struct BaseTextStyle: TextStyle, @preconcurrency BaseThemeDependencies {
+    public let id = String(describing:Self.self)
+    public let textStyleColor: TextStyleColor
+    public let fontName: FontName
     
     @Dependency(\.themeConfigurator) public var themeConfigurator
-    var fonts: any FontsProtocol {
-        themeConfigurator.theme.fonts
+    
+    var font: BaseFont {
+        fonts.font(by: fontName) ?? fonts.small
     }
     
-    var colors: any ColorsProtocol {
-        themeConfigurator.theme.colors
+    var color: Color {
+        colors.color(by: textStyleColor.color) ?? colors.textPrimary
     }
     
-    var spacings: any SpacingsProtocol {
-        themeConfigurator.theme.spacings
-    }
-    
-    public init() {
-        self.id = name
+    public init(
+        color: TextStyleColor,
+        fontName: FontName
+    ) {
+        self.textStyleColor = color
+        self.fontName = fontName
     }
     
     public func body(content: Content) -> some View {
-        print(fonts.small.lineHeight - fonts.small.fontLineHeight)
-        print((fonts.small.lineHeight - fonts.small.fontLineHeight) / 2)
-        return content
-            .font(fonts.small.font)
-            .lineSpacing(fonts.small.lineHeight - fonts.small.fontLineHeight)
-            .padding(.vertical, (fonts.small.lineHeight - fonts.small.fontLineHeight) / 2)
-            .foregroundStyle(colors.textPrimary)
+        content
+            .font(font.font)
+            .lineSpacing(font.lineHeight - font.fontLineHeight)
+            .padding(.vertical, (font.lineHeight - font.fontLineHeight) / 2)
+            .foregroundStyle(color)
     }
 }
 
-public extension TextStyle where Self == SmallPrimaryTextStyle {
-    static var smallPrimary: Self { Self() }
-}
-
-public struct SmallSecondaryTextStyle: TextStyle, ViewModifier {
-    public let id: String
-    public var name = String(describing:Self.self)
+public enum TextStyleColor: CaseIterable, Identifiable {
+    case textPrimary
+    case textSecondary
+    case primary
     
-    @Dependency(\.themeConfigurator) public var themeConfigurator
-    var fonts: any FontsProtocol {
-        themeConfigurator.theme.fonts
-    }
+    public var id: Self { self }
     
-    var colors: any ColorsProtocol {
-        themeConfigurator.theme.colors
-    }
-    
-    var spacings: any SpacingsProtocol {
-        themeConfigurator.theme.spacings
-    }
-    
-    public init() {
-        self.id = name
-    }
-    
-    public func body(content: Content) -> some View {
-        print(fonts.small.lineHeight - fonts.small.fontLineHeight)
-        print((fonts.small.lineHeight - fonts.small.fontLineHeight) / 2)
-        return content
-            .font(fonts.small.font)
-            .lineSpacing(fonts.small.lineHeight - fonts.small.fontLineHeight)
-            .padding(.vertical, (fonts.small.lineHeight - fonts.small.fontLineHeight) / 2)
-            .foregroundStyle(colors.textSecondary)
+    var color: ColorName {
+        switch self {
+        case .textPrimary:
+            .textPrimary
+        case .textSecondary:
+            .textSecondary
+        case .primary:
+            .primary
+        }
     }
 }
 
-public extension TextStyle where Self == SmallSecondaryTextStyle {
-    static var smallSecondary: Self { Self() }
+public enum TextStyleCase: CaseIterable, Identifiable {
+    case smallTextPrimary
+    case smallTextSecondary
+    case smallPrimary
+    case mediumTextPrimary
+    case mediumTextSecondary
+    case mediumPrimary
+    case mediumBoldTextPrimary
+    case mediumBoldTextSecondary
+    case mediumBoldPrimary
+    case BigBoldTextPrimary
+    case BigBoldTextSecondary
+    case BigBoldPrimary
+    
+    public var id: Self { self }
+    
+    @MainActor
+    public func modifier() -> AnyViewModifier {
+        switch self {
+        case .smallTextPrimary:
+            return AnyViewModifier(BaseTextStyle.small(.textPrimary))
+        case .smallTextSecondary:
+            return AnyViewModifier(BaseTextStyle.small(.textSecondary))
+        case .smallPrimary:
+            return AnyViewModifier(BaseTextStyle.small(.primary))
+        case .mediumTextPrimary:
+            return AnyViewModifier(BaseTextStyle.medium(.textPrimary))
+        case .mediumTextSecondary:
+            return AnyViewModifier(BaseTextStyle.medium(.textSecondary))
+        case .mediumPrimary:
+            return AnyViewModifier(BaseTextStyle.medium(.primary))
+        case .mediumBoldTextPrimary:
+            return AnyViewModifier(BaseTextStyle.mediumBold(.textPrimary))
+        case .mediumBoldTextSecondary:
+            return AnyViewModifier(BaseTextStyle.mediumBold(.textSecondary))
+        case .mediumBoldPrimary:
+            return AnyViewModifier(BaseTextStyle.mediumBold(.primary))
+        case .BigBoldTextPrimary:
+            return AnyViewModifier(BaseTextStyle.bigBold(.textPrimary))
+        case .BigBoldTextSecondary:
+            return AnyViewModifier(BaseTextStyle.bigBold(.textSecondary))
+        case .BigBoldPrimary:
+            return AnyViewModifier(BaseTextStyle.bigBold(.primary))
+        }
+    }
 }
