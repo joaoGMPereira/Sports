@@ -9,12 +9,12 @@ public protocol DynamicImageStyle: DynamicProperty, Sendable {
 }
 
 public struct DynamicImageStyleConfiguration {
-    let asyncImage: AsyncImage<Image>
+    let asyncImage: AsyncImage<_ConditionalContent<_ConditionalContent<Image, Image>, Color>>
     let image: Image
     let type: DynamicImageType
     
     
-    fileprivate init(asyncImage: AsyncImage<Image>, image: Image, type: DynamicImageType) {
+    init(asyncImage: AsyncImage<_ConditionalContent<_ConditionalContent<Image, Image>, Color>>, image: Image, type: DynamicImageType) {
         self.asyncImage = asyncImage
         self.image = image
         self.type = type
@@ -22,12 +22,12 @@ public struct DynamicImageStyleConfiguration {
 }
 
 public struct DynamicImageStyleKey: EnvironmentKey {
-    public static let defaultValue: any DynamicImageStyle = PlainDynamicImageStyle()
+    public static let defaultValue: any DynamicImageStyle = SmallDynamicImageStyle(color: .primary)
 }
 
 public extension EnvironmentValues {
     
-    fileprivate var detailStyle : any DynamicImageStyle {
+    var dynamicImageStyle : any DynamicImageStyle {
         get { self[DynamicImageStyleKey.self] }
         set { self[DynamicImageStyleKey.self] = newValue }
     }
@@ -35,7 +35,8 @@ public extension EnvironmentValues {
 }
 
 public extension DynamicImageStyle {
-    @MainActor fileprivate func resolve(configuration: Configuration) -> some View {
+    @MainActor
+    func resolve(configuration: Configuration) -> some View {
         ResolvedDynamicImageStyle(style: self, configuration: configuration)
     }
 }
