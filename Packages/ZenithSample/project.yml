@@ -1,0 +1,54 @@
+name: ZenithSample
+
+options:
+  xcodeVersion: '9999'
+  
+packages:
+  ZenithCore:
+    path: ../ZenithCore
+  ZenithCoreInterface:
+    path: ../ZenithCoreInterface
+  Zenith:
+    path: ../Zenith
+
+configs:
+  Debug: debug
+  Release: release
+configFiles:
+  Debug: Configs/BaseDebug.xcconfig
+  Release: Configs/BaseRelease.xcconfig
+
+targets:
+  ZenithSample:
+    type: application
+    platform: iOS
+    settings:
+      IPHONEOS_DEPLOYMENT_TARGET: ${IOS_DEPLOY_TARGET}
+    sources: [ZenithSample]
+    dependencies:
+      - sdk: UIKit.framework
+      - sdk: Foundation.framework
+      - package: ZenithCore
+        product: ZenithCore
+      - package: ZenithCoreInterface
+        product: ZenithCoreInterface
+      - package: Zenith
+        product: Zenith
+
+    preBuildScripts:
+      - path: ${SWIFTGEN_SH_PATH}
+        name: SwiftGen
+
+schemes:
+  ZenithSample:
+    build:
+      targets:
+        ZenithSample: all
+    run:
+      config: Debug
+    profile:
+      config: Debug
+    analyze:
+      config: Debug
+    archive:
+      config: Debug
