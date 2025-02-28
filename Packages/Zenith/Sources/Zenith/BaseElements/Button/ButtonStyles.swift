@@ -47,7 +47,8 @@ public enum ButtonStyles: String, Decodable, Sendable, Identifiable, CaseIterabl
     
     case primary, secondary
     
-    public var style: any ButtonStyle {
+    @MainActor
+    public func style() -> any ButtonStyle {
         switch self {
         case .primary:
             return PrimaryButtonStyle()
