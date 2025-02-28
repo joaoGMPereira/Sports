@@ -1,11 +1,15 @@
-import Dependencies
 import SwiftUI
-import ZenithCore
+import ZenithCoreInterface
 
 struct ZenithCoreSampleView: View {
     @Dependency(\.themeConfigurator) var themeConfigurator
-    @Dependency(\.themeConfigurator.theme.fonts) var fonts
-    @Dependency(\.themeConfigurator.theme.colors) var colors
+    var fonts: any FontsProtocol {
+        themeConfigurator.theme.fonts
+    }
+    var colors: any ColorsProtocol {
+        themeConfigurator.theme.colors
+    }
+    
     var body: some View {
         NavigationView {
             List {
@@ -52,9 +56,14 @@ struct ZenithCoreSampleView: View {
 
 // MARK: - Fonts Example
 struct FontExampleView: View {
-    @Dependency(\.themeConfigurator.theme.fonts) var fonts
-    @Dependency(\.themeConfigurator.theme.colors) var colors
-
+    @Dependency(\.themeConfigurator) var themeConfigurator
+    var fonts: any FontsProtocol {
+        themeConfigurator.theme.fonts
+    }
+    var colors: any ColorsProtocol {
+        themeConfigurator.theme.colors
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             ForEach(FontName.allCases, id: \.rawValue) { font in
@@ -69,8 +78,13 @@ struct FontExampleView: View {
 
 // MARK: - Colors Example
 struct ColorExampleView: View {
-    @Dependency(\.themeConfigurator.theme.fonts) var fonts
-    @Dependency(\.themeConfigurator.theme.colors) var colors
+    @Dependency(\.themeConfigurator) var themeConfigurator
+    var fonts: any FontsProtocol {
+        themeConfigurator.theme.fonts
+    }
+    var colors: any ColorsProtocol {
+        themeConfigurator.theme.colors
+    }
     
     var body: some View {
         VStack {
@@ -93,9 +107,16 @@ struct ColorExampleView: View {
 
 // MARK: - Spacing Example
 struct SpacingExampleView: View {
-    @Dependency(\.themeConfigurator.theme.fonts) var fonts
-    @Dependency(\.themeConfigurator.theme.colors) var colors
-    @Dependency(\.themeConfigurator.theme.spacings) var spacings
+    @Dependency(\.themeConfigurator) var themeConfigurator
+    var fonts: any FontsProtocol {
+        themeConfigurator.theme.fonts
+    }
+    var colors: any ColorsProtocol {
+        themeConfigurator.theme.colors
+    }
+    var spacings: any SpacingsProtocol {
+        themeConfigurator.theme.spacings
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {

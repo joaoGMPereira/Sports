@@ -17,7 +17,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/exyte/PopupView.git", revision: "c82f68dd56d9359e144ab0446f5866208e4a02e8"),
         .package(url: "https://github.com/SFSafeSymbols/SFSafeSymbols.git", from: "5.2.0"),
-        .package(path: "../ZenithCore")
+        .package(path: "../ZenithCoreInterface")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -27,7 +27,7 @@ let package = Package(
             dependencies: [
                 .product(name: "PopupView", package: "PopupView"),
                 .product(name: "SFSafeSymbols", package: "SFSafeSymbols"),
-                .product(name: "ZenithCore", package: "ZenithCore")
+                .product(name: "ZenithCoreInterface", package: "ZenithCoreInterface")
             ]
         ),
         

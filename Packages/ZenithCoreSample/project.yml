@@ -4,11 +4,10 @@ options:
   xcodeVersion: '9999'
   
 packages:
-  swift-dependencies:
-    version: 1.7.0
-    url: https://github.com/pointfreeco/swift-dependencies.git
   ZenithCore:
-    path: ../Packages/ZenithCore
+    path: ../ZenithCore
+  ZenithCoreInterface:
+    path: ../ZenithCoreInterface
 
 configs:
   Debug: debug
@@ -23,14 +22,14 @@ targets:
     platform: iOS
     settings:
       IPHONEOS_DEPLOYMENT_TARGET: ${IOS_DEPLOY_TARGET}
-    sources: [Packages/ZenithCoreSample]
+    sources: [ZenithCoreSample]
     dependencies:
       - sdk: UIKit.framework
       - sdk: Foundation.framework
       - package: ZenithCore
         product: ZenithCore
-      - package: swift-dependencies
-        product: Dependencies
+      - package: ZenithCoreInterface
+        product: ZenithCoreInterface
 
     preBuildScripts:
       - path: ${SWIFTGEN_SH_PATH}

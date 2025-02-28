@@ -13,9 +13,6 @@ packages:
   DebugSwift:
     majorVersion: 0.3.6
     url: https://github.com/DebugSwift/DebugSwift.git
-  swift-dependencies:
-    majorVersion: 1.7.0
-    url: https://github.com/pointfreeco/swift-dependencies.git
   PopupView:
     revision: c82f68dd56d9359e144ab0446f5866208e4a02e8
     url: https://github.com/exyte/PopupView.git
@@ -46,8 +43,6 @@ targets:
       - package: SFSafeSymbols
       - package: HotSwiftUI
       - package: DebugSwift
-      - package: swift-dependencies
-        product: Dependencies
       - package: PopupView
       - package: Zenith
         product: Zenith

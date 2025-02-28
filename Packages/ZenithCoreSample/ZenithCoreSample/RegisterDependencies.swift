@@ -1,5 +1,5 @@
-import Dependencies
 import ZenithCore
+import ZenithCoreInterface
 
 @MainActor
 extension ThemeConfiguratorKey: @preconcurrency @retroactive DependencyKey {
