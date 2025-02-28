@@ -16,10 +16,10 @@ for project_file in $project_files; do
     echo "📂 Diretório: $dir"
 
     # Executa xcodegen e redireciona a saída para logs
-    xcodegen -s "$project_file" > "$dir/xcodegen_output.log" 2>&1 &
+    xcodegen -s "$project_file" 2>&1 &
     pid=$!
     pids+=($pid)
-    echo "✅ Processo iniciado para $project_file (PID: $pid) - Logs em $dir/xcodegen_output.log"
+    echo "✅ Processo iniciado para $project_file (PID: $pid)"
 done
 
 echo "⏳ Aguardando a finalização de todos os processos..."
@@ -46,10 +46,10 @@ echo "\n🏗️ Iniciando geração dos projetos principais..."
 
 if [ -f "KettleGym/project.yml" ]; then
     echo "🚀 Gerando projeto principal: KettleGym/project.yml"
-    if xcodegen -s KettleGym/project.yml | tee KettleGym/xcodegen_output.log; then
-        echo "✅ Projeto principal gerado com sucesso. Logs disponíveis em KettleGym/xcodegen_output.log"
+    if xcodegen -s KettleGym/project.yml; then
+        echo "✅ Projeto principal gerado com sucesso."
     else
-        echo "❌ Erro ao gerar o projeto principal. Verifique os logs em KettleGym/xcodegen_output.log"
+        echo "❌ Erro ao gerar o projeto principal."
     fi
 else
     echo "⚠️ Arquivo KettleGym/project.yml não encontrado."
