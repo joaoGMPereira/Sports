@@ -13,10 +13,39 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
     @State
     var textsIsExpanded: Bool = false
     
+    fileprivate func section(
+        title: String,
+        isExpanded: Binding<Bool>,
+        @ViewBuilder content: () -> some View
+    ) -> some View {
+        return Section(isExpanded: isExpanded) {
+            content()
+        } header: {
+            Label(
+                title: {
+                    Text(title)
+                        .textStyle(.mediumBold(.primary))
+                },
+                icon: {
+                    Image(systemSymbol: .chevronDown)
+                        .rotationEffect(.init(degrees: imagesIsExpanded ? 180 : 0))
+                })
+            .font(fonts.mediumBold.font)
+            .foregroundStyle(colors.textPrimary)
+            .animation(.smooth, value: imagesIsExpanded)
+            .onTapGesture {
+                withAnimation {
+                    imagesIsExpanded.toggle()
+                }
+            }
+        }
+        .listRowBackground(colors.backgroundSecondary)
+    }
+    
     var body: some View {
         NavigationView {
             List {
-                Section(isExpanded: $imagesIsExpanded) {
+                section(title: "IMAGES", isExpanded: $imagesIsExpanded) {
                     ForEach(DynamicImageStyleColor.allCases, id: \.self) { style in
                         DynamicImage("checkmark")
                             .dynamicImageStyle(.small(style))
@@ -31,27 +60,8 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
                         DynamicImage("https://example.com/icon.png")
                             .dynamicImageStyle(.medium(style))
                     }
-                } header: {
-                    Label(
-                        title: {
-                            Text("Images")
-                                .textStyle(.mediumBold(.primary))
-                        },
-                        icon: {
-                            Image(systemSymbol: .chevronDown)
-                                .rotationEffect(.init(degrees: imagesIsExpanded ? 180 : 0))
-                        })
-                    .font(fonts.mediumBold.font)
-                    .foregroundStyle(colors.textPrimary)
-                    .animation(.smooth, value: imagesIsExpanded)
-                    .onTapGesture {
-                        withAnimation {
-                            imagesIsExpanded.toggle()
-                        }
-                    }
                 }
-                .listRowBackground(colors.backgroundSecondary)
-                Section(isExpanded: $buttonsIsExpanded) {
+                section(title: "BUTTONS", isExpanded: $buttonsIsExpanded) {
                     Button("Primary") {
                         print("caiu aqui")
                     }
@@ -60,51 +70,14 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
                         print("caiu aqui")
                     }
                     .buttonStyle(.secondary)
-                } header: {
-                    Label(
-                        title: {
-                            Text("Buttons")
-                                .textStyle(.mediumBold(.primary))
-                        },
-                        icon: {
-                            Image(systemSymbol: .chevronDown)
-                                .rotationEffect(.init(degrees: buttonsIsExpanded ? 180 : 0))
-                        })
-                    .font(fonts.mediumBold.font)
-                    .foregroundStyle(colors.textPrimary)
-                    .animation(.smooth, value: buttonsIsExpanded)
-                    .onTapGesture {
-                        withAnimation {
-                            buttonsIsExpanded.toggle()
-                        }
-                    }
                 }
-                .listRowBackground(colors.backgroundSecondary)
-                Section(isExpanded: $textsIsExpanded) {
+                
+                section(title: "TEXTS", isExpanded: $textsIsExpanded) {
                     ForEach(TextStyleCase.allCases, id: \.self) { style in
                         Text("teste")
                             .modifier(style.modifier())
                     }
-                } header: {
-                    Label(
-                        title: {
-                            Text("Texts")
-                                .textStyle(.mediumBold(.primary))
-                        },
-                        icon: {
-                            Image(systemSymbol: .chevronDown)
-                                .rotationEffect(.init(degrees: textsIsExpanded ? 180 : 0))
-                        })
-                    .font(fonts.mediumBold.font)
-                    .foregroundStyle(colors.textPrimary)
-                    .animation(.smooth, value: textsIsExpanded)
-                    .onTapGesture {
-                        withAnimation {
-                            textsIsExpanded.toggle()
-                        }
-                    }
                 }
-                .listRowBackground(colors.backgroundSecondary)
             }
             .toolbar {
                 ToolbarItem(placement: .principal) {
