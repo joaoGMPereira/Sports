@@ -16,6 +16,7 @@ certificates: ## Install/Update certificates
 	@bundle exec fastlane match_certificates
 
 generate: ## Generate projects, wåorkspace and install pods
+	@./Scripts/killXcode.sh
 	@$(MAKE) generatesources
 	@$(MAKE) generateprojects
 	@$(MAKE) generateworkspace
