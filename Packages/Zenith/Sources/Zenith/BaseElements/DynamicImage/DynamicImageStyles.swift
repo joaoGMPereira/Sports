@@ -9,9 +9,9 @@ public extension View {
 
 public struct SmallDynamicImageStyle: @preconcurrency DynamicImageStyle, BaseThemeDependencies {
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
-    let color: DynamicImageStyleColor
+    let color: DynamicImageColor
     
-    init(color: DynamicImageStyleColor) {
+    init(color: DynamicImageColor) {
         self.color = color
     }
     
@@ -24,9 +24,9 @@ public struct SmallDynamicImageStyle: @preconcurrency DynamicImageStyle, BaseThe
 
 public struct MediumDynamicImageStyle: @preconcurrency DynamicImageStyle, BaseThemeDependencies {
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
-    let color: DynamicImageStyleColor
+    let color: DynamicImageColor
     
-    init(color: DynamicImageStyleColor) {
+    init(color: DynamicImageColor) {
         self.color = color
     }
     
@@ -38,14 +38,14 @@ public struct MediumDynamicImageStyle: @preconcurrency DynamicImageStyle, BaseTh
 }
 
 public extension DynamicImageStyle where Self == SmallDynamicImageStyle {
-    static func small(_ color: DynamicImageStyleColor) -> Self { .init(color: color)  }
+    static func small(_ color: DynamicImageColor) -> Self { .init(color: color)  }
 }
 
 public extension DynamicImageStyle where Self == MediumDynamicImageStyle {
-    static func medium(_ color: DynamicImageStyleColor) -> Self { .init(color: color)  }
+    static func medium(_ color: DynamicImageColor) -> Self { .init(color: color)  }
 }
 
-public enum DynamicImageStyleColor: CaseIterable, Identifiable, Sendable {
+public enum DynamicImageColor: CaseIterable, Identifiable, Sendable {
     case primary
     case secondary
     case tertiary
@@ -71,7 +71,7 @@ public enum DynamicImageStyleCase: CaseIterable, Identifiable {
     public var id: Self { self }
     
     @MainActor
-    public func style(_ color: DynamicImageStyleColor) -> any DynamicImageStyle {
+    public func style(_ color: DynamicImageColor) -> any DynamicImageStyle {
         switch self {
         case .small:
             return SmallDynamicImageStyle(color: color)
@@ -82,7 +82,7 @@ public enum DynamicImageStyleCase: CaseIterable, Identifiable {
 }
 
 
-extension View {
+fileprivate extension View {
     func smallSize() -> some View {
         frame(width: 16, height: 16)
     }
@@ -94,19 +94,19 @@ extension View {
 private struct BaseDynamicImage: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
     let configuration: DynamicImageStyleConfiguration
-    let dynamicImageStyleColor: DynamicImageStyleColor
+    let DynamicImageColor: DynamicImageColor
     
     init(
         configuration: DynamicImageStyleConfiguration,
-        color: DynamicImageStyleColor
+        color: DynamicImageColor
     ) {
         self.configuration = configuration
-        self.dynamicImageStyleColor = color
+        self.DynamicImageColor = color
     }
     
     var body: some View {
         Group {
-            if let color = colors.color(by: dynamicImageStyleColor.color) {
+            if let color = colors.color(by: DynamicImageColor.color) {
                 if configuration.type == .async {
                     configuration.asyncImage.foregroundStyle(color)
                 } else {
