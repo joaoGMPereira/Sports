@@ -1,6 +1,12 @@
 import SwiftUI
 import ZenithCoreInterface
 
+public extension View {
+    func tagStyle(_ style: some TagStyle) -> some View {
+        environment(\.tagStyle, style)
+    }
+}
+
 public struct SmallTagStyle: @preconcurrency TagStyle, BaseThemeDependencies {
     public var id = String(describing: Self.self)
     
@@ -57,6 +63,54 @@ public extension TagStyle where Self == SmallTagStyle {
 public extension TagStyle where Self == MediumTagStyle {
     static func medium(_ color: TagColor) -> Self { .init(color: color) }
 }
+
+public enum TagColor: CaseIterable, Identifiable, Sendable {
+    case primary
+    case secondary
+    
+    public var id: Self { self }
+    
+    var foregroundColor: ColorName {
+        switch self {
+        case .primary:
+                .textSecondary
+        case .secondary:
+                .textPrimary
+        }
+    }
+    
+    var backgroundColor: ColorName {
+        switch self {
+        case .primary:
+                .primary
+        case .secondary:
+                .backgroundTertiary
+        }
+    }
+}
+
+public enum TagStyleCase: CaseIterable, Identifiable {
+    case smallPrimary
+    case mediumPrimary
+    case smallSecondary
+    case mediumSecondary
+    
+    public var id: Self { self }
+    
+    public func style() -> AnyTagStyle {
+        switch self {
+        case .smallPrimary:
+            .init(.small(.primary))
+        case .mediumPrimary:
+            .init(.medium(.primary))
+        case .smallSecondary:
+            .init(.small(.secondary))
+        case .mediumSecondary:
+            .init(.medium(.secondary))
+        }
+    }
+}
+
 
 fileprivate extension View {
     func smallSize() -> some View {

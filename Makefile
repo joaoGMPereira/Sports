@@ -40,3 +40,6 @@ cleanall: ## Cleanup projects
 
 install_bundler: ## Run bundler after installing correct version
 	@./Scripts/Bundler/installBundler.sh
+
+generateComponent:
+	python3 ./Scripts/generateComponent.py

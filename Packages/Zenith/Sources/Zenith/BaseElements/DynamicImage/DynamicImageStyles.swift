@@ -55,28 +55,39 @@ public enum DynamicImageColor: CaseIterable, Identifiable, Sendable {
     var color: ColorName {
         switch self {
         case .primary:
-            .textPrimary
+                .textPrimary
         case .secondary:
-            .textSecondary
+                .textSecondary
         case .tertiary:
-            .primary
+                .primary
         }
     }
 }
 
 public enum DynamicImageStyleCase: CaseIterable, Identifiable {
-    case small
-    case medium
-
+    case smallPrimary
+    case smallSecondary
+    case smallTertiary
+    case mediumPrimary
+    case mediumSecondary
+    case mediumTertiary
+    
     public var id: Self { self }
     
-    @MainActor
-    public func style(_ color: DynamicImageColor) -> any DynamicImageStyle {
+    public func style() -> AnyDynamicImageStyle {
         switch self {
-        case .small:
-            return SmallDynamicImageStyle(color: color)
-        case .medium:
-            return MediumDynamicImageStyle(color: color)
+        case .smallPrimary:
+            .init(.small(.primary))
+        case .smallSecondary:
+            .init(.small(.secondary))
+        case .smallTertiary:
+            .init(.small(.tertiary))
+        case .mediumPrimary:
+            .init(.medium(.primary))
+        case .mediumSecondary:
+            .init(.medium(.secondary))
+        case .mediumTertiary:
+            .init(.medium(.tertiary))
         }
     }
 }

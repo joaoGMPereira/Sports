@@ -1,6 +1,22 @@
 import SwiftUI
 import ZenithCoreInterface
 
+public struct AnyButtonStyle: ButtonStyle {
+    public let id: UUID = .init()
+    
+    private let _makeBody: (ButtonStyleConfiguration) -> AnyView
+    
+    public init<S: ButtonStyle>(_ style: S) {
+        _makeBody = { configuration in
+            AnyView(style.makeBody(configuration: configuration))
+        }
+    }
+    
+    public func makeBody(configuration: ButtonStyleConfiguration) -> some View {
+        _makeBody(configuration)
+    }
+}
+
 public struct PrimaryButtonStyle: ButtonStyle, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) public var themeConfigurator
     
@@ -39,8 +55,7 @@ public extension ButtonStyle where Self == SecondaryButtonStyle {
     static var secondary: Self { Self() }
 }
 
-
-public enum ButtonStyles: String, Decodable, Sendable, Identifiable, CaseIterable {
+public enum ButtonStyleCase: String, Decodable, Sendable, Identifiable, CaseIterable {
     public var id: String {
         rawValue
     }
@@ -48,12 +63,12 @@ public enum ButtonStyles: String, Decodable, Sendable, Identifiable, CaseIterabl
     case primary, secondary
     
     @MainActor
-    public func style() -> any ButtonStyle {
+    public func style() -> AnyButtonStyle {
         switch self {
         case .primary:
-            return PrimaryButtonStyle()
+            return .init(.primary)
         case .secondary:
-            return SecondaryButtonStyle()
+            return .init(.secondary)
         }
     }
 }

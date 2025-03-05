@@ -1,5 +1,21 @@
 import SwiftUI
 
+public struct AnyDynamicImageStyle: DynamicImageStyle & Sendable & Identifiable {
+    public let id: UUID = .init()
+    
+    private let _makeBody: @Sendable (DynamicImageStyleConfiguration) -> AnyView
+    
+    public init<S: DynamicImageStyle>(_ style: S) {
+        _makeBody = { @Sendable configuration in
+            AnyView(style.makeBody(configuration: configuration))
+        }
+    }
+    
+    public func makeBody(configuration: DynamicImageStyleConfiguration) -> some View {
+        _makeBody(configuration)
+    }
+}
+
 public protocol DynamicImageStyle: DynamicProperty, Sendable {
     
     typealias Configuration = DynamicImageStyleConfiguration
