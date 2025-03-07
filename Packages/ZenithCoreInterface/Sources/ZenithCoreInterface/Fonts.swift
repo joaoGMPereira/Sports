@@ -1,6 +1,6 @@
 import SwiftUI
 
-public enum FontName: String, Decodable, CaseIterable {
+public enum FontName: String, Decodable, CaseIterable, Sendable {
     case small, medium, mediumBold, bigBold
 }
 

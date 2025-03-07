@@ -30,7 +30,7 @@ public struct DividerStyleConfiguration {
 }
 
 public struct DividerStyleKey: EnvironmentKey {
-    public static let defaultValue: any DividerStyle =   PrimaryDividerStyle()
+    public static let defaultValue: any DividerStyle = PrimaryDividerStyle()
 }
 
 public extension EnvironmentValues {

@@ -5,10 +5,10 @@ struct TextSample: View {
     @State var isExpanded = false
     
     var body: some View {
-        SectionView(title: "TEXTS", isExpanded: $isExpanded) {
+        SectionView(title: "TEXT", isExpanded: $isExpanded) {
             ForEach(TextStyleCase.allCases, id: \.self) { style in
-                Text("teste")
-                    .modifier(style.modifier())
+                Text("Sample Text")
+                    .textStyle(style.style())
             }
         }
     }

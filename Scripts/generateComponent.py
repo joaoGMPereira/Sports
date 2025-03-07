@@ -43,6 +43,155 @@ def print_error(message):
 def print_info(message):
     """Imprime mensagem informativa"""
     print(f"{Colors.CYAN}{message}{Colors.END}")
+    
+def create_native_style_configuration(component_name):
+    """Cria o arquivo [Component]StyleConfiguration.swift para componentes nativos"""
+    return f"""import SwiftUI
+import ZenithCoreInterface
+
+public struct Any{component_name}Style: {component_name}Style & Sendable & Identifiable {{
+    public let id: UUID = .init()
+    
+    private let _makeBody: @Sendable ({component_name}StyleConfiguration) -> AnyView
+    
+    public init<S: {component_name}Style>(_ style: S) {{
+        _makeBody = {{ @Sendable configuration in
+            AnyView(style.makeBody(configuration: configuration))
+        }}
+    }}
+    
+    public func makeBody(configuration: {component_name}StyleConfiguration) -> some View {{
+        _makeBody(configuration)
+    }}
+}}
+
+public protocol {component_name}Style: StyleProtocol & Identifiable {{
+    typealias Configuration = {component_name}StyleConfiguration
+}}
+
+public struct {component_name}StyleConfiguration {{
+    let content: {component_name}
+    
+    init(content: {component_name}) {{
+        self.content = content
+    }}
+}}
+
+public struct {component_name}StyleKey: EnvironmentKey {{
+    public static let defaultValue: any {component_name}Style = Primary{component_name}Style()
+}}
+
+public extension EnvironmentValues {{
+    var {component_name.lower()}Style : any {component_name}Style {{
+        get {{ self[{component_name}StyleKey.self] }}
+        set {{ self[{component_name}StyleKey.self] = newValue }}
+    }}
+}}
+
+public extension {component_name}Style {{
+    @MainActor
+    func resolve(configuration: Configuration) -> some View {{
+        Resolved{component_name}Style(style: self, configuration: configuration)
+    }}
+}}
+
+private struct Resolved{component_name}Style<Style: {component_name}Style>: View {{
+    let style: Style
+    let configuration: Style.Configuration
+    
+    var body: some View {{
+        style.makeBody(configuration: configuration)
+    }}
+}}
+"""
+
+def create_native_styles(component_name):
+    """Cria o arquivo [Component]Styles.swift para componentes nativos"""
+    return f"""import SwiftUI
+import ZenithCoreInterface
+
+public extension {component_name} {{
+    func {component_name.lower()}Style(_ style: some {component_name}Style) -> some View {{
+        AnyView(
+            style.resolve(
+                configuration: {component_name}StyleConfiguration(
+                    content: self
+                )
+            ).environment(\\.{component_name.lower()}Style, style)
+        )
+    }}
+}}
+
+public struct Primary{component_name}Style: @preconcurrency {component_name}Style, BaseThemeDependencies {{
+    public var id = String(describing: Self.self)
+    
+    @Dependency(\\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
+    
+    @MainActor
+    public func makeBody(configuration: Configuration) -> some View {{
+        configuration
+            .content
+            .foregroundStyle(colors.textPrimary)
+    }}
+}}
+
+public struct Secondary{component_name}Style: @preconcurrency {component_name}Style, BaseThemeDependencies {{
+    public var id = String(describing: Self.self)
+    
+    @Dependency(\\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
+    
+    @MainActor
+    public func makeBody(configuration: Configuration) -> some View {{
+        configuration
+            .content
+            .foregroundStyle(colors.textSecondary)
+    }}
+}}
+
+public struct Tertiary{component_name}Style: @preconcurrency {component_name}Style, BaseThemeDependencies {{
+    public var id = String(describing: Self.self)
+    
+    @Dependency(\\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
+    
+    @MainActor
+    public func makeBody(configuration: Configuration) -> some View {{
+        configuration
+            .content
+            .foregroundStyle(colors.primary)
+    }}
+}}
+
+public extension {component_name}Style where Self == Primary{component_name}Style {{
+    static func primary() -> Self {{ Primary{component_name}Style() }}
+}}
+
+public extension {component_name}Style where Self == Secondary{component_name}Style {{
+    static func secondary() -> Self {{ Secondary{component_name}Style() }}
+}}
+
+public extension {component_name}Style where Self == Tertiary{component_name}Style {{
+    static func tertiary() -> Self {{ Tertiary{component_name}Style() }}
+}}
+
+public enum {component_name}StyleCase: CaseIterable, Identifiable {{
+    case primary
+    case secondary
+    case tertiary
+    
+    public var id: Self {{ self }}
+    
+    public func style() -> Any{component_name}Style {{
+        switch self {{
+        case .primary:
+            .init(.primary())
+        case .secondary:
+            .init(.secondary())
+        case .tertiary:
+            .init(.tertiary())
+        }}
+    }}
+}}
+"""
 
 def create_style_configuration(component_name):
     """Cria o arquivo [Component]StyleConfiguration.swift"""
@@ -404,19 +553,33 @@ def generate_component():
     """Função principal de geração de componente"""
     print_header()
     
-        # 1. Obter nome do componente
+    # 1. Escolher o tipo de componente (Nativo ou Customizado)
+    print_info("Escolha o tipo de componente:")
+    print("1. Nativo")
+    print("2. Customizado")
+    
+    component_type = input("> ")
+    
+    if component_type not in ["1", "2"]:
+        print_error("Opção inválida!")
+        time.sleep(1.5)
+        return False
+    
+    is_native = component_type == "1"
+    
+    # 2. Obter nome do componente
     print_info("Digite o nome do componente (ex: Button, Card, Avatar):")
     component_name = input("> ")
-
+    
     if not component_name:
         print_error("Nome de componente inválido!")
         time.sleep(1.5)
         return False
-
+    
     # Garantir que a primeira letra seja maiúscula
     component_name = component_name[0].upper() + component_name[1:] if component_name else ''
     
-    # 2. Selecionar o tipo de componente
+    # 3. Selecionar o tipo de componente
     print_info("\nOnde deseja salvar o componente?")
     print("1. BaseElements")
     print("2. Components")
@@ -440,7 +603,7 @@ def generate_component():
         time.sleep(1.5)
         return False
     
-    # 3. Encontrar o caminho de destino
+    # 4. Encontrar o caminho de destino
     print_info("\nProcurando diretório Zenith...")
     root_path, zenith_path = find_zenith_path()
     
@@ -465,7 +628,7 @@ def generate_component():
             time.sleep(1.5)
             return False
     
-    # 4. Criar diretório de saída para o componente principal
+    # 5. Criar diretório de saída para o componente principal
     output_dir = os.path.join(zenith_path, folder_type, component_name)
     
     try:
@@ -476,22 +639,33 @@ def generate_component():
         time.sleep(1.5)
         return False
     
-    # 5. Adicionar o método lower() ao nome do componente para uso em variáveis
+    # 6. Adicionar o método lower() ao nome do componente para uso em variáveis
     component_name_obj = type('obj', (object,), {
         'lower': lambda: component_name[0].lower() + component_name[1:] if component_name else '',
         'upper': lambda: component_name.upper() if component_name else ''
     })
     
-    # 6. Gerar conteúdo dos arquivos principais
+    # 7. Gerar conteúdo dos arquivos principais
     print_info("\nGerando arquivos do componente...")
     
-    files = {
-        f"{component_name}StyleConfiguration.swift": create_style_configuration(component_name),
-        f"{component_name}Styles.swift": create_component_styles(component_name),
-        f"{component_name}.swift": create_component(component_name)
-    }
+    # files = {
+    #     f"{component_name}StyleConfiguration.swift": create_style_configuration(component_name),
+    #     f"{component_name}Styles.swift": create_component_styles(component_name)
+    # }
+    if is_native:
+        files = {
+            f"{component_name}StyleConfiguration.swift": create_native_style_configuration(component_name),
+            f"{component_name}Styles.swift": create_native_styles(component_name)
+        }
+    else:
+        files = {
+            f"{component_name}StyleConfiguration.swift": create_style_configuration(component_name),
+            f"{component_name}Styles.swift": create_component_styles(component_name),
+            f"{component_name}.swift": create_component(component_name)
+        }
+
     
-    # 7. Escrever cada arquivo do componente principal
+    # 8. Escrever cada arquivo do componente principal
     try:
         for filename, content in files.items():
             file_path = os.path.join(output_dir, filename)
@@ -504,7 +678,7 @@ def generate_component():
         time.sleep(1.5)
         return False
     
-    # 8. Criar e configurar o arquivo de amostra para ZenithSample
+    # 9. Criar e configurar o arquivo de amostra para ZenithSample
     print_info("\nConfigurando amostra para ZenithSample...")
     
     # Determinar o caminho do ZenithSample
@@ -538,7 +712,7 @@ def generate_component():
             
             return True
     
-    # CORREÇÃO: Criar um diretório específico para o componente dentro do tipo de componente
+    # Criar um diretório específico para o componente dentro do tipo de componente
     sample_component_dir = os.path.join(sample_component_type_dir, component_name)
     if not os.path.exists(sample_component_dir):
         try:
@@ -565,14 +739,14 @@ def generate_component():
         print_error(f"Erro ao criar arquivo de amostra: {str(e)}")
         print_warning("O componente principal foi criado, mas o arquivo de amostra falhou.")
     
-    # 9. Mostrar resumo
+    # 10. Mostrar resumo
     print("\n" + "=" * 50)
     print_success(f"Componente {component_name} gerado com sucesso!")
     print_info(f"Localização do componente: {output_dir}")
-    print_info(f"Localização da amostra: {sample_component_dir}/{component_name}Sample.swift")
+    print_info(f"Tipo de componente: {'Nativo' if is_native else 'Customizado'}")
     print("=" * 50)
     
-    # 10. Nova opção para executar make generate
+    # 11. Nova opção para executar make generate
     print_info("\nDeseja executar 'make generate' para atualizar o projeto?")
     print("1. Sim")
     print("2. Não")

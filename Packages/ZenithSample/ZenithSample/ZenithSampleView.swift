@@ -12,8 +12,9 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
                 DynamicImageSample()
                 ButtonSample()
                 TextSample()
-                DividerSample()
                 TagSample()
+                DividerSample()
+                TextSample()
             }
             .toolbar {
                 ToolbarItem(placement: .principal) {

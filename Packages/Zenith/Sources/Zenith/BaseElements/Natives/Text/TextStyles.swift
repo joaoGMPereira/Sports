@@ -1,15 +1,21 @@
 import SwiftUI
 import ZenithCoreInterface
 
-public protocol TextStyle: ViewModifier, Identifiable where ID == String {
-}
-
 public extension Text {
-    func textStyle<T: TextStyle>(_ style: T) -> some View {
-        modifier(style)
+    @MainActor
+    func textStyle(_ style: some TextStyle) -> some View {
+        AnyView(
+            style.resolve(
+                configuration: TextStyleConfiguration(
+                    content: self
+                )
+            ).environment(\.textStyle, style)
+        )
     }
 }
 
+
+@MainActor
 public extension TextStyle where Self == BaseTextStyle {
     static func small(_ color: TextStyleColor) -> Self { Self(color: color, fontName: .small) }
     static func medium(_ color: TextStyleColor) -> Self { Self(color: color, fontName: .medium) }
@@ -17,7 +23,8 @@ public extension TextStyle where Self == BaseTextStyle {
     static func bigBold(_ color: TextStyleColor) -> Self { Self(color: color, fontName: .bigBold) }
 }
 
-public struct BaseTextStyle: TextStyle, @preconcurrency BaseThemeDependencies {
+@MainActor
+public struct BaseTextStyle: @preconcurrency TextStyle, @preconcurrency BaseThemeDependencies {
     public let id = String(describing:Self.self)
     public let textStyleColor: TextStyleColor
     public let fontName: FontName
@@ -40,8 +47,10 @@ public struct BaseTextStyle: TextStyle, @preconcurrency BaseThemeDependencies {
         self.fontName = fontName
     }
     
-    public func body(content: Content) -> some View {
-        content
+    @MainActor
+    public func makeBody(configuration: TextStyleConfiguration) -> some View {
+        configuration
+            .content
             .font(font.font)
             .lineSpacing(font.lineHeight - font.fontLineHeight)
             .padding(.vertical, (font.lineHeight - font.fontLineHeight) / 2)
@@ -49,7 +58,7 @@ public struct BaseTextStyle: TextStyle, @preconcurrency BaseThemeDependencies {
     }
 }
 
-public enum TextStyleColor: CaseIterable, Identifiable {
+public enum TextStyleColor: CaseIterable, Identifiable, Sendable {
     case textPrimary
     case textSecondary
     case primary
@@ -85,32 +94,32 @@ public enum TextStyleCase: CaseIterable, Identifiable {
     public var id: Self { self }
     
     @MainActor
-    public func modifier() -> AnyViewModifier {
+    public func style() -> AnyTextStyle {
         switch self {
         case .smallTextPrimary:
-            return AnyViewModifier(BaseTextStyle.small(.textPrimary))
+            return .init(BaseTextStyle.small(.textPrimary))
         case .smallTextSecondary:
-            return AnyViewModifier(BaseTextStyle.small(.textSecondary))
+            return .init(BaseTextStyle.small(.textSecondary))
         case .smallPrimary:
-            return AnyViewModifier(BaseTextStyle.small(.primary))
+            return .init(BaseTextStyle.small(.primary))
         case .mediumTextPrimary:
-            return AnyViewModifier(BaseTextStyle.medium(.textPrimary))
+            return .init(BaseTextStyle.medium(.textPrimary))
         case .mediumTextSecondary:
-            return AnyViewModifier(BaseTextStyle.medium(.textSecondary))
+            return .init(BaseTextStyle.medium(.textSecondary))
         case .mediumPrimary:
-            return AnyViewModifier(BaseTextStyle.medium(.primary))
+            return .init(BaseTextStyle.medium(.primary))
         case .mediumBoldTextPrimary:
-            return AnyViewModifier(BaseTextStyle.mediumBold(.textPrimary))
+            return .init(BaseTextStyle.mediumBold(.textPrimary))
         case .mediumBoldTextSecondary:
-            return AnyViewModifier(BaseTextStyle.mediumBold(.textSecondary))
+            return .init(BaseTextStyle.mediumBold(.textSecondary))
         case .mediumBoldPrimary:
-            return AnyViewModifier(BaseTextStyle.mediumBold(.primary))
+            return .init(BaseTextStyle.mediumBold(.primary))
         case .BigBoldTextPrimary:
-            return AnyViewModifier(BaseTextStyle.bigBold(.textPrimary))
+            return .init(BaseTextStyle.bigBold(.textPrimary))
         case .BigBoldTextSecondary:
-            return AnyViewModifier(BaseTextStyle.bigBold(.textSecondary))
+            return .init(BaseTextStyle.bigBold(.textSecondary))
         case .BigBoldPrimary:
-            return AnyViewModifier(BaseTextStyle.bigBold(.primary))
+            return .init(BaseTextStyle.bigBold(.primary))
         }
     }
 }
