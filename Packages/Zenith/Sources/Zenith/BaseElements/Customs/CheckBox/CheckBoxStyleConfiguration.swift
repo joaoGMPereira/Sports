@@ -23,14 +23,21 @@ public protocol CheckBoxStyle: StyleProtocol & Identifiable {
 
 public struct CheckBoxStyleConfiguration {
     let text: String
-    
-    init(text: String) {
+    @Binding var isSelected: Bool
+    @Binding var isDisabled: Bool
+    init(
+        isSelected: Binding<Bool>,
+        text: String = "",
+        isDisabled: Binding<Bool>
+    ) {
+        self._isSelected = isSelected
         self.text = text
+        self._isDisabled = isDisabled
     }
 }
 
 public struct CheckBoxStyleKey: EnvironmentKey {
-    public static let defaultValue: any CheckBoxStyle = PrimaryCheckBoxStyle()
+    public static let defaultValue: any CheckBoxStyle = DefaultCheckBoxStyle()
 }
 
 public extension EnvironmentValues {

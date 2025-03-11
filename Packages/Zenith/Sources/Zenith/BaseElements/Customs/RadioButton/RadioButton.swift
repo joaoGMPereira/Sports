@@ -2,8 +2,8 @@ import Dependencies
 import SwiftUI
 import ZenithCoreInterface
 
-public struct CheckBox: View {
-    @Environment(\.checkboxStyle) private var style
+public struct RadioButton: View {
+    @Environment(\.radiobuttonStyle) private var style
     let text: String
     @Binding var isSelected: Bool
     @Binding var isDisabled: Bool
@@ -35,7 +35,7 @@ public struct CheckBox: View {
     public var body: some View {
         AnyView(
             style.resolve(
-                configuration: CheckBoxStyleConfiguration(
+                configuration: RadioButtonStyleConfiguration(
                     isSelected: $isSelected,
                     text: text,
                     isDisabled: $isDisabled
@@ -43,4 +43,12 @@ public struct CheckBox: View {
             )
         )
     }
+}
+
+public extension RadioButton {
+    func isDisabled(_ value: Bool) -> RadioButton {
+            var copy = self
+            copy._isDisabled = .constant(value)
+            return copy
+        }
 }

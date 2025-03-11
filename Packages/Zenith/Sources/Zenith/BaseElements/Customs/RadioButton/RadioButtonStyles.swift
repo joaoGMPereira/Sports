@@ -3,12 +3,12 @@ import ZenithCoreInterface
 
 
 public extension View {
-    func checkboxStyle(_ style: some CheckBoxStyle) -> some View {
-        environment(\.checkboxStyle, style)
+    func radiobuttonStyle(_ style: some RadioButtonStyle) -> some View {
+        environment(\.radiobuttonStyle, style)
     }
 }
 
-public struct DefaultCheckBoxStyle: @preconcurrency CheckBoxStyle, BaseThemeDependencies {
+public struct DefaultRadioButtonStyle: @preconcurrency RadioButtonStyle, BaseThemeDependencies {
     public var id = String(describing: Self.self)
     
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
@@ -17,20 +17,20 @@ public struct DefaultCheckBoxStyle: @preconcurrency CheckBoxStyle, BaseThemeDepe
     
     @MainActor
     public func makeBody(configuration: Configuration) -> some View {
-        BaseCheckBox(configuration: configuration)
+        BaseRadioButton(configuration: configuration)
     }
 }
 
-public extension CheckBoxStyle where Self == DefaultCheckBoxStyle {
+public extension RadioButtonStyle where Self == DefaultRadioButtonStyle {
     static func `default`() -> Self { .init() }
 }
 
-public enum CheckBoxStyleCase: CaseIterable, Identifiable {
+public enum RadioButtonStyleCase: CaseIterable, Identifiable {
     case `default`
     
     public var id: Self { self }
     
-    public func style() -> AnyCheckBoxStyle {
+    public func style() -> AnyRadioButtonStyle {
         switch self {
         case .default:
                 .init(.default())
@@ -42,14 +42,14 @@ fileprivate struct AnimationProperties {
     var scaleValue: CGFloat = 1.0
 }
 
-struct BaseCheckBox: View, @preconcurrency BaseThemeDependencies {
+struct BaseRadioButton: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
     
-    let configuration: CheckBoxStyleConfiguration
+    let configuration: RadioButtonStyleConfiguration
     @State private var animate: Bool = false
     
     init(
-        configuration: CheckBoxStyleConfiguration
+        configuration: RadioButtonStyleConfiguration
     ) {
         self.configuration = configuration
     }
@@ -60,12 +60,12 @@ struct BaseCheckBox: View, @preconcurrency BaseThemeDependencies {
             labelView
         }
         .contentShape(Rectangle())
-        .onTapGesture { configuration.isSelected.toggle() }
+        .onTapGesture { configuration.isSelected = true }
         .disabled(isDisabled)
     }
 }
 
-private extension BaseCheckBox {
+private extension BaseRadioButton {
     @ViewBuilder var labelView: some View {
         if !configuration.text.isEmpty { // Show label if label is not empty
             Text(configuration.text)
@@ -74,7 +74,7 @@ private extension BaseCheckBox {
     }
     
     @ViewBuilder var circleView: some View {
-        RoundedRectangle(cornerRadius: 4)
+        Circle()
             .fill(innerCircleColor)
             .frame(width: 14, height: 14)
             .keyframeAnimator(
@@ -91,7 +91,7 @@ private extension BaseCheckBox {
                     }
                 })
             .overlay(
-                RoundedRectangle(cornerRadius: 4)
+                Circle()
                     .stroke(outlineColor, lineWidth: 6)
                     .animation(.bouncy, value: outlineColor)
             ) // Circle outline
@@ -110,12 +110,14 @@ private extension BaseCheckBox {
                     }
                 })
             .onChange(of: configuration.isSelected) { _, newValue in
-                animate.toggle()
+                if newValue == true {
+                    animate.toggle()
+                }
             }
     }
 }
 
-private extension BaseCheckBox {
+private extension BaseRadioButton {
     var isDisabled: Bool {
         configuration.isDisabled
     }

@@ -165,6 +165,7 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
             }
             .navigationBarTitleDisplayMode(.inline)
             .scrollContentBackground(.hidden)
+            .background(colors.background)
         }
     }
 
