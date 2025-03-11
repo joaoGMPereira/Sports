@@ -1,4 +1,3 @@
-#if DEBUG
 final class ThemeConfiguratorSpy: ThemeConfiguratorProtocol {
     var theme: Theme = Theme(
         name: .light,
@@ -25,4 +24,3 @@ final class ThemeConfiguratorSpy: ThemeConfiguratorProtocol {
         messages.append(.changeThemeName(theme))
     }
 }
-#endif

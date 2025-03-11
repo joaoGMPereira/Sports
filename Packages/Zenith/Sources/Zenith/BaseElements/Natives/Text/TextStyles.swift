@@ -58,7 +58,7 @@ public struct BaseTextStyle: @preconcurrency TextStyle, @preconcurrency BaseThem
     }
 }
 
-public enum TextStyleColor: CaseIterable, Identifiable, Sendable {
+public enum TextStyleColor: String, Decodable, CaseIterable, Identifiable, Sendable {
     case textPrimary
     case textSecondary
     case primary
@@ -77,7 +77,7 @@ public enum TextStyleColor: CaseIterable, Identifiable, Sendable {
     }
 }
 
-public enum TextStyleCase: CaseIterable, Identifiable {
+public enum TextStyleCase: String, Decodable, CaseIterable, Identifiable {
     case smallTextPrimary
     case smallTextSecondary
     case smallPrimary

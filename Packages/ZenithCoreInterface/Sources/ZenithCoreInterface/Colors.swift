@@ -18,3 +18,9 @@ public protocol ColorsProtocol: Sendable, Equatable {
     
     func color(by colorName: ColorName) -> Color?
 }
+
+public extension Color {
+    func uiColor() -> UIColor {
+        UIColor(self)
+    }
+}

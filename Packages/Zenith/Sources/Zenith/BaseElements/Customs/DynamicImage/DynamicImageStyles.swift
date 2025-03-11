@@ -55,11 +55,11 @@ public enum DynamicImageColor: CaseIterable, Identifiable, Sendable {
     var color: ColorName {
         switch self {
         case .primary:
-                .textPrimary
+            .textPrimary
         case .secondary:
-                .textSecondary
+            .textSecondary
         case .tertiary:
-                .primary
+            .primary
         }
     }
 }
@@ -91,7 +91,6 @@ public enum DynamicImageStyleCase: CaseIterable, Identifiable {
         }
     }
 }
-
 
 fileprivate extension View {
     func smallSize() -> some View {

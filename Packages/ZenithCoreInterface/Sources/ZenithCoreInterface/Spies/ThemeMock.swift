@@ -1,4 +1,3 @@
-#if DEBUG
 import SwiftUICore
 
 public struct ColorsMock: ColorsProtocol {
@@ -132,4 +131,3 @@ public struct ConstantsMock: ConstantsProtocol {
     
     public let animationTimer: Double = 0.5
 }
-#endif

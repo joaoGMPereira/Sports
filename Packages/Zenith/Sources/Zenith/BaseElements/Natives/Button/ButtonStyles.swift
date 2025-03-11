@@ -21,7 +21,8 @@ public struct PrimaryButtonStyle: ButtonStyle, @preconcurrency BaseThemeDependen
     @Dependency(\.themeConfigurator) public var themeConfigurator
     
     public func makeBody(configuration: Configuration) -> some View {
-        configuration.label
+        configuration
+            .label
             .font(fonts.small.font)
             .padding(spacings.medium)
             .background(

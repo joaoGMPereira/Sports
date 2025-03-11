@@ -9,6 +9,8 @@ struct DynamicImageSample: View {
             ForEach(DynamicImageStyleCase.allCases, id: \.self) { style in
                 DynamicImage("checkmark")
                     .dynamicImageStyle(style.style())
+                DynamicImage("https://img.icons8.com/ios/50/domain--v1.png")
+                    .dynamicImageStyle(style.style())
             }
         }
     }

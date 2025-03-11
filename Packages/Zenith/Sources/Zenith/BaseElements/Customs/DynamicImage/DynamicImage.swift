@@ -1,7 +1,11 @@
 import SwiftUI
 import SFSafeSymbols
 
-public enum DynamicImageType {
+public enum DynamicImageType: String, Decodable, CaseIterable, Identifiable {
+    public var id: String {
+        rawValue
+    }
+    
     case async, local
 }
 
@@ -22,7 +26,7 @@ public struct DynamicImage: View {
     ) {
         let imageRawValue = image.rawValue
         self.image = imageRawValue
-        self.type = imageRawValue.starts(with: "https://") ? .async : .local
+        self.type = .local
     }
     
     public var body: some View {
@@ -43,7 +47,7 @@ public struct DynamicImage: View {
                 Color.blue
             }
         }
-        let image = Image(systemSymbol: .init(rawValue: image))
+        let image = Image(systemSymbol: .init(rawValue: image)).resizable()
         let configuration = DynamicImageStyleConfiguration(asyncImage: asyncImage, image: image, type: type)
         AnyView(style.resolve(configuration: configuration))
     }

@@ -629,7 +629,10 @@ def generate_component():
             return False
     
     # 5. Criar diretório de saída para o componente principal
-    output_dir = os.path.join(zenith_path, folder_type, component_name)
+    if is_native:
+        output_dir = os.path.join(zenith_path, folder_type, "Natives", component_name)
+    else:
+        output_dir = os.path.join(zenith_path, folder_type, "Customs", component_name)
     
     try:
         if not os.path.exists(output_dir):
@@ -648,10 +651,6 @@ def generate_component():
     # 7. Gerar conteúdo dos arquivos principais
     print_info("\nGerando arquivos do componente...")
     
-    # files = {
-    #     f"{component_name}StyleConfiguration.swift": create_style_configuration(component_name),
-    #     f"{component_name}Styles.swift": create_component_styles(component_name)
-    # }
     if is_native:
         files = {
             f"{component_name}StyleConfiguration.swift": create_native_style_configuration(component_name),
@@ -685,11 +684,15 @@ def generate_component():
     zenith_sample_path = os.path.join(root_path, "Packages", "ZenithSample", "ZenithSample")
     
     # Criar o diretório para o tipo de componente se não existir
-    sample_component_type_dir = os.path.join(zenith_sample_path, folder_type)
+    if is_native:
+        sample_component_type_dir = os.path.join(zenith_sample_path, folder_type, "Natives")
+    else:
+        sample_component_type_dir = os.path.join(zenith_sample_path, folder_type, "Customs")
+    
     if not os.path.exists(sample_component_type_dir):
         try:
             os.makedirs(sample_component_type_dir)
-            print_success(f"✓ Diretório {folder_type} criado em ZenithSample")
+            print_success(f"✓ Diretório {folder_type}/{'Natives' if is_native else 'Customs'} criado em ZenithSample")
         except Exception as e:
             print_error(f"Erro ao criar diretório em ZenithSample: {str(e)}")
             print_warning("Continuando sem criar arquivo de amostra...")
@@ -717,7 +720,7 @@ def generate_component():
     if not os.path.exists(sample_component_dir):
         try:
             os.makedirs(sample_component_dir)
-            print_success(f"✓ Diretório {component_name} criado em {folder_type}")
+            print_success(f"✓ Diretório {component_name} criado em {folder_type}/{'Natives' if is_native else 'Customs'}")
         except Exception as e:
             print_error(f"Erro ao criar diretório do componente em ZenithSample: {str(e)}")
             # Continue mesmo com erro, tentando criar o arquivo diretamente no diretório pai
@@ -728,7 +731,7 @@ def generate_component():
     try:
         with open(sample_file_path, 'w') as f:
             f.write(create_component_sample(component_name))
-        print_success(f"✓ {component_name}Sample.swift criado em {folder_type}/{component_name}")
+        print_success(f"✓ {component_name}Sample.swift criado em {folder_type}/{'Natives' if is_native else 'Customs'}/{component_name}")
         
         # Atualizar o ZenithSampleView.swift para incluir o novo componente
         if update_sample_view(zenith_sample_path, component_name):
@@ -744,6 +747,7 @@ def generate_component():
     print_success(f"Componente {component_name} gerado com sucesso!")
     print_info(f"Localização do componente: {output_dir}")
     print_info(f"Tipo de componente: {'Nativo' if is_native else 'Customizado'}")
+    print_info(f"Pasta: {folder_type}/{'Natives' if is_native else 'Customs'}/{component_name}")
     print("=" * 50)
     
     # 11. Nova opção para executar make generate

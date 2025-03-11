@@ -16,6 +16,9 @@ packages:
   PopupView:
     revision: c82f68dd56d9359e144ab0446f5866208e4a02e8
     url: https://github.com/exyte/PopupView.git
+  SwiftUIIntrospect:
+    version: 1.3.0
+    url: https://github.com/siteline/swiftui-introspect.git
   Zenith:
     path: ../Packages/Zenith
   ZenithCore:
@@ -50,6 +53,8 @@ targets:
         product: ZenithCoreInterface
       - package: ZenithCore
         product: ZenithCore
+      - package: SwiftUIIntrospect
+        product: SwiftUIIntrospect
 
     preBuildScripts:
       - path: ${SWIFTGEN_SH_PATH}

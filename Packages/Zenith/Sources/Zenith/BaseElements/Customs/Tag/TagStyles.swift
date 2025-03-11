@@ -28,11 +28,10 @@ public struct SmallTagStyle: @preconcurrency TagStyle, BaseThemeDependencies {
                 RoundedRectangle(cornerRadius: .infinity)
                     .stroke(colors.color(by: color.backgroundColor)?.darker() ?? .clear, lineWidth: 1)
             )
-            .smallSize()
     }
 }
 
-public struct MediumTagStyle: @preconcurrency TagStyle, BaseThemeDependencies {
+public struct DefaultTagStyle: @preconcurrency TagStyle, BaseThemeDependencies {
     public var id = String(describing: Self.self)
     
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
@@ -60,8 +59,8 @@ public extension TagStyle where Self == SmallTagStyle {
     static func small(_ color: TagColor) -> Self { .init(color: color) }
 }
 
-public extension TagStyle where Self == MediumTagStyle {
-    static func medium(_ color: TagColor) -> Self { .init(color: color) }
+public extension TagStyle where Self == DefaultTagStyle {
+    static func `default`(_ color: TagColor) -> Self { .init(color: color) }
 }
 
 public enum TagColor: CaseIterable, Identifiable, Sendable {
@@ -73,18 +72,18 @@ public enum TagColor: CaseIterable, Identifiable, Sendable {
     var foregroundColor: ColorName {
         switch self {
         case .primary:
-                .textSecondary
+            .textSecondary
         case .secondary:
-                .textPrimary
+            .textPrimary
         }
     }
     
     var backgroundColor: ColorName {
         switch self {
         case .primary:
-                .primary
+            .primary
         case .secondary:
-                .backgroundTertiary
+            .backgroundTertiary
         }
     }
 }
@@ -102,11 +101,11 @@ public enum TagStyleCase: CaseIterable, Identifiable {
         case .smallPrimary:
             .init(.small(.primary))
         case .mediumPrimary:
-            .init(.medium(.primary))
+            .init(.default(.primary))
         case .smallSecondary:
             .init(.small(.secondary))
         case .mediumSecondary:
-            .init(.medium(.secondary))
+            .init(.default(.secondary))
         }
     }
 }
