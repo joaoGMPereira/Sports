@@ -7,16 +7,23 @@ struct SectionView<T: View>: View, @preconcurrency BaseThemeDependencies {
     
     let title: String
     let isExpanded: Binding<Bool>
+    let backgroundColor: Color?
     let content: T
+    
+    var color: Color {
+        backgroundColor ?? colors.backgroundSecondary
+    }
     
     init(
         title: String,
         isExpanded: Binding<Bool>,
+        backgroundColor: Color? = nil,
         @ViewBuilder content: @escaping () -> T
     ) {
         self.title = title
         self.isExpanded = isExpanded
         self.content = content()
+        self.backgroundColor = backgroundColor
     }
     
     var body: some View {
@@ -41,6 +48,6 @@ struct SectionView<T: View>: View, @preconcurrency BaseThemeDependencies {
                 }
             }
         }
-        .listRowBackground(colors.backgroundSecondary)
+        .listRowBackground(color)
     }
 }

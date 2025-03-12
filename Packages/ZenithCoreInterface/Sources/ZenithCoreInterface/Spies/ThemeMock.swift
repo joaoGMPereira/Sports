@@ -124,6 +124,8 @@ public struct SpacingsMock: SpacingsProtocol {
 }
 
 public struct ConstantsMock: ConstantsProtocol {
+    public let smallCornerRadius: Double = 8
+    
     public let disabledOpacity: Double = 0.3
     
     public let smallButtonSize: Double = 44

@@ -22,15 +22,23 @@ public protocol CardStyle: StyleProtocol & Identifiable {
 }
 
 public struct CardStyleConfiguration {
-    let text: String
+    let image: String
+    let title: String
+    let arrangement: StackArrangementCase
     
-    init(text: String) {
-        self.text = text
+    public init(
+        image: String,
+        title: String,
+        arrangement: StackArrangementCase
+    ) {
+        self.image = image
+        self.title = title
+        self.arrangement = arrangement
     }
 }
 
 public struct CardStyleKey: EnvironmentKey {
-    public static let defaultValue: any CardStyle = PrimaryCardStyle()
+    public static let defaultValue: any CardStyle = DefaultCardStyle()
 }
 
 public extension EnvironmentValues {

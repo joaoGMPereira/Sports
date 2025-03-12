@@ -106,12 +106,19 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
             category: .custom,
             tabType: .baseElements,
             view: CheckBoxSample()
+                
         ),
         ElementType(
-            name: "WeightSelectorView",
+            name: "IndicatorSelector",
             category: .custom,
-            tabType: .baseElements,
-            view: WeightSelectorView()
+            tabType: .components,
+            view: IndicatorSelectorSample()
+        ),
+        ElementType(
+            name: "Card",
+            category: .custom,
+            tabType: .components,
+            view: CardSample()
         )
     ]
 
@@ -216,104 +223,4 @@ struct ZenithSampleView_Previews: PreviewProvider {
     static var previews: some View {
         ZenithSampleView()
     }
-}
-import SwiftUI
-
-struct WeightPreferenceKey: PreferenceKey {
-    static let defaultValue: [CGFloat: Double] = [:]
-
-    static func reduce(value: inout [CGFloat: Double], nextValue: () -> [CGFloat: Double]) {
-        value.merge(nextValue(), uniquingKeysWith: { $1 })
-    }
-}
-
-struct WeightSelectorView: View, @preconcurrency BaseThemeDependencies {
-    @Dependency(\.themeConfigurator) var themeConfigurator
-
-    @State private var selectedWeight: Double = 70.0 // Peso inicial em kg
-    private let minWeight: Double = 40.0
-    private let maxWeight: Double = 150.0
-    private let step: Double = 0.1 // 100g
-
-    @State private var itemPositions: [CGFloat: Double] = [:]
-    @State private var manualSelection: Bool = false
-
-    private var weights: [Double] {
-        stride(from: minWeight, through: maxWeight, by: step).map { $0 }
-    }
-
-    var body: some View {
-        VStack {
-            Text(String(format: "%.1f kg", selectedWeight))
-                .textStyle(.mediumBold(.primary))
-                .padding(.bottom, 20)
-
-            GeometryReader { geometry in
-                ZStack {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            ForEach(weights, id: \.self) { weight in
-                                Rectangle()
-                                    .fill(weight == selectedWeight ? colors.primary : colors.primary.opacity(0.8))
-                                    .frame(
-                                        width: weight == selectedWeight ? 3 : 2,
-                                        height: weight.truncatingRemainder(dividingBy: 1.0) == 0 ? 40 : 20
-                                    )
-                                    .background(
-                                        GeometryReader { itemGeometry in
-                                            Color.clear
-                                                .preference(key: WeightPreferenceKey.self, value: [itemGeometry.frame(in: .global).midX: weight])
-                                        }
-                                    )
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        manualSelection = true
-                                        withAnimation {
-                                            selectedWeight = weight
-                                        }
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                            manualSelection = false
-                                        }
-                                    }
-                            }
-                        }
-                        .padding(.horizontal, geometry.size.width / 2 - 10)
-                    }
-                    .onPreferenceChange(WeightPreferenceKey.self) { preferences in
-                        guard !manualSelection else { return }
-                        let center = geometry.size.width / 2
-                        let closest = preferences.min(by: { abs($0.key - center) < abs($1.key - center) })
-                        if let closestWeight = closest?.value {
-                            selectedWeight = closestWeight
-                        }
-                    }
-
-                    HStack {
-                        LinearGradient(
-                            gradient: Gradient(colors: [colors.backgroundSecondary.opacity(0.8), colors.backgroundSecondary.opacity(0.1)]),
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                        .frame(width: 60)
-                        .allowsHitTesting(false)
-
-                        Spacer()
-
-                        LinearGradient(
-                            gradient: Gradient(colors: [colors.backgroundSecondary.opacity(0.1), colors.backgroundSecondary.opacity(0.8)]),
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                        .frame(width: 60)
-                        .allowsHitTesting(false)
-                    }
-                }
-            }
-            .frame(height: 60)
-        }
-    }
-}
-
-#Preview {
-    WeightSelectorView()
 }

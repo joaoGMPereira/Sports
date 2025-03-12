@@ -118,15 +118,15 @@ private struct BaseDynamicImage: View, @preconcurrency BaseThemeDependencies {
         Group {
             if let color = colors.color(by: DynamicImageColor.color) {
                 if configuration.type == .async {
-                    configuration.asyncImage.foregroundStyle(color)
+                    configuration.asyncImage.foregroundStyle(color).scaledToFit()
                 } else {
-                    configuration.image.foregroundStyle(color)
+                    configuration.image.foregroundStyle(color).scaledToFit()
                 }
             } else {
                 if configuration.type == .async {
-                    configuration.asyncImage
+                    configuration.asyncImage.scaledToFit()
                 } else {
-                    configuration.image
+                    configuration.image.scaledToFit()
                 }
             }
         }

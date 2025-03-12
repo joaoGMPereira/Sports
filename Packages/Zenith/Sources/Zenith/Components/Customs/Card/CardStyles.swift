@@ -1,14 +1,13 @@
 import SwiftUI
 import ZenithCoreInterface
 
-
 public extension View {
     func cardStyle(_ style: some CardStyle) -> some View {
         environment(\.cardStyle, style)
     }
 }
 
-public struct PrimaryCardStyle: @preconcurrency CardStyle, BaseThemeDependencies {
+public struct DefaultCardStyle: @preconcurrency CardStyle, BaseThemeDependencies {
     public var id = String(describing: Self.self)
     
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
@@ -17,12 +16,24 @@ public struct PrimaryCardStyle: @preconcurrency CardStyle, BaseThemeDependencies
     
     @MainActor
     public func makeBody(configuration: Configuration) -> some View {
-        BaseCard(configuration: configuration)
-            .foregroundColor(colors.textPrimary)
+        BaseCard(alignment: configuration.arrangement.alignment()) {
+            Stack(arrangement: configuration.arrangement.style()) {
+                DynamicImage(configuration.image)
+                    .dynamicImageStyle(.small(.tertiary))
+                    .padding(themeConfigurator.theme.spacings.small)
+                    .background(
+                        Circle()
+                            .fill(colors.backgroundTertiary) // Cor de fundo do círculo
+                    )
+                    .clipShape(Circle())
+                Text(configuration.title)
+                    .textStyle(.medium(.textPrimary))
+            }
+        }
     }
 }
 
-public struct SecondaryCardStyle: @preconcurrency CardStyle, BaseThemeDependencies {
+public struct BorderedStyle: @preconcurrency CardStyle, BaseThemeDependencies {
     public var id = String(describing: Self.self)
     
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
@@ -31,46 +42,70 @@ public struct SecondaryCardStyle: @preconcurrency CardStyle, BaseThemeDependenci
     
     @MainActor
     public func makeBody(configuration: Configuration) -> some View {
-        BaseCard(configuration: configuration)
-            .foregroundColor(colors.textSecondary)
+        Group {
+            if configuration.title.isEmpty {
+                EmptyView()
+            } else {
+                Stack(arrangement: configuration.arrangement.style()) {
+                    DynamicImage(configuration.image)
+                        .dynamicImageStyle(.medium(.primary))
+                    Text(configuration.title)
+                        .font(fonts.small.font)
+                        .textStyle(.mediumBold(.textPrimary))
+                }
+                .padding(themeConfigurator.theme.spacings.medium)
+                .frame(maxWidth: .infinity, alignment: configuration.arrangement.alignment())
+                .background(
+                    RoundedRectangle(cornerRadius: themeConfigurator.theme.constants.smallCornerRadius)
+                        .stroke(colors.textPrimary, lineWidth: 1)
+                )
+            }
+        }
     }
 }
 
-public extension CardStyle where Self == PrimaryCardStyle {
-    static func primary() -> Self { .init() }
+public extension CardStyle where Self == DefaultCardStyle {
+    static func `default`() -> Self { .init() }
 }
 
-public extension CardStyle where Self == SecondaryCardStyle {
-    static func secondary() -> Self { .init() }
+public extension CardStyle where Self == BorderedStyle {
+    static func bordered() -> Self { .init() }
 }
 
 public enum CardStyleCase: CaseIterable, Identifiable {
-    case primary
-    case secondary
+    case `default`
+    case bordered
     
     public var id: Self { self }
     
     public func style() -> AnyCardStyle {
         switch self {
-        case .primary:
-            .init(.primary())
-        case .secondary:
-            .init(.secondary())
+        case .default:
+            .init(.default())
+        case .bordered:
+                .init(.bordered())
         }
     }
 }
 
-private struct BaseCard: View, @preconcurrency BaseThemeDependencies {
+private struct BaseCard<Content: View>: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
+
+    let alignment: Alignment
+    let content: Content
     
-    let configuration: CardStyleConfiguration
-    
-    init(configuration: CardStyleConfiguration) {
-        self.configuration = configuration
+    init(alignment: Alignment, @ViewBuilder content: () -> Content) {
+        self.alignment = alignment
+        self.content = content()
     }
     
     var body: some View {
-        Text(configuration.text)
-            .font(fonts.small.font)
+        content
+            .padding(themeConfigurator.theme.spacings.medium)
+            .frame(maxWidth: .infinity, alignment: alignment)
+            .background(
+                colors.backgroundSecondary
+                    .cornerRadius(themeConfigurator.theme.constants.smallCornerRadius)
+            )
     }
 }

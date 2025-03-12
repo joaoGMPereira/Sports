@@ -3,4 +3,5 @@ public protocol ConstantsProtocol: Sendable, Equatable {
     var smallButtonSize: Double { get }
     var mediumButtonSize: Double { get }
     var animationTimer: Double { get }
+    var smallCornerRadius: Double { get }
 }
