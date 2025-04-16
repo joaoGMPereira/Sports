@@ -4,6 +4,9 @@ import Zenith
 struct CheckBoxSample: View {
     @State var isExpanded = false
     @State var isSelected = false
+    @State var isSelectedWithoutText = false
+    @State var isDisabledSelected = false
+    @State var isDisabled = true
     @State private var selectedItems: Set<Int> = []
     @State private var showAlert = false
     @State private var alertMessage = ""
@@ -82,12 +85,37 @@ struct CheckBoxSample: View {
                 .checkboxStyle(
                     style.style()
                 )
+                CheckBox(
+                    isSelected: $isSelectedWithoutText
+                )
+                .checkboxStyle(
+                    style.style()
+                )
+                CheckBox(
+                    isSelected: .constant(false),
+                    text: "Single Radio Button With Text Disabled"
+                )
+                .isDisabled(true)
+                CheckBox(
+                    isSelected: $isDisabledSelected,
+                    text: "Single Radio Button With Text Disabled Mutation"
+                )
+                .isDisabled(isDisabled)
+            }.onAppear {
+                Task {
+                    // Delay for 3 seconds (in nanoseconds)
+                    try await Task.sleep(for: .seconds(3))
+                    
+                    // Run your async task here
+                    await MainActor.run {
+                        isDisabled = false
+                    }
+                }
             }
-            
             Button(action: showSelectedCount) {
                 Text("Show Selected Count")
             }
-            .buttonStyle(.secondary)
+            .buttonStyle(.secondary())
             .padding(.top, 16)
         }
         .alert(isPresented: $showAlert) {

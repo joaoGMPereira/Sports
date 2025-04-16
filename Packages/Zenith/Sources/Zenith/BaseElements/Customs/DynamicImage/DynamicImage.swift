@@ -29,6 +29,14 @@ public struct DynamicImage: View {
         self.type = .local
     }
     
+    public init (
+        _ image: ImageName
+    ) {
+        let imageRawValue = image.rawValue
+        self.image = imageRawValue
+        self.type = .local
+    }
+    
     public var body: some View {
         let asyncImage = AsyncImage(
             url: URL(
@@ -47,8 +55,15 @@ public struct DynamicImage: View {
                 Color.blue
             }
         }
-        let image = Image(systemSymbol: .init(rawValue: image)).resizable()
-        let configuration = DynamicImageStyleConfiguration(asyncImage: asyncImage, image: image, type: type)
+        let configuration = DynamicImageStyleConfiguration(asyncImage: asyncImage, image: localImage, type: type)
         AnyView(style.resolve(configuration: configuration))
+    }
+    
+    private var localImage: Image {
+        if let imageAsset = ImageName(rawValue: image) {
+            return Image(asset: ImageAsset(name: imageAsset.rawValue)).resizable()
+        } else {
+            return Image(systemSymbol: .init(rawValue: image)).resizable()
+        }
     }
 }

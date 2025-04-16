@@ -1,11 +1,11 @@
 import SwiftUI
 
 public enum ColorName: String, Decodable, CaseIterable {
-    case primary, background, backgroundSecondary, backgroundTertiary, textPrimary, textSecondary, critical, attention, danger, positive
+    case highlightA, background, backgroundSecondary, backgroundTertiary, textPrimary, textSecondary, critical, attention, danger, positive
 }
 
 public protocol ColorsProtocol: Sendable, Equatable {
-    var primary: Color { get }
+    var highlightA: Color { get }
     var background: Color { get }
     var backgroundSecondary: Color { get }
     var backgroundTertiary: Color { get }

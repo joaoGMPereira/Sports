@@ -13,9 +13,11 @@ struct CardSample: View, @preconcurrency BaseThemeDependencies {
             backgroundColor: .clear
         ) {
             Card.emptyState(
-                image: .figureRun,
-                title: "Sample Card"
-            )
+                image: .figureStepTraining,
+                title: "Crie um novo treino"
+            ) {
+                
+            }
             .cardStyle(.bordered())
             ForEach(CardStyleCase.allCases, id: \.self) { style in
                 ForEach(StackArrangementCase.allCases, id: \.self) { arrangementStyle in
@@ -23,7 +25,9 @@ struct CardSample: View, @preconcurrency BaseThemeDependencies {
                         image: .figureRun,
                         title: "Sample Card",
                         arrangement: arrangementStyle
-                    )
+                    ) {
+                        
+                    }
                     .cardStyle(style.style())
                 }
             }

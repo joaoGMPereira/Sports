@@ -11,6 +11,49 @@
         }
       }
     },
+    "%@ séries de %@ - %@ repetições" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ séries de %2$@ - %3$@ repetições"
+          }
+        }
+      }
+    },
+    "%@x" : {
+
+    },
+    "⏱️ Gravando: %@" : {
+
+    },
+    "📄 Campo 1: %@" : {
+
+    },
+    "📄 Campo 2: %@" : {
+
+    },
+    "🕒 %@" : {
+
+    },
+    "25%" : {
+
+    },
+    "35 a 40min" : {
+
+    },
+    "Adicionar treino" : {
+
+    },
+    "Campo 1 é obrigatório" : {
+
+    },
+    "Campo 2 é obrigatório" : {
+
+    },
+    "Comming Soon" : {
+
+    },
     "Dados Básicos" : {
 
     },
@@ -26,10 +69,25 @@
     "Exercícios" : {
 
     },
+    "Exportar" : {
+
+    },
     "Feito: %@" : {
 
     },
     "Fique atento a escolha, caso queira completar os Dias de treino escolha **Adicionar**" : {
+
+    },
+    "Importar" : {
+
+    },
+    "Informações da Gravação" : {
+
+    },
+    "KettleGym" : {
+
+    },
+    "Leg Press 45º" : {
 
     },
     "Peso: %@, Rep: %@" : {
@@ -41,6 +99,15 @@
           }
         }
       }
+    },
+    "Precisa de evoluir" : {
+
+    },
+    "Tempo" : {
+
+    },
+    "Você ainda não pussui um treino." : {
+
     }
   },
   "version" : "1.0"

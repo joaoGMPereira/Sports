@@ -8,35 +8,42 @@ public struct Card: View {
     let image: String
     let title: String
     let arrangement: StackArrangementCase
+    let action: () -> Void
     
     public init(
         image: String,
         title: String,
-        arrangement: StackArrangementCase
+        arrangement: StackArrangementCase,
+        action: @escaping () -> Void
     ) {
         self.image = image
         self.title = title
         self.arrangement = arrangement
+        self.action = action
     }
     
     public init(
         image: SFSymbol,
         title: String,
-        arrangement: StackArrangementCase
+        arrangement: StackArrangementCase,
+        action: @escaping () -> Void
     ) {
         self.image = image.rawValue
         self.title = title
         self.arrangement = arrangement
+        self.action = action
     }
     
     public static func emptyState(
         image: SFSymbol,
-        title: String
+        title: String,
+        action: @escaping () -> Void
     ) -> Self {
         .init(
             image: image,
             title: title,
-            arrangement: .verticalCenter
+            arrangement: .verticalCenter,
+            action: action
         )
     }
     
@@ -46,7 +53,8 @@ public struct Card: View {
                 configuration: CardStyleConfiguration(
                     image: image,
                     title: title,
-                    arrangement: arrangement
+                    arrangement: arrangement,
+                    action: action
                 )
             )
         )

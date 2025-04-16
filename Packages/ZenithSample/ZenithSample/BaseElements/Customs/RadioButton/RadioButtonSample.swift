@@ -66,7 +66,7 @@ struct RadioButtonSample: View {
             }.onAppear {
                 Task {
                     // Delay for 3 seconds (in nanoseconds)
-                    try await Task.sleep(nanoseconds: 3 * 1_000_000_000)
+                    try await Task.sleep(for: .seconds(3))
                     
                     // Run your async task here
                     await MainActor.run {

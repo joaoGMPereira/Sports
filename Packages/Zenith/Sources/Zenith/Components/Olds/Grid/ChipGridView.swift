@@ -1,5 +1,5 @@
 import SwiftUI
-import ZenithCore
+import ZenithCoreInterface
 
 public struct ChipGridView: View {
     // Lista de chips
@@ -129,13 +129,13 @@ public struct ChipView: View {
         }
         .padding(.horizontal, style.horizontalPadding)
         .padding(.vertical, style.verticalPadding)
-        .background(isSelected ? Asset.primary.swiftUIColor.opacity(0.6) : Asset.primary.swiftUIColor.opacity(0.2))
+        .background(isSelected ? .purple.opacity(0.6) : .purple.opacity(0.2))
         .cornerRadius(style.corner)
         .overlay(
             RoundedRectangle(cornerRadius: style.corner)
-                .stroke(Asset.primary.swiftUIColor, lineWidth: 1)
+                .stroke(.purple, lineWidth: 1)
         )
-        .foregroundColor(Asset.primary.swiftUIColor)
+        .foregroundColor(.purple)
         .padding(2)
     }
 }

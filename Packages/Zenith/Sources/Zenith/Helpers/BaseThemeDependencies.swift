@@ -1,3 +1,4 @@
+import SwiftUI
 import ZenithCoreInterface
 
 public protocol BaseThemeDependencies {
@@ -18,5 +19,10 @@ public extension BaseThemeDependencies {
     @MainActor
     var spacings: any SpacingsProtocol {
         themeConfigurator.theme.spacings
+    }
+    
+    @MainActor
+    var constants: any ConstantsProtocol {
+        themeConfigurator.theme.constants
     }
 }

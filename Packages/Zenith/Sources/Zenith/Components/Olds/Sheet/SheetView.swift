@@ -170,9 +170,6 @@ struct GridSetPlanSearchView: View {
             self.enableSetPlan = false
             setPlanCreated($0 ,$1, $2)
         }
-        .onAppear {
-            print(items)
-        }
     }
     
     private func applyFilter(with text: String) {
@@ -234,9 +231,6 @@ struct GridSearchView: View {
         .createNameSheet(isPresented: $enableSetPlan) {
             self.enableSetPlan = false
             created($0)
-        }
-        .onAppear {
-            print(items)
         }
     }
     

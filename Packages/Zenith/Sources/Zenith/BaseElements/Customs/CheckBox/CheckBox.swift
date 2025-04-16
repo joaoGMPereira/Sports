@@ -8,20 +8,6 @@ public struct CheckBox: View {
     @Binding var isSelected: Bool
     @Binding var isDisabled: Bool
     
-    public init<V: Hashable & Sendable>(
-        tag: V,
-        selection: Binding<V?>,
-        text: String,
-        disabled: Binding<Bool> = .constant(false)
-    ) {
-        self._isSelected = Binding(
-            get: { selection.wrappedValue == tag },
-            set: { _ in selection.wrappedValue = tag }
-        )
-        self.text = text
-        self._isDisabled = disabled
-    }
-    
     public init(
         isSelected: Binding<Bool>,
         text: String = "",
@@ -44,3 +30,12 @@ public struct CheckBox: View {
         )
     }
 }
+
+public extension CheckBox {
+    func isDisabled(_ value: Bool) -> CheckBox {
+        var copy = self
+        copy._isDisabled = .constant(value)
+        return copy
+    }
+}
+

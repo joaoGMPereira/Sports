@@ -119,6 +119,12 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
             category: .custom,
             tabType: .components,
             view: CardSample()
+        ),
+        ElementType(
+            name: "ActionCard",
+            category: .custom,
+            tabType: .components,
+            view: ActionCardSample()
         )
     ]
 
@@ -162,7 +168,7 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
 
                 if filteredElements().isEmpty {
                     Text("No \(selectedCategory.rawValue.lowercased()) elements available.")
-                        .font(fonts.medium.font)
+                        .font(fonts.medium)
                         .foregroundColor(colors.textPrimary)
                         .listRowBackground(colors.backgroundSecondary)
                 }
@@ -172,7 +178,7 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text(tabType.rawValue)
-                        .font(fonts.mediumBold.font)
+                        .font(fonts.mediumBold)
                         .foregroundColor(colors.textPrimary)
                 }
             }
@@ -187,7 +193,7 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
     private var categoryPicker: some View {
         Picker("Element Category", selection: $selectedCategory) {
             ForEach(ElementCategory.allCases) { category in
-                Text(category.rawValue).font(fonts.mediumBold.font).tag(category)
+                Text(category.rawValue).font(fonts.mediumBold).tag(category)
             }
         }
         .pickerStyle(SegmentedPickerStyle())

@@ -56,7 +56,6 @@ struct SportsApp: App {
         WindowGroup {
             AppTabView()
                 .onAppear {
-                    print(sharedModelContainer.mainContext.sqliteCommand)
                     insets = InsetsManager.getInsets()
                 }
                 .toast(toast: $toast)

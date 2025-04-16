@@ -1,5 +1,5 @@
 import Zenith
-import ZenithCore
+import ZenithCoreInterface
 import SwiftUI
 
 struct TrainingTextFieldsState {

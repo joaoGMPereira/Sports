@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 import Zenith
-import ZenithCore
+import ZenithCoreInterface
 
 struct EditTrainingProgramView: View {
     @State private var name: String = String()
@@ -79,7 +79,7 @@ struct EditTrainingProgramView: View {
             )
             .buttonStyle(
                 FillButtonStyle(
-                    color: Asset.primary.swiftUIColor,
+                    color: .purple,
                     isEnabled: !(
                         trainingDays.isEmpty ||  name.isEmpty
                     )

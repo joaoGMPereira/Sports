@@ -47,8 +47,8 @@ public struct RadioButton: View {
 
 public extension RadioButton {
     func isDisabled(_ value: Bool) -> RadioButton {
-            var copy = self
-            copy._isDisabled = .constant(value)
-            return copy
-        }
+        var copy = self
+        copy._isDisabled = .constant(value)
+        return copy
+    }
 }

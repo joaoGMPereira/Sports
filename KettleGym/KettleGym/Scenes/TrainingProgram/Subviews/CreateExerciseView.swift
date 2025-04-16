@@ -1,5 +1,5 @@
 import Zenith
-import ZenithCore
+import ZenithCoreInterface
 import SwiftData
 import SFSafeSymbols
 import SwiftUI

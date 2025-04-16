@@ -19,7 +19,6 @@ public enum InsetsManager {
     @MainActor
     public static func getInsets() -> EdgeInsets {
        let teste = UIApplication.shared.keyWindow?.safeAreaInsets.swiftUiInsets ?? .init()
-        print(teste)
         return teste
     }
 }

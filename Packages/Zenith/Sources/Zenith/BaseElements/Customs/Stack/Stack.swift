@@ -4,9 +4,9 @@ public enum StackArrangementCase: String, Decodable, CaseIterable, Equatable {
     case verticalCenter
     case verticalLeading
     case horizontalCenter
-    case horizontalTop
+    case horizontalLeading
     
-    func style() -> StackArrangement {
+    func arrangement() -> StackArrangement {
         switch self {
         case .verticalCenter:
             .vertical(alignment: .center)
@@ -14,8 +14,8 @@ public enum StackArrangementCase: String, Decodable, CaseIterable, Equatable {
             .vertical(alignment: .leading)
         case .horizontalCenter:
             .horizontal(alignment: .center)
-        case .horizontalTop:
-            .horizontal(alignment: .top)
+        case .horizontalLeading:
+            .horizontal(alignment: .center)
         }
     }
     
@@ -26,9 +26,9 @@ public enum StackArrangementCase: String, Decodable, CaseIterable, Equatable {
         case .verticalLeading:
             .leading
         case .horizontalCenter:
+            .center
+        case .horizontalLeading:
             .leading
-        case .horizontalTop:
-            .top
         }
     }
 }
@@ -52,13 +52,13 @@ public enum StackArrangement: @preconcurrency CaseIterable, Equatable {
     case horizontal(alignment: VerticalAlignment = .center)
 }
 
-struct Stack<Content: View>: View {
+public struct Stack<Content: View>: View {
     let arrangement: StackArrangement
     let spacing: CGFloat?
     let content: Content
-    init(
+    
+    public init(
         arrangement: StackArrangement,
-        
         spacing: CGFloat? = nil,
         @ViewBuilder content: () -> Content
     ) {
@@ -66,7 +66,8 @@ struct Stack<Content: View>: View {
         self.spacing = spacing
         self.content = content()
     }
-    var body: some View {
+    
+    public var body: some View {
         Group {
             switch arrangement {
             case let .vertical(alignment):

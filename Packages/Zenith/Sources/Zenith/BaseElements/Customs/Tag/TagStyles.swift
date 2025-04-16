@@ -19,8 +19,7 @@ public struct SmallTagStyle: @preconcurrency TagStyle, BaseThemeDependencies {
     
     @MainActor
     public func makeBody(configuration: Configuration) -> some View {
-        BaseTag(configuration: configuration)
-            .foregroundColor(colors.color(by: color.foregroundColor))
+        BaseTag(configuration: configuration, color: color)
             .smallSize()
             .background(colors.color(by: color.backgroundColor))
             .cornerRadius(.infinity)
@@ -43,8 +42,7 @@ public struct DefaultTagStyle: @preconcurrency TagStyle, BaseThemeDependencies {
     
     @MainActor
     public func makeBody(configuration: Configuration) -> some View {
-        BaseTag(configuration: configuration)
-            .foregroundColor(colors.color(by: color.foregroundColor))
+        BaseTag(configuration: configuration, color: color)
             .mediumSize()
             .background(colors.color(by: color.backgroundColor))
             .cornerRadius(.infinity)
@@ -64,14 +62,14 @@ public extension TagStyle where Self == DefaultTagStyle {
 }
 
 public enum TagColor: CaseIterable, Identifiable, Sendable {
-    case primary
+    case highlightA
     case secondary
     
     public var id: Self { self }
     
-    var foregroundColor: ColorName {
+    var foregroundColor: TextStyleColor {
         switch self {
-        case .primary:
+        case .highlightA:
             .textSecondary
         case .secondary:
             .textPrimary
@@ -80,8 +78,8 @@ public enum TagColor: CaseIterable, Identifiable, Sendable {
     
     var backgroundColor: ColorName {
         switch self {
-        case .primary:
-            .primary
+        case .highlightA:
+            .highlightA
         case .secondary:
             .backgroundTertiary
         }
@@ -89,8 +87,8 @@ public enum TagColor: CaseIterable, Identifiable, Sendable {
 }
 
 public enum TagStyleCase: CaseIterable, Identifiable {
-    case smallPrimary
-    case mediumPrimary
+    case smallHighlightA
+    case mediumHighlightA
     case smallSecondary
     case mediumSecondary
     
@@ -98,10 +96,10 @@ public enum TagStyleCase: CaseIterable, Identifiable {
     
     public func style() -> AnyTagStyle {
         switch self {
-        case .smallPrimary:
-            .init(.small(.primary))
-        case .mediumPrimary:
-            .init(.default(.primary))
+        case .smallHighlightA:
+            .init(.small(.highlightA))
+        case .mediumHighlightA:
+            .init(.default(.highlightA))
         case .smallSecondary:
             .init(.small(.secondary))
         case .mediumSecondary:
@@ -128,13 +126,16 @@ private struct BaseTag: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
     
     let configuration: TagStyleConfiguration
+    let color: TagColor
     
-    init(configuration: TagStyleConfiguration) {
+    init(configuration: TagStyleConfiguration, color: TagColor) {
         self.configuration = configuration
+        self.color = color
     }
     
     var body: some View {
         Text(configuration.text)
-            .font(fonts.small.font)
+            .textStyle(.small(color.foregroundColor))
+            .padding(.top, 2)
     }
 }

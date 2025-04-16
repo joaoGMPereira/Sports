@@ -28,6 +28,9 @@ let package = Package(
                 .product(name: "PopupView", package: "PopupView"),
                 .product(name: "SFSafeSymbols", package: "SFSafeSymbols"),
                 .product(name: "ZenithCoreInterface", package: "ZenithCoreInterface")
+            ],
+            resources: [
+             .process("Resources")
             ]
         ),
         

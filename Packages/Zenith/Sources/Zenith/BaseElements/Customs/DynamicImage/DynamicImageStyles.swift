@@ -37,6 +37,15 @@ public struct MediumDynamicImageStyle: @preconcurrency DynamicImageStyle, BaseTh
     }
 }
 
+public struct NoneDynamicImageStyle: @preconcurrency DynamicImageStyle, BaseThemeDependencies {
+    @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
+
+    @MainActor
+    public func makeBody(configuration: Configuration) -> some View {
+        BaseDynamicImage(configuration: configuration, color: .none)
+    }
+}
+
 public extension DynamicImageStyle where Self == SmallDynamicImageStyle {
     static func small(_ color: DynamicImageColor) -> Self { .init(color: color)  }
 }
@@ -48,18 +57,21 @@ public extension DynamicImageStyle where Self == MediumDynamicImageStyle {
 public enum DynamicImageColor: CaseIterable, Identifiable, Sendable {
     case primary
     case secondary
-    case tertiary
+    case highlightA
+    case none
     
     public var id: Self { self }
     
-    var color: ColorName {
+    var color: ColorName? {
         switch self {
         case .primary:
             .textPrimary
         case .secondary:
             .textSecondary
-        case .tertiary:
-            .primary
+        case .highlightA:
+            .highlightA
+        case .none:
+            nil
         }
     }
 }
@@ -67,10 +79,10 @@ public enum DynamicImageColor: CaseIterable, Identifiable, Sendable {
 public enum DynamicImageStyleCase: CaseIterable, Identifiable {
     case smallPrimary
     case smallSecondary
-    case smallTertiary
+    case smallHighlightA
     case mediumPrimary
     case mediumSecondary
-    case mediumTertiary
+    case mediumHighlightA
     
     public var id: Self { self }
     
@@ -80,14 +92,14 @@ public enum DynamicImageStyleCase: CaseIterable, Identifiable {
             .init(.small(.primary))
         case .smallSecondary:
             .init(.small(.secondary))
-        case .smallTertiary:
-            .init(.small(.tertiary))
+        case .smallHighlightA:
+            .init(.small(.highlightA))
         case .mediumPrimary:
             .init(.medium(.primary))
         case .mediumSecondary:
             .init(.medium(.secondary))
-        case .mediumTertiary:
-            .init(.medium(.tertiary))
+        case .mediumHighlightA:
+            .init(.medium(.highlightA))
         }
     }
 }
@@ -104,19 +116,19 @@ fileprivate extension View {
 private struct BaseDynamicImage: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
     let configuration: DynamicImageStyleConfiguration
-    let DynamicImageColor: DynamicImageColor
+    let dynamicImageColor: DynamicImageColor
     
     init(
         configuration: DynamicImageStyleConfiguration,
         color: DynamicImageColor
     ) {
         self.configuration = configuration
-        self.DynamicImageColor = color
+        self.dynamicImageColor = color
     }
     
     var body: some View {
         Group {
-            if let color = colors.color(by: DynamicImageColor.color) {
+            if let dynamicImageColor = dynamicImageColor.color, let color = colors.color(by: dynamicImageColor) {
                 if configuration.type == .async {
                     configuration.asyncImage.foregroundStyle(color).scaledToFit()
                 } else {

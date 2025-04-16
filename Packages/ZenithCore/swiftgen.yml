@@ -1,0 +1,8 @@
+xcassets:
+  inputs:
+    - 'Sources/ZenithCore/Resources/Assets.xcassets'
+  outputs:
+    - templatePath: ./template.stencil
+      output: Sources/ZenithCore/Generated/Assets.generated.swift
+      params:
+        publicAccess: true

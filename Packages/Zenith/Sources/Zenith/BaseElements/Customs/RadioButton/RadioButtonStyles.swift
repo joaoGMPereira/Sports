@@ -132,7 +132,7 @@ private extension BaseRadioButton {
         if isDisabled {
             return colors.backgroundTertiary.opacity(0.6)
         }
-        return configuration.isSelected ? colors.primary : colors.backgroundTertiary
+        return configuration.isSelected ? colors.highlightA : colors.backgroundTertiary
     }
     
     var labelColor: Color {

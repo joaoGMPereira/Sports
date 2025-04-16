@@ -75,3 +75,8 @@ struct HistoryExecutionsView: View {
         return formatter.string(from: date)
     }
 }
+
+struct UserKey: Hashable {
+    let id: UUID
+    let name: String
+}

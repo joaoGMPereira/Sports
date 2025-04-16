@@ -1,5 +1,5 @@
 import SwiftUI
-import ZenithCore
+import ZenithCoreInterface
 
 public struct FillButtonStyle: ButtonStyle {
     var color: Color
@@ -80,7 +80,7 @@ public struct WithoutBackgroundPrimaryButtonStyle: ButtonStyle {
             .padding(.vertical, 8)
             .contentShape(Rectangle())
             .backgroundStyle(.clear) // Feedback visual ao pressionar
-            .foregroundColor(configuration.isPressed ? Asset.primary.swiftUIColor.opacity(0.8) : Asset.primary.swiftUIColor)
+            .foregroundColor(configuration.isPressed ? .purple.opacity(0.8) : .purple)
             .cornerRadius(8)
             .scaleEffect(configuration.isPressed ? 0.95 : 1.0) // Efeito de escala ao pressionar
             .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)

@@ -1,13 +1,30 @@
-echo "\nGenerating source files with Swiftgen and Sourcery"
+#!/bin/bash
 
-# Cleanup any generated from git index
+echo -e "\nGenerating source files with SwiftGen"
+
+# Cleanup any generated files from the git index
 find . -iname "*.generated.swift" -exec git rm --cached --ignore-unmatch {} \+
 
-# Run on main projects first as their structure is not the same as modules
-mkdir -p Packages/ZenithCore/Sources/ZenithCore/Generated
-# Change directory to where the swiftgen.yml is located
-cd "$PWD/Packages/ZenithCore" || exit
-swiftgen config run --config swiftgen.yml > /dev/null
+# Define an array of paths where SwiftGen should run
+paths=(
+  "Packages/ZenithCore"
+  "Packages/Zenith"
+)
 
-# Wait on all processes, a process may not exist anymore when getting here, so test for it first
+for path in "${paths[@]}"; do
+  echo "Running SwiftGen in: $path"
+
+  # Ensure the output directory exists
+  mkdir -p "$path/Sources/$(basename "$path")/Generated"
+
+  # Move to the directory to run SwiftGen
+  cd "$path" || exit 1
+
+  # Run SwiftGen
+  swiftgen config run --config swiftgen.yml > /dev/null
+
+  # Return to root directory
+  cd - > /dev/null
+done
+
 echo "Done"

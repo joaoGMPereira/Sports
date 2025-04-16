@@ -3,7 +3,7 @@ import ZenithCoreInterface
 
 
 public extension View {
-    func selectorStyle(_ style: some IndicatorSelectorStyle) -> some View {
+    func indicatorSelectorStyle(_ style: some IndicatorSelectorStyle) -> some View {
         environment(\.selectorStyle, style)
     }
 }
@@ -20,12 +20,12 @@ public struct DefaultIndicatorSelectorStyle: @preconcurrency IndicatorSelectorSt
         BaseIndicatorSelector(
             configuration: configuration,
             textStyle: .mediumBold(.textPrimary),
-            contentColor: colors.primary
+            contentColor: colors.highlightA
         )
     }
 }
 
-public struct InverseIndicatorSelectorStyle: @preconcurrency IndicatorSelectorStyle, BaseThemeDependencies {
+public struct HighlightAIndicatorSelectorStyle: @preconcurrency IndicatorSelectorStyle, BaseThemeDependencies {
     public var id = String(describing: Self.self)
     
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
@@ -36,7 +36,7 @@ public struct InverseIndicatorSelectorStyle: @preconcurrency IndicatorSelectorSt
     public func makeBody(configuration: Configuration) -> some View {
         BaseIndicatorSelector(
             configuration: configuration,
-            textStyle: .mediumBold(.primary),
+            textStyle: .mediumBold(.highlightA),
             contentColor: colors.textPrimary
         )
     }
@@ -46,22 +46,22 @@ public extension IndicatorSelectorStyle where Self == DefaultIndicatorSelectorSt
     static func `default`() -> Self { .init() }
 }
 
-public extension IndicatorSelectorStyle where Self == InverseIndicatorSelectorStyle {
-    static func inverse() -> Self { .init() }
+public extension IndicatorSelectorStyle where Self == HighlightAIndicatorSelectorStyle {
+    static func highlightA() -> Self { .init() }
 }
 
 public enum IndicatorSelectorStyleCase: CaseIterable, Identifiable {
     case `default`
-    case inverse
+    case highlightA
     
     public var id: Self { self }
     
     public func style() -> AnyIndicatorSelectorStyle {
         switch self {
         case .default:
-                .init(.default())
-        case .inverse:
-                .init(.inverse())
+            .init(.default())
+        case .highlightA:
+            .init(.highlightA())
         }
     }
 }

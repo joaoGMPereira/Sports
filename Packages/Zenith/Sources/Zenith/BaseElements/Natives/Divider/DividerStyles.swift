@@ -39,7 +39,7 @@ public struct SecondaryDividerStyle: @preconcurrency DividerStyle, BaseThemeDepe
     }
 }
 
-public struct TertiaryDividerStyle: @preconcurrency DividerStyle, BaseThemeDependencies {
+public struct HighlightADividerStyle: @preconcurrency DividerStyle, BaseThemeDependencies {
     public var id = String(describing: Self.self)
     
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
@@ -48,7 +48,7 @@ public struct TertiaryDividerStyle: @preconcurrency DividerStyle, BaseThemeDepen
     public func makeBody(configuration: Configuration) -> some View {
         configuration
             .content
-            .overlay(colors.primary)
+            .overlay(colors.highlightA)
     }
 }
 
@@ -60,14 +60,14 @@ public extension DividerStyle where Self == SecondaryDividerStyle {
     static func secondary() -> Self { SecondaryDividerStyle() }
 }
 
-public extension DividerStyle where Self == TertiaryDividerStyle {
-    static func tertiary() -> Self { TertiaryDividerStyle() }
+public extension DividerStyle where Self == HighlightADividerStyle {
+    static func highlightA() -> Self { HighlightADividerStyle() }
 }
 
 public enum DividerStyleCase: CaseIterable, Identifiable {
     case primary
     case secondary
-    case tertiary
+    case highlightA
     
     public var id: Self { self }
     
@@ -77,8 +77,8 @@ public enum DividerStyleCase: CaseIterable, Identifiable {
             .init(.primary())
         case .secondary:
             .init(.secondary())
-        case .tertiary:
-            .init(.tertiary())
+        case .highlightA:
+            .init(.highlightA())
         }
     }
 }

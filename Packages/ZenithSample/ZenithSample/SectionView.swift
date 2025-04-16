@@ -39,7 +39,7 @@ struct SectionView<T: View>: View, @preconcurrency BaseThemeDependencies {
                     Image(systemSymbol: .chevronDown)
                         .rotationEffect(.init(degrees: isExpanded.wrappedValue ? 180 : 0))
                 })
-            .font(fonts.mediumBold.font)
+            .font(fonts.mediumBold)
             .foregroundStyle(colors.textPrimary)
             .animation(.smooth, value: isExpanded.wrappedValue)
             .onTapGesture {

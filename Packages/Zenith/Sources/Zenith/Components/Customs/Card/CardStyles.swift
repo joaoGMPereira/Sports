@@ -7,7 +7,7 @@ public extension View {
     }
 }
 
-public struct DefaultCardStyle: @preconcurrency CardStyle, BaseThemeDependencies {
+public struct FillCardStyle: @preconcurrency CardStyle, BaseThemeDependencies {
     public var id = String(describing: Self.self)
     
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
@@ -16,18 +16,28 @@ public struct DefaultCardStyle: @preconcurrency CardStyle, BaseThemeDependencies
     
     @MainActor
     public func makeBody(configuration: Configuration) -> some View {
-        BaseCard(alignment: configuration.arrangement.alignment()) {
-            Stack(arrangement: configuration.arrangement.style()) {
-                DynamicImage(configuration.image)
-                    .dynamicImageStyle(.small(.tertiary))
-                    .padding(themeConfigurator.theme.spacings.small)
-                    .background(
-                        Circle()
-                            .fill(colors.backgroundTertiary) // Cor de fundo do círculo
-                    )
-                    .clipShape(Circle())
-                Text(configuration.title)
-                    .textStyle(.medium(.textPrimary))
+        Group {
+            if configuration.title.isEmpty {
+                EmptyView()
+            } else {
+                BaseCard(
+                    alignment: configuration.arrangement.alignment(),
+                    type: .fill,
+                    action: configuration.action
+                ) {
+                    Stack(arrangement: configuration.arrangement.arrangement()) {
+                        DynamicImage(configuration.image)
+                            .dynamicImageStyle(.small(.highlightA))
+                            .padding(themeConfigurator.theme.spacings.small)
+                            .background(
+                                Circle()
+                                    .fill(colors.backgroundTertiary) // Cor de fundo do círculo
+                            )
+                            .clipShape(Circle())
+                        Text(configuration.title)
+                            .textStyle(.medium(.textPrimary))
+                    }
+                }
             }
         }
     }
@@ -46,26 +56,31 @@ public struct BorderedStyle: @preconcurrency CardStyle, BaseThemeDependencies {
             if configuration.title.isEmpty {
                 EmptyView()
             } else {
-                Stack(arrangement: configuration.arrangement.style()) {
-                    DynamicImage(configuration.image)
-                        .dynamicImageStyle(.medium(.primary))
-                    Text(configuration.title)
-                        .font(fonts.small.font)
-                        .textStyle(.mediumBold(.textPrimary))
+                BaseCard(
+                    alignment: configuration.arrangement.alignment(),
+                    type: .bordered,
+                    action: configuration.action
+                ) {
+                    Stack(arrangement: configuration.arrangement.arrangement()) {
+                        DynamicImage(configuration.image)
+                            .dynamicImageStyle(.medium(.primary))
+                        Text(configuration.title)
+                            .textStyle(.small(.textPrimary))
+                    }
+                    .frame(maxHeight:.infinity)
                 }
-                .padding(themeConfigurator.theme.spacings.medium)
-                .frame(maxWidth: .infinity, alignment: configuration.arrangement.alignment())
-                .background(
-                    RoundedRectangle(cornerRadius: themeConfigurator.theme.constants.smallCornerRadius)
+                .background {
+                    RoundedRectangle(cornerRadius: 24)
                         .stroke(colors.textPrimary, lineWidth: 1)
-                )
+                }
+                
             }
         }
     }
 }
 
-public extension CardStyle where Self == DefaultCardStyle {
-    static func `default`() -> Self { .init() }
+public extension CardStyle where Self == FillCardStyle {
+    static func fill() -> Self { .init() }
 }
 
 public extension CardStyle where Self == BorderedStyle {
@@ -73,39 +88,59 @@ public extension CardStyle where Self == BorderedStyle {
 }
 
 public enum CardStyleCase: CaseIterable, Identifiable {
-    case `default`
+    case fill
     case bordered
     
     public var id: Self { self }
     
     public func style() -> AnyCardStyle {
         switch self {
-        case .default:
-            .init(.default())
+        case .fill:
+            .init(.fill())
         case .bordered:
-                .init(.bordered())
+            .init(.bordered())
         }
     }
 }
 
-private struct BaseCard<Content: View>: View, @preconcurrency BaseThemeDependencies {
-    @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
 
+
+public struct BaseCard<Content: View>: View, @preconcurrency BaseThemeDependencies {
+    @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
+    @GestureState private var isPressed = false
     let alignment: Alignment
+    let type: CardType
     let content: Content
+    let action: () -> Void
     
-    init(alignment: Alignment, @ViewBuilder content: () -> Content) {
+    public init(
+        alignment: Alignment,
+        type: CardType,
+        action: @escaping () -> Void,
+        @ViewBuilder content: () -> Content
+    ) {
         self.alignment = alignment
+        self.type = type
+        self.action = action
         self.content = content()
     }
     
-    var body: some View {
-        content
-            .padding(themeConfigurator.theme.spacings.medium)
-            .frame(maxWidth: .infinity, alignment: alignment)
-            .background(
-                colors.backgroundSecondary
-                    .cornerRadius(themeConfigurator.theme.constants.smallCornerRadius)
-            )
+    public var body: some View {
+        Button(action: {
+            action()
+        }) {
+            content
+                .padding(themeConfigurator.theme.spacings.medium)
+                .frame(maxWidth: .infinity, alignment: alignment)
+        }
+        .buttonStyle(.cardAppearance(type))
     }
+}
+
+public enum CardType: String, CaseIterable, Decodable, Identifiable {
+    public var id: String {
+        rawValue
+    }
+    
+    case fill, bordered
 }

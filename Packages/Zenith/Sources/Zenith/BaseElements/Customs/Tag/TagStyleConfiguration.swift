@@ -31,7 +31,7 @@ public struct TagStyleConfiguration {
 }
 
 public struct TagStyleKey: EnvironmentKey {
-    public static let defaultValue: any TagStyle = SmallTagStyle(color: .primary)
+    public static let defaultValue: any TagStyle = SmallTagStyle(color: .highlightA)
 }
 
 public extension EnvironmentValues {

@@ -46,5 +46,7 @@
 	</array>
     <key>CFBundleIconName</key>
     <string>AppIcon</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Precisamos acessar o microfone para gravar sua voz</string>
 </dict>
 </plist>

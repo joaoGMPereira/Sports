@@ -31,7 +31,7 @@ public struct BaseTextStyle: @preconcurrency TextStyle, @preconcurrency BaseThem
     
     @Dependency(\.themeConfigurator) public var themeConfigurator
     
-    var font: BaseFont {
+    var font: Font {
         fonts.font(by: fontName) ?? fonts.small
     }
     
@@ -49,11 +49,9 @@ public struct BaseTextStyle: @preconcurrency TextStyle, @preconcurrency BaseThem
     
     @MainActor
     public func makeBody(configuration: TextStyleConfiguration) -> some View {
-        configuration
+        return configuration
             .content
-            .font(font.font)
-            .lineSpacing(font.lineHeight - font.fontLineHeight)
-            .padding(.vertical, (font.lineHeight - font.fontLineHeight) / 2)
+            .font(font)
             .foregroundStyle(color)
     }
 }
@@ -61,7 +59,7 @@ public struct BaseTextStyle: @preconcurrency TextStyle, @preconcurrency BaseThem
 public enum TextStyleColor: String, Decodable, CaseIterable, Identifiable, Sendable {
     case textPrimary
     case textSecondary
-    case primary
+    case highlightA
     
     public var id: Self { self }
     
@@ -71,8 +69,8 @@ public enum TextStyleColor: String, Decodable, CaseIterable, Identifiable, Senda
             .textPrimary
         case .textSecondary:
             .textSecondary
-        case .primary:
-            .primary
+        case .highlightA:
+            .highlightA
         }
     }
 }
@@ -80,16 +78,16 @@ public enum TextStyleColor: String, Decodable, CaseIterable, Identifiable, Senda
 public enum TextStyleCase: String, Decodable, CaseIterable, Identifiable {
     case smallTextPrimary
     case smallTextSecondary
-    case smallPrimary
+    case smallHighlightA
     case mediumTextPrimary
     case mediumTextSecondary
-    case mediumPrimary
+    case mediumHighlightA
     case mediumBoldTextPrimary
     case mediumBoldTextSecondary
-    case mediumBoldPrimary
+    case mediumBoldHighlightA
     case BigBoldTextPrimary
     case BigBoldTextSecondary
-    case BigBoldPrimary
+    case BigBoldHighlightA
     
     public var id: Self { self }
     
@@ -100,26 +98,26 @@ public enum TextStyleCase: String, Decodable, CaseIterable, Identifiable {
             return .init(BaseTextStyle.small(.textPrimary))
         case .smallTextSecondary:
             return .init(BaseTextStyle.small(.textSecondary))
-        case .smallPrimary:
-            return .init(BaseTextStyle.small(.primary))
+        case .smallHighlightA:
+            return .init(BaseTextStyle.small(.highlightA))
         case .mediumTextPrimary:
             return .init(BaseTextStyle.medium(.textPrimary))
         case .mediumTextSecondary:
             return .init(BaseTextStyle.medium(.textSecondary))
-        case .mediumPrimary:
-            return .init(BaseTextStyle.medium(.primary))
+        case .mediumHighlightA:
+            return .init(BaseTextStyle.medium(.highlightA))
         case .mediumBoldTextPrimary:
             return .init(BaseTextStyle.mediumBold(.textPrimary))
         case .mediumBoldTextSecondary:
             return .init(BaseTextStyle.mediumBold(.textSecondary))
-        case .mediumBoldPrimary:
-            return .init(BaseTextStyle.mediumBold(.primary))
+        case .mediumBoldHighlightA:
+            return .init(BaseTextStyle.mediumBold(.highlightA))
         case .BigBoldTextPrimary:
             return .init(BaseTextStyle.bigBold(.textPrimary))
         case .BigBoldTextSecondary:
             return .init(BaseTextStyle.bigBold(.textSecondary))
-        case .BigBoldPrimary:
-            return .init(BaseTextStyle.bigBold(.primary))
+        case .BigBoldHighlightA:
+            return .init(BaseTextStyle.bigBold(.highlightA))
         }
     }
 }

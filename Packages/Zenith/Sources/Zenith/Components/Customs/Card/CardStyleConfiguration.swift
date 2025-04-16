@@ -25,20 +25,23 @@ public struct CardStyleConfiguration {
     let image: String
     let title: String
     let arrangement: StackArrangementCase
+    let action: () -> Void
     
     public init(
         image: String,
         title: String,
-        arrangement: StackArrangementCase
+        arrangement: StackArrangementCase,
+        action: @escaping () -> Void
     ) {
         self.image = image
         self.title = title
         self.arrangement = arrangement
+        self.action = action
     }
 }
 
 public struct CardStyleKey: EnvironmentKey {
-    public static let defaultValue: any CardStyle = DefaultCardStyle()
+    public static let defaultValue: any CardStyle = FillCardStyle()
 }
 
 public extension EnvironmentValues {

@@ -1,5 +1,5 @@
 import Zenith
-import ZenithCore
+import ZenithCoreInterface
 import SwiftUI
 import SwiftData
 import SFSafeSymbols
@@ -66,7 +66,9 @@ extension Encodable {
     }
 }
 
-struct CommingSoonView: View {
+struct CommingSoonView: View, BaseThemeDependencies {
+    @Dependency(\.themeConfigurator) var themeConfigurator: any ThemeConfiguratorProtocol
+    
     @Environment(\.modelContext) private var modelContext
     @Query private var items: [CommingSoon]
     @State var filteredItems: [CommingSoon] = []
@@ -81,11 +83,16 @@ struct CommingSoonView: View {
         NavigationStack {
             Form {
                 Toggle("Habilitar Text Dinamico", isOn: $isDynamicText)
+                    .toggleStyle(.default(.highlightA))
+                    .foregroundStyle(colors.textPrimary)
+                    .listRowBackground(colors.backgroundSecondary)
                 if isDynamicText {
                     TextField("Texto Dinamico", text: $dynamicText)
                         .onSubmit {
                             addDynamicItem()
                         }
+                        .foregroundStyle(colors.textPrimary)
+                        .listRowBackground(colors.backgroundSecondary)
                 } else {
                     TextField("Nome da Sessão", text: $sectionText)
                         .onChange(of: sectionText) {
@@ -117,47 +124,79 @@ struct CommingSoonView: View {
                             .frame(minWidth: 50, minHeight: 80, maxHeight: 400)
                             .presentationCompactAdaptation(.popover)
                         }
+                        .foregroundStyle(colors.textPrimary)
+                        .listRowBackground(colors.backgroundSecondary)
                     TextField("Nova Feature", text: $featureText)
                         .onSubmit {
                             addItem()
                         }
+                        .foregroundStyle(colors.textPrimary)
+                        .listRowBackground(colors.backgroundSecondary)
                 }
                 
                 ForEach(items.indices, id: \.self) { sectionIndex in
                     if items.count > 0 {
-                        Section(items[safe: sectionIndex]?.title ?? "") {
+                        Section(
+                            header:
+                                Text(items[safe: sectionIndex]?.title ?? "")
+                                .font(fonts.mediumBold)
+                        ){
                             ForEach(items[safe: sectionIndex]?.items ?? [], id: \.self) { item in
                                 Text(item)
+                                    .font(fonts.small)
+                                    .foregroundStyle(colors.textPrimary)
                             }
                             .onDelete { sets in
                                 deleteItems(at: sets, in: sectionIndex)
                             }
                         }
+                        .foregroundStyle(colors.textPrimary)
+                        .listRowBackground(colors.backgroundSecondary)
                     }
                 }
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                HStack {
                     Button(action: {
                         importData()
                     }) {
-                        Image(systemSymbol: .squareAndArrowDownOnSquareFill)
-                            .font(.callout) // Tamanho do ícone
+                        HStack {
+                            Text("Importar")
+                                .textStyle(.small(.textPrimary))
+                            Image(systemSymbol: .squareAndArrowDownOnSquareFill)
+                                .font(.callout)
+                        }
                     }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
+                    .buttonStyle(.primary)
+                    Spacer()
                     Button(action: {
                         exportData()
                     }) {
-                        Image(systemSymbol: .squareAndArrowUpOnSquareFill)
-                            .font(.callout) // Tamanho do ícone
+                        HStack {
+                            Text("Exportar")
+                                .textStyle(.small(.primary))
+                            Image(systemSymbol: .squareAndArrowUpOnSquareFill)
+                                .font(.callout)
+                        }
                     }
+                    .buttonStyle(.secondary())
                 }
+                .padding(.vertical, spacings.small)
+                .listRowBackground(colors.backgroundSecondary)
+            }
+            .scrollContentBackground(.hidden)
+            .background(colors.background, ignoresSafeAreaEdges: .all)
+            .toolbar {
+                
                 ToolbarItem(placement: .navigationBarTrailing) {
                     EditButton()
                 }
             }
-            .navigationTitle("Comming Soon")
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("Comming Soon")
+                        .font(fonts.mediumBold)
+                        .foregroundColor(colors.textPrimary)
+                }
+            }
         }
     }
     

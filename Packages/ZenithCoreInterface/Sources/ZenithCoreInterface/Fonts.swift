@@ -27,10 +27,15 @@ public struct BaseFont: FontProtocol, Sendable, Equatable {
 }
 
 public protocol FontsProtocol: Sendable, Equatable {
-    var small: BaseFont { get }
-    var medium: BaseFont { get }
-    var mediumBold: BaseFont { get }
-    var bigBold: BaseFont { get }
+    var baseSmall: BaseFont { get }
+    var baseMedium: BaseFont { get }
+    var baseMediumBold: BaseFont { get }
+    var baseBigBold: BaseFont { get }
     
-    func font(by fontName: FontName) -> BaseFont?
+    var small: Font { get }
+    var medium: Font { get }
+    var mediumBold: Font { get }
+    var bigBold: Font { get }
+    
+    func font(by fontName: FontName) -> Font?
 }

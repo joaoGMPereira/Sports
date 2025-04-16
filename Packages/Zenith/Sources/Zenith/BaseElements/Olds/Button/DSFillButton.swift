@@ -1,5 +1,4 @@
 import SwiftUI
-import ZenithCore
 
 public struct DSFillButton: View {
     var title: String
@@ -7,7 +6,7 @@ public struct DSFillButton: View {
     var isEnabled: Bool
     var completion: () -> Void
     
-    public init(title: String, isEnabled: Bool = true, color: Color = Asset.primary.swiftUIColor, completion: @escaping () -> Void) {
+    public init(title: String, isEnabled: Bool = true, color: Color = .purple, completion: @escaping () -> Void) {
         self.title = title
         self.isEnabled = isEnabled
         self.color = color
@@ -40,7 +39,7 @@ public struct DSContentButton: View {
     public init(
         title: String,
         isEnabled: Bool = true,
-        color: Color = Asset.primary.swiftUIColor,
+        color: Color = .purple,
         horizontalPadding: CGFloat = 8,
         verticalPadding: CGFloat = 8,
         completion: @escaping () -> Void
@@ -83,7 +82,7 @@ public struct DSBorderedButton: View {
         title: String,
         isEnabled: Bool = true,
         maxWidth: Bool = false,
-        color: Color = Asset.primary.swiftUIColor,
+        color: Color = .purple,
         horizontalPadding: CGFloat = 8,
         verticalPadding: CGFloat = 8,
         completion: @escaping () -> Void

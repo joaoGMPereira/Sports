@@ -1,5 +1,5 @@
 import Zenith
-import ZenithCore
+import ZenithCoreInterface
 import SwiftData
 import SwiftUI
 struct CreateTrainingsView: View {

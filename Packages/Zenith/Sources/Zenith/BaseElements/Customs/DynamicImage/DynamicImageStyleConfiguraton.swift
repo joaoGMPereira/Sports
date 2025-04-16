@@ -38,7 +38,7 @@ public struct DynamicImageStyleConfiguration {
 }
 
 public struct DynamicImageStyleKey: EnvironmentKey {
-    public static let defaultValue: any DynamicImageStyle = SmallDynamicImageStyle(color: .primary)
+    public static let defaultValue: any DynamicImageStyle = NoneDynamicImageStyle()
 }
 
 public extension EnvironmentValues {

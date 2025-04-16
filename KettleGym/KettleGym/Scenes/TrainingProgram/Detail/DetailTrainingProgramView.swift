@@ -1,26 +1,19 @@
 import Zenith
-import ZenithCore
+import ZenithCoreInterface
 import SwiftUI
 import SwiftData
 import SFSafeSymbols
 import SwiftUIIntrospect
 
-struct UserKey: Hashable {
-    let id: UUID
-    let name: String
-}
-
-struct DetailTrainingProgramView: View {
+struct DetailTrainingProgramView: View, BaseThemeDependencies {
     @State var trainingProgram: TrainingProgram
+    
+    @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
     @Environment(Router<TrainingProgramRoute>.self) var trainingProgrammingRouter
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @State private var isExpanded: Bool = true
     @State private var shouldResetView = false
-    
-    init(trainingProgram: TrainingProgram) {
-        self.trainingProgram = trainingProgram
-    }
     
     var body: some View {
         Form {

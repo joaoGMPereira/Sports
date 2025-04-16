@@ -26,13 +26,17 @@ public struct SmallToggleStyle: ToggleStyle, @preconcurrency BaseThemeDependenci
     }
     
     public func makeBody(configuration: Configuration) -> some View {
-        BaseToggle(
-            onColor: colors.color(by: color.onColor) ?? .primary,
-            offColor: colors.backgroundTertiary,
-            width: 40,
-            height: 20,
-            isOn: configuration.$isOn
-        )
+        HStack {
+            configuration.label
+            Spacer()
+            BaseToggle(
+                onColor: colors.color(by: color.onColor) ?? .primary,
+                offColor: colors.backgroundTertiary,
+                width: 40,
+                height: 20,
+                isOn: configuration.$isOn
+            )
+        }
     }
 }
 
@@ -49,13 +53,17 @@ public struct DefaultToggleStyle: ToggleStyle, @preconcurrency BaseThemeDependen
     }
     
     public func makeBody(configuration: Configuration) -> some View {
-        BaseToggle(
-            onColor: colors.color(by: color.onColor) ?? .primary,
-            offColor: colors.backgroundTertiary,
-            width: 50,
-            height: 30,
-            isOn: configuration.$isOn
-        )
+        HStack {
+            configuration.label
+            Spacer()
+            BaseToggle(
+                onColor: colors.color(by: color.onColor) ?? .primary,
+                offColor: colors.backgroundTertiary,
+                width: 50,
+                height: 30,
+                isOn: configuration.$isOn
+            )
+        }
     }
 }
 
@@ -112,15 +120,15 @@ private struct BaseToggle: View {
 }
 
 public enum ToggleColor: CaseIterable, Identifiable, Sendable {
-    case primary
+    case highlightA
     case secondary
     
     public var id: Self { self }
 
     var onColor: ColorName {
         switch self {
-        case .primary:
-            .primary
+        case .highlightA:
+            .highlightA
         case .secondary:
             .textPrimary
         }
@@ -128,8 +136,8 @@ public enum ToggleColor: CaseIterable, Identifiable, Sendable {
 }
 
 public enum ToggleStyleCase: String, Decodable, CaseIterable, Identifiable {
-    case smallPrimary
-    case mediumPrimary
+    case smallHighlightA
+    case mediumHighlightA
     case smallSecondary
     case mediumSecondary
     
@@ -138,10 +146,10 @@ public enum ToggleStyleCase: String, Decodable, CaseIterable, Identifiable {
     @MainActor
     public func style() -> AnyToggleStyle {
         switch self {
-        case .smallPrimary:
-            .init(.small(.primary))
-        case .mediumPrimary:
-            .init(.default(.primary))
+        case .smallHighlightA:
+            .init(.small(.highlightA))
+        case .mediumHighlightA:
+            .init(.default(.highlightA))
         case .smallSecondary:
             .init(.small(.secondary))
         case .mediumSecondary:

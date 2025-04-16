@@ -1,7 +1,7 @@
 import SwiftUICore
 
 public struct ColorsMock: ColorsProtocol {
-    public let primary = Color.red
+    public let highlightA = Color.red
     
     public let background = Color.red
     
@@ -23,7 +23,7 @@ public struct ColorsMock: ColorsProtocol {
     
     var colors: [ColorName: Color] {
         [
-            .primary: primary,
+            .highlightA: highlightA,
             .background: background,
             .backgroundSecondary: backgroundSecondary,
             .textPrimary: textPrimary,
@@ -43,28 +43,28 @@ public struct ColorsMock: ColorsProtocol {
 
 public struct FontsMock: FontsProtocol {
     /// Fonte para texto auxiliar e etiquetas
-    public let small = BaseFont(
+    public let baseSmall = BaseFont(
         font: .callout,
         fontLineHeight: 16,
         lineHeight: 24
     )
     
     /// Fonte para títulos de seções e botões principais
-    public let medium = BaseFont(
+    public let baseMedium = BaseFont(
         font: .body,
         fontLineHeight: 24,
         lineHeight: 32
     )
     
     /// Fonte para títulos de seções e botões principais
-    public let mediumBold = BaseFont(
+    public let baseMediumBold = BaseFont(
         font: .title,
         fontLineHeight: 32,
         lineHeight: 40
     )
     
     /// Fonte para títulos de destaque e chamadas importantes
-    public let bigBold = BaseFont(
+    public let baseBigBold = BaseFont(
         font: .headline,
         fontLineHeight: 56,
         lineHeight: 64
@@ -72,15 +72,31 @@ public struct FontsMock: FontsProtocol {
     
     var fonts: [FontName: BaseFont] {
         [
-            .small: small,
-            .medium: medium,
-            .mediumBold: mediumBold,
-            .bigBold: bigBold
+            .small: baseSmall,
+            .medium: baseMedium,
+            .mediumBold: baseMediumBold,
+            .bigBold: baseBigBold
         ]
     }
     
-    public func font(by fontName: FontName) -> BaseFont? {
-        fonts[fontName]
+    public var small: Font {
+        baseSmall.font
+    }
+    
+    public var medium: Font {
+        baseMedium.font
+    }
+    
+    public var mediumBold: Font {
+        baseMediumBold.font
+    }
+    
+    public var bigBold: Font {
+        baseBigBold.font
+    }
+    
+    public func font(by fontName: FontName) -> Font? {
+        fonts[fontName]?.font
     }
 }
 
@@ -124,6 +140,8 @@ public struct SpacingsMock: SpacingsProtocol {
 }
 
 public struct ConstantsMock: ConstantsProtocol {
+    public var tapOpacity: Double = 0.3
+    
     public let smallCornerRadius: Double = 8
     
     public let disabledOpacity: Double = 0.3

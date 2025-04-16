@@ -1,92 +1,146 @@
 import SwiftUI
 import SwiftData
+import Zenith
+import ZenithCoreInterface
 
-struct HomeView: View {
+struct HomeView: View, BaseThemeDependencies {
     @State private var trainingProgrammingRouter: Router<TrainingProgramRoute> = .init()
     @Environment(\.modelContext) private var modelContext
     @Query private var trainingPrograms: [TrainingProgram]
     
+    @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
+    
     var body: some View {
         RoutingView(stack: $trainingProgrammingRouter.stack) {
             List {
-                ForEach(trainingPrograms) { trainingProgram in
-                    Button {
-                        trainingProgrammingRouter.navigate(to: .detail(trainingProgram))
-                    } label: {
-                        HStack {
-                            Text(trainingProgram.title)
-                                .foregroundStyle(Color.primary)
-                            Spacer()
-                            Image(systemSymbol: trainingProgram.hasFinished ? .archiveboxFill : .slowmo)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 15, height: 15)
-                                .foregroundColor(trainingProgram.hasFinished ? .red : .yellow)
+                Group {
+                    if trainingPrograms.isNotEmpty {
+                        HomeWithTrainingsView(
+                            trainingPrograms: trainingPrograms,
+                            trainingAction: { trainingProgram in
+                                trainingProgrammingRouter.navigate(to: .workoutPlans(trainingProgram))
+                            },
+                            newTrainingAction: {
+                                addItem()
+                            }) {
+                                
+                            }
+                    } else {
+                        HomeEmptyView {
+                            addItem()
                         }
                     }
                 }
-                .onDelete(perform: delete)
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
             }
+            .listRowSeparator(.hidden)
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(colors.background, ignoresSafeAreaEdges: .all)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
+                ToolbarItem(placement: .principal) {
+                    Text("KettleGym")
+                        .font(fonts.mediumBold)
+                        .foregroundColor(colors.textPrimary)
                 }
             }
-            .navigationTitle("Home")
         }
         .environment(trainingProgrammingRouter)
         .onAppear {
-           // try? removeDuplicateSetPlans()
         }
     }
-    
-//    func removeDuplicateSetPlans() throws {
-//        let allSetPlans = try? modelContext.fetch(FetchDescriptor<SetPlan>())
-//
-//        // Agrupa os SetPlans usando um dicionário, onde a chave são os valores de quantity, minRep e maxRep
-//        var uniqueSetPlans: [String: SetPlan] = [:]
-//        var duplicates: [SetPlan] = []
-//
-//        for setPlan in allSetPlans ?? [] {
-//            guard let quantity = setPlan.quantity, let minRep = setPlan.minRep, let maxRep = setPlan.maxRep else {
-//                continue
-//            }
-//
-//            // Cria uma chave única usando os valores dos atributos que definem a duplicidade
-//            let key = "\(quantity)-\(minRep)-\(maxRep)"
-//
-//            if uniqueSetPlans[key] == nil {
-//                uniqueSetPlans[key] = setPlan
-//            } else {
-//                // Caso o SetPlan já exista, marca-o como duplicado
-//                duplicates.append(setPlan)
-//            }
-//        }
-//
-//        // Remove os objetos duplicados
-//        for duplicate in duplicates {
-//            modelContext.delete(duplicate)
-//        }
-//
-//        // Salva o contexto após as remoções
-//        try modelContext.save()
-//    }
     
     private func addItem() {
         trainingProgrammingRouter.navigate(to: .trainingProgram)
     }
+}
+
+struct HomeWithTrainingsView: View, BaseThemeDependencies {
+    @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
     
-    private func delete(at offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(trainingPrograms[index])
+    let trainingPrograms: [TrainingProgram]
+    
+    let trainingAction: (TrainingProgram) -> Void
+    let newTrainingAction: () -> Void
+    let bannerAction: () -> Void
+    
+    var body: some View {
+        ForEach(trainingPrograms) { trainingProgram in
+//            ActionCard(title: trainingProgram.title, description: "Frequências: \(trainingProgram.workoutSessions.count) vezes na semana", image: .play, tags: trainingProgram.workoutSessions.map { $0.name }) {
+//                trainingAction(trainingProgram)
+//            }
+            BaseCard(alignment: .leading, type: .fill, action: {
+                trainingAction(trainingProgram)
+            }) {
+                HStack(spacing: spacings.medium) {
+                    Text(trainingProgram.title)
+                        .textStyle(.mediumBold(.textPrimary))
+                    Spacer()
+                    Button {
+                        
+                    } label: {
+                        Text("25%")
+                            .textStyle(.small(.textPrimary))
+                            .padding(spacings.extraSmall)
+                    }
+                    .buttonStyle(.highlightA(shape: .circle))
+                    .allowsHitTesting(false)
+                }
             }
-            try? modelContext.save()
         }
+        BaseCard(
+            alignment: .center,
+            type: .bordered,
+            action: newTrainingAction
+        ) {
+            Stack(arrangement: .horizontal(alignment: .center)) {
+                Text("Adicionar treino")
+                    .textStyle(.small(.textPrimary))
+                Spacer()
+                DynamicImage(.plus)
+                    .dynamicImageStyle(.medium(.primary))
+            }
+            .frame(maxHeight:.infinity)
+        }
+        .background {
+            RoundedRectangle(cornerRadius: 24) // TODO RADIUS
+                .stroke(colors.textPrimary, lineWidth: 1)
+        }
+        Card(
+            image: .figureRun,
+            title: "Entre aqui para contratar sua propaganda",
+            arrangement: .verticalLeading
+        ) {
+            bannerAction()
+        }
+    }
+}
+
+struct HomeEmptyView: View {
+    let callback: () -> Void
+    
+    var body: some View {
+        HStack {
+            Spacer()
+            DynamicImage(.logo)
+                .frame(width: 200)
+                .scaledToFit()
+            Spacer()
+        }
+        Text("Você ainda não pussui um treino.")
+            .textStyle(.medium(.textPrimary))
+            .frame(maxWidth: .infinity)
+            .multilineTextAlignment(.center)
+        
+        Card.emptyState(
+            image: .figureRun,
+            title: "Criar treino"
+        ) {
+            callback()
+        }
+        .cardStyle(
+            .bordered()
+        )
     }
 }
