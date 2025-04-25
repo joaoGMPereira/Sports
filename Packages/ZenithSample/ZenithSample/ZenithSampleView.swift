@@ -1,4 +1,3 @@
-
 import SwiftUI
 import Zenith
 import SFSafeSymbols
@@ -13,6 +12,7 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
     enum TabType: String, CaseIterable, Identifiable {
         case baseElements = "Base Elements"
         case components = "Components"
+        case templates = "Templates"
         case future = "Future"
 
         var id: String { self.rawValue }
@@ -21,6 +21,7 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
             switch self {
             case .baseElements: return .squareGrid2x2
             case .components: return .puzzlepieceExtension
+            case .templates: return .rectangle3Group
             case .future: return .sparkles
             }
         }
@@ -29,6 +30,7 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
     enum ElementCategory: String, CaseIterable, Identifiable {
         case custom = "Custom"
         case native = "Native"
+        case template = "Template"
         case other = "Other"
 
         var id: String { self.rawValue }
@@ -125,6 +127,13 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
             category: .custom,
             tabType: .components,
             view: ActionCardSample()
+        ),
+        // Templates
+        ElementType(
+            name: "StepsTemplate",
+            category: .template,
+            tabType: .templates,
+            view: StepsTemplateSample()
         )
     ]
 
@@ -149,7 +158,12 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
                     .tag(tabType)
             }
         }
-        .accentColor(colors.primary)
+        .accentColor(colors.highlightA)
+        .onChange(of: selectedTab) { newValue in
+            if newValue == .templates {
+                selectedCategory = .template
+            }
+        }
     }
 
     // MARK: - Tab Content
@@ -158,19 +172,19 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
         NavigationStack {
             List {
                 Section {
-                    categoryPicker
+                    categoryPicker(for: tabType)
                         .listRowBackground(Color.clear)
                 }
                 ForEach(filteredElements()) { element in
                     element.view
-                        .listRowBackground(colors.backgroundSecondary)
+                        .listRowBackground(colors.backgroundB)
                 }
 
                 if filteredElements().isEmpty {
                     Text("No \(selectedCategory.rawValue.lowercased()) elements available.")
                         .font(fonts.medium)
-                        .foregroundColor(colors.textPrimary)
-                        .listRowBackground(colors.backgroundSecondary)
+                        .foregroundColor(colors.contentA)
+                        .listRowBackground(colors.backgroundB)
                 }
             }
             .listRowSeparator(.hidden)
@@ -179,32 +193,32 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
                 ToolbarItem(placement: .principal) {
                     Text(tabType.rawValue)
                         .font(fonts.mediumBold)
-                        .foregroundColor(colors.textPrimary)
+                        .foregroundColor(colors.contentA)
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
             .scrollContentBackground(.hidden)
-            .background(colors.background)
+            .background(colors.backgroundA)
         }
     }
 
     // MARK: - Category Picker
 
-    private var categoryPicker: some View {
+    private func categoryPicker(for tabType: TabType) -> some View {
         Picker("Element Category", selection: $selectedCategory) {
-            ForEach(ElementCategory.allCases) { category in
+            ForEach(tabType == .templates ? [ElementCategory.template] : ElementCategory.allCases) { category in
                 Text(category.rawValue).font(fonts.mediumBold).tag(category)
             }
         }
         .pickerStyle(SegmentedPickerStyle())
         .introspect(.picker(style: .segmented), on: .iOS(.v17, .v18)) {
             $0.backgroundColor = UIColor.clear
-            $0.layer.borderColor = colors.primary.uiColor().cgColor
-                  $0.selectedSegmentTintColor = colors.primary.uiColor()
+            $0.layer.borderColor = colors.highlightA.uiColor().cgColor
+            $0.selectedSegmentTintColor = colors.highlightA.uiColor()
                   $0.layer.borderWidth = 1
 
             let titleTextAttributes = [
-                NSAttributedString.Key.foregroundColor: colors.textPrimary.uiColor(),
+                NSAttributedString.Key.foregroundColor: colors.contentA.uiColor(),
                 NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14, weight: .bold)
             ]
             $0.setTitleTextAttributes(
@@ -213,7 +227,7 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
             )
 
             let titleTextAttributesSelected = [
-                NSAttributedString.Key.foregroundColor: colors.textSecondary.uiColor(),
+                NSAttributedString.Key.foregroundColor: colors.contentB.uiColor(),
                 NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14, weight: .bold)
             ]
             $0.setTitleTextAttributes(

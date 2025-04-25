@@ -13,7 +13,7 @@ public extension Divider {
     }
 }
 
-public struct PrimaryDividerStyle: @preconcurrency DividerStyle, BaseThemeDependencies {
+public struct ContentADividerStyle: @preconcurrency DividerStyle, BaseThemeDependencies {
     public var id = String(describing: Self.self)
     
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
@@ -22,11 +22,11 @@ public struct PrimaryDividerStyle: @preconcurrency DividerStyle, BaseThemeDepend
     public func makeBody(configuration: Configuration) -> some View {
         configuration
             .content
-            .overlay(colors.textPrimary)
+            .overlay(colors.contentA)
     }
 }
 
-public struct SecondaryDividerStyle: @preconcurrency DividerStyle, BaseThemeDependencies {
+public struct ContentBDividerStyle: @preconcurrency DividerStyle, BaseThemeDependencies {
     public var id = String(describing: Self.self)
     
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
@@ -35,7 +35,7 @@ public struct SecondaryDividerStyle: @preconcurrency DividerStyle, BaseThemeDepe
     public func makeBody(configuration: Configuration) -> some View {
         configuration
             .content
-            .overlay(colors.textSecondary)
+            .overlay(colors.contentB)
     }
 }
 
@@ -52,12 +52,12 @@ public struct HighlightADividerStyle: @preconcurrency DividerStyle, BaseThemeDep
     }
 }
 
-public extension DividerStyle where Self == PrimaryDividerStyle {
-    static func primary() -> Self { PrimaryDividerStyle() }
+public extension DividerStyle where Self == ContentADividerStyle {
+    static func contentA() -> Self { ContentADividerStyle() }
 }
 
-public extension DividerStyle where Self == SecondaryDividerStyle {
-    static func secondary() -> Self { SecondaryDividerStyle() }
+public extension DividerStyle where Self == ContentBDividerStyle {
+    static func contentB() -> Self { ContentBDividerStyle() }
 }
 
 public extension DividerStyle where Self == HighlightADividerStyle {
@@ -65,18 +65,18 @@ public extension DividerStyle where Self == HighlightADividerStyle {
 }
 
 public enum DividerStyleCase: CaseIterable, Identifiable {
-    case primary
-    case secondary
+    case contentA
+    case contentB
     case highlightA
     
     public var id: Self { self }
     
     public func style() -> AnyDividerStyle {
         switch self {
-        case .primary:
-            .init(.primary())
-        case .secondary:
-            .init(.secondary())
+        case .contentA:
+            .init(.contentA())
+        case .contentB:
+            .init(.contentB())
         case .highlightA:
             .init(.highlightA())
         }

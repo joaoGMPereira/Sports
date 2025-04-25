@@ -84,15 +84,15 @@ struct CommingSoonView: View, BaseThemeDependencies {
             Form {
                 Toggle("Habilitar Text Dinamico", isOn: $isDynamicText)
                     .toggleStyle(.default(.highlightA))
-                    .foregroundStyle(colors.textPrimary)
-                    .listRowBackground(colors.backgroundSecondary)
+                    .foregroundStyle(colors.contentA)
+                    .listRowBackground(colors.backgroundB)
                 if isDynamicText {
                     TextField("Texto Dinamico", text: $dynamicText)
                         .onSubmit {
                             addDynamicItem()
                         }
-                        .foregroundStyle(colors.textPrimary)
-                        .listRowBackground(colors.backgroundSecondary)
+                        .foregroundStyle(colors.contentA)
+                        .listRowBackground(colors.backgroundB)
                 } else {
                     TextField("Nome da Sessão", text: $sectionText)
                         .onChange(of: sectionText) {
@@ -124,14 +124,14 @@ struct CommingSoonView: View, BaseThemeDependencies {
                             .frame(minWidth: 50, minHeight: 80, maxHeight: 400)
                             .presentationCompactAdaptation(.popover)
                         }
-                        .foregroundStyle(colors.textPrimary)
-                        .listRowBackground(colors.backgroundSecondary)
+                        .foregroundStyle(colors.contentA)
+                        .listRowBackground(colors.backgroundB)
                     TextField("Nova Feature", text: $featureText)
                         .onSubmit {
                             addItem()
                         }
-                        .foregroundStyle(colors.textPrimary)
-                        .listRowBackground(colors.backgroundSecondary)
+                        .foregroundStyle(colors.contentA)
+                        .listRowBackground(colors.backgroundB)
                 }
                 
                 ForEach(items.indices, id: \.self) { sectionIndex in
@@ -144,14 +144,14 @@ struct CommingSoonView: View, BaseThemeDependencies {
                             ForEach(items[safe: sectionIndex]?.items ?? [], id: \.self) { item in
                                 Text(item)
                                     .font(fonts.small)
-                                    .foregroundStyle(colors.textPrimary)
+                                    .foregroundStyle(colors.contentA)
                             }
                             .onDelete { sets in
                                 deleteItems(at: sets, in: sectionIndex)
                             }
                         }
-                        .foregroundStyle(colors.textPrimary)
-                        .listRowBackground(colors.backgroundSecondary)
+                        .foregroundStyle(colors.contentA)
+                        .listRowBackground(colors.backgroundB)
                     }
                 }
                 HStack {
@@ -160,30 +160,30 @@ struct CommingSoonView: View, BaseThemeDependencies {
                     }) {
                         HStack {
                             Text("Importar")
-                                .textStyle(.small(.textPrimary))
+                                .textStyle(.small(.contentA))
                             Image(systemSymbol: .squareAndArrowDownOnSquareFill)
                                 .font(.callout)
                         }
                     }
-                    .buttonStyle(.primary)
+                    .buttonStyle(.contentA)
                     Spacer()
                     Button(action: {
                         exportData()
                     }) {
                         HStack {
                             Text("Exportar")
-                                .textStyle(.small(.primary))
+                                .textStyle(.small(.highlightA))
                             Image(systemSymbol: .squareAndArrowUpOnSquareFill)
                                 .font(.callout)
                         }
                     }
-                    .buttonStyle(.secondary())
+                    .buttonStyle(.highlightA())
                 }
                 .padding(.vertical, spacings.small)
-                .listRowBackground(colors.backgroundSecondary)
+                .listRowBackground(colors.backgroundB)
             }
             .scrollContentBackground(.hidden)
-            .background(colors.background, ignoresSafeAreaEdges: .all)
+            .background(colors.backgroundA, ignoresSafeAreaEdges: .all)
             .toolbar {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -194,7 +194,7 @@ struct CommingSoonView: View, BaseThemeDependencies {
                 ToolbarItem(placement: .principal) {
                     Text("Comming Soon")
                         .font(fonts.mediumBold)
-                        .foregroundColor(colors.textPrimary)
+                        .foregroundColor(colors.contentA)
                 }
             }
         }

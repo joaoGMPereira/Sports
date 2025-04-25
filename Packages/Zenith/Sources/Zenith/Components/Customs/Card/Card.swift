@@ -1,62 +1,43 @@
-import Dependencies
 import SwiftUI
 import ZenithCoreInterface
-import SFSafeSymbols
 
-public struct Card: View {
-    @Environment(\.cardStyle) private var style
-    let image: String
-    let title: String
-    let arrangement: StackArrangementCase
+public struct Card<Content: View>: View, @preconcurrency BaseThemeDependencies {
+    @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
+    @GestureState private var isPressed = false
+    let alignment: Alignment
+    let type: CardType
+    let content: Content
     let action: () -> Void
     
     public init(
-        image: String,
-        title: String,
-        arrangement: StackArrangementCase,
-        action: @escaping () -> Void
+        alignment: Alignment,
+        type: CardType,
+        action: @escaping () -> Void,
+        @ViewBuilder content: () -> Content
     ) {
-        self.image = image
-        self.title = title
-        self.arrangement = arrangement
+        self.alignment = alignment
+        self.type = type
         self.action = action
-    }
-    
-    public init(
-        image: SFSymbol,
-        title: String,
-        arrangement: StackArrangementCase,
-        action: @escaping () -> Void
-    ) {
-        self.image = image.rawValue
-        self.title = title
-        self.arrangement = arrangement
-        self.action = action
-    }
-    
-    public static func emptyState(
-        image: SFSymbol,
-        title: String,
-        action: @escaping () -> Void
-    ) -> Self {
-        .init(
-            image: image,
-            title: title,
-            arrangement: .verticalCenter,
-            action: action
-        )
+        self.content = content()
     }
     
     public var body: some View {
-        AnyView(
-            style.resolve(
-                configuration: CardStyleConfiguration(
-                    image: image,
-                    title: title,
-                    arrangement: arrangement,
-                    action: action
-                )
-            )
-        )
+        Button(action: {
+            action()
+        }) {
+            content
+                .padding(themeConfigurator.theme.spacings.medium)
+                .frame(maxWidth: .infinity, alignment: alignment)
+        }
+        .buttonStyle(.cardAppearance(type))
     }
 }
+
+public enum CardType: String, CaseIterable, Decodable, Identifiable {
+    public var id: String {
+        rawValue
+    }
+    
+    case fill, bordered
+}
+

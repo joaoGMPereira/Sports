@@ -39,15 +39,15 @@ public struct LightColors: ColorsProtocol {
     
     public let highlightA = ColorPrimitiveToken.neonGreen
     
-    public let background = ColorPrimitiveToken.white
+    public let backgroundA = ColorPrimitiveToken.white
     
-    public let backgroundSecondary = ColorPrimitiveToken.extraLightGray
+    public let backgroundB = ColorPrimitiveToken.extraLightGray
     
-    public let backgroundTertiary = ColorPrimitiveToken.extraLightGray
+    public let backgroundC = ColorPrimitiveToken.extraLightGray
     
-    public let textPrimary = ColorPrimitiveToken.black
+    public let contentA = ColorPrimitiveToken.black
     
-    public let textSecondary = ColorPrimitiveToken.white
+    public let contentB = ColorPrimitiveToken.white
     
     public let critical = ColorPrimitiveToken.redSupport
     
@@ -60,10 +60,10 @@ public struct LightColors: ColorsProtocol {
     var colors: [ColorName: Color] {
         [
             .highlightA: highlightA,
-            .background: background,
-            .backgroundSecondary: backgroundSecondary,
-            .textPrimary: textPrimary,
-            .textSecondary: textSecondary,
+            .backgroundA: backgroundA,
+            .backgroundB: backgroundB,
+            .contentA: contentB,
+            .contentA: contentB,
             .critical: critical,
             .attention: attention,
             .danger: danger,
@@ -82,15 +82,15 @@ public struct DarkColors: ColorsProtocol {
     
     public let highlightA = ColorPrimitiveToken.neonGreen
     
-    public let background = ColorPrimitiveToken.black
+    public let backgroundA = ColorPrimitiveToken.black
     
-    public let backgroundSecondary = ColorPrimitiveToken.darkGray
+    public let backgroundB = ColorPrimitiveToken.darkGray
     
-    public let backgroundTertiary = ColorPrimitiveToken.lightGray
+    public let backgroundC = ColorPrimitiveToken.lightGray
     
-    public let textPrimary = ColorPrimitiveToken.white
+    public let contentA = ColorPrimitiveToken.white
     
-    public let textSecondary = ColorPrimitiveToken.black
+    public let contentB = ColorPrimitiveToken.black
     
     public let critical = ColorPrimitiveToken.redSupport
     
@@ -103,11 +103,11 @@ public struct DarkColors: ColorsProtocol {
     var colors: [ColorName: Color] {
         [
             .highlightA: highlightA,
-            .background: background,
-            .backgroundSecondary: backgroundSecondary,
-            .backgroundTertiary: backgroundTertiary,
-            .textPrimary: textPrimary,
-            .textSecondary: textSecondary,
+            .backgroundA: backgroundA,
+            .backgroundB: backgroundB,
+            .backgroundC: backgroundC,
+            .contentA: contentA,
+            .contentB: contentB,
             .critical: critical,
             .attention: attention,
             .danger: danger,

@@ -7,7 +7,7 @@ struct AppTabView: View, BaseThemeDependencies {
     @Dependency(\.themeConfigurator) var themeConfigurator: any ThemeConfiguratorProtocol
     
     init() {
-        UITabBar.appearance().unselectedItemTintColor = themeConfigurator.theme.colors.textPrimary.uiColor()
+        UITabBar.appearance().unselectedItemTintColor = themeConfigurator.theme.colors.contentA.uiColor()
     }
     
     @Environment(TabRouter<TabRoute>.self) var router
@@ -20,7 +20,7 @@ struct AppTabView: View, BaseThemeDependencies {
             HomeView()
             .tabItem {
                 Label("Home", systemSymbol: .listDash)
-                    .foregroundStyle(colors.textPrimary)
+                    .foregroundStyle(colors.contentA)
             }
             .tag(TabRoute.home)
             

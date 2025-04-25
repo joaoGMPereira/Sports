@@ -32,7 +32,7 @@ public struct TextStyleConfiguration {
 
 @MainActor
 public struct TextStyleKey: @preconcurrency EnvironmentKey {
-    public static let defaultValue: any TextStyle = TextStyleCase.smallTextPrimary.style()
+    public static let defaultValue: any TextStyle = TextStyleCase.smallContentA.style()
 }
 
 public extension EnvironmentValues {

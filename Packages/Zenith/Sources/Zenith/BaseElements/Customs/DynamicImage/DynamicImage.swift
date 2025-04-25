@@ -61,9 +61,13 @@ public struct DynamicImage: View {
     
     private var localImage: Image {
         if let imageAsset = ImageName(rawValue: image) {
-            return Image(asset: ImageAsset(name: imageAsset.rawValue)).resizable()
+            return Image(asset: ImageAsset(name: imageAsset.rawValue))
         } else {
-            return Image(systemSymbol: .init(rawValue: image)).resizable()
+            return Image(systemSymbol: .init(rawValue: image))
         }
+    }
+    
+    public func resizable() -> some View {
+        localImage.resizable()
     }
 }

@@ -3,15 +3,15 @@ import SwiftUICore
 public struct ColorsMock: ColorsProtocol {
     public let highlightA = Color.red
     
-    public let background = Color.red
+    public let backgroundA = Color.red
     
-    public let backgroundSecondary = Color.red
+    public let backgroundB = Color.red
     
-    public let backgroundTertiary = Color.red
+    public let backgroundC = Color.red
     
-    public let textPrimary = Color.red
+    public let contentA = Color.red
     
-    public let textSecondary = Color.red
+    public let contentB = Color.red
     
     public let critical = Color.red
     
@@ -24,10 +24,10 @@ public struct ColorsMock: ColorsProtocol {
     var colors: [ColorName: Color] {
         [
             .highlightA: highlightA,
-            .background: background,
-            .backgroundSecondary: backgroundSecondary,
-            .textPrimary: textPrimary,
-            .textSecondary: textSecondary,
+            .backgroundA: backgroundA,
+            .backgroundB: backgroundB,
+            .contentA: contentA,
+            .contentB: contentB,
             .critical: critical,
             .attention: attention,
             .danger: danger,

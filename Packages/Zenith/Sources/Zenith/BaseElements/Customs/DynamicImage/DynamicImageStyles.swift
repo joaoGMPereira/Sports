@@ -10,14 +10,11 @@ public extension View {
 public struct SmallDynamicImageStyle: @preconcurrency DynamicImageStyle, BaseThemeDependencies {
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
     let color: DynamicImageColor
-    
-    init(color: DynamicImageColor) {
-        self.color = color
-    }
+    let state: DSState
     
     @MainActor
     public func makeBody(configuration: Configuration) -> some View {
-        BaseDynamicImage(configuration: configuration, color: color)
+        BaseDynamicImage(configuration: configuration, dynamicImageColor: color, state: state)
             .smallSize()
     }
 }
@@ -25,14 +22,11 @@ public struct SmallDynamicImageStyle: @preconcurrency DynamicImageStyle, BaseThe
 public struct MediumDynamicImageStyle: @preconcurrency DynamicImageStyle, BaseThemeDependencies {
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
     let color: DynamicImageColor
-    
-    init(color: DynamicImageColor) {
-        self.color = color
-    }
+    let state: DSState
     
     @MainActor
     public func makeBody(configuration: Configuration) -> some View {
-        BaseDynamicImage(configuration: configuration, color: color)
+        BaseDynamicImage(configuration: configuration, dynamicImageColor: color, state: state)
             .mediumSize()
     }
 }
@@ -42,21 +36,25 @@ public struct NoneDynamicImageStyle: @preconcurrency DynamicImageStyle, BaseThem
 
     @MainActor
     public func makeBody(configuration: Configuration) -> some View {
-        BaseDynamicImage(configuration: configuration, color: .none)
+        BaseDynamicImage(configuration: configuration, dynamicImageColor: .none, state: .enabled)
     }
 }
 
 public extension DynamicImageStyle where Self == SmallDynamicImageStyle {
-    static func small(_ color: DynamicImageColor) -> Self { .init(color: color)  }
+    static func small(_ color: DynamicImageColor, state: DSState = .enabled) -> Self { .init(color: color, state: state)  }
 }
 
 public extension DynamicImageStyle where Self == MediumDynamicImageStyle {
-    static func medium(_ color: DynamicImageColor) -> Self { .init(color: color)  }
+    static func medium(_ color: DynamicImageColor, state: DSState = .enabled) -> Self { .init(color: color, state: state)  }
+}
+
+public extension DynamicImageStyle where Self == NoneDynamicImageStyle {
+    static func none() -> Self { .init()  }
 }
 
 public enum DynamicImageColor: CaseIterable, Identifiable, Sendable {
-    case primary
-    case secondary
+    case contentA
+    case contentB
     case highlightA
     case none
     
@@ -64,10 +62,10 @@ public enum DynamicImageColor: CaseIterable, Identifiable, Sendable {
     
     var color: ColorName? {
         switch self {
-        case .primary:
-            .textPrimary
-        case .secondary:
-            .textSecondary
+        case .contentA:
+            .contentA
+        case .contentB:
+            .contentB
         case .highlightA:
             .highlightA
         case .none:
@@ -77,39 +75,51 @@ public enum DynamicImageColor: CaseIterable, Identifiable, Sendable {
 }
 
 public enum DynamicImageStyleCase: CaseIterable, Identifiable {
-    case smallPrimary
-    case smallSecondary
-    case smallHighlightA
-    case mediumPrimary
-    case mediumSecondary
-    case mediumHighlightA
+    case smallContentA, smallContentB, smallHighlightA, mediumContentA, mediumContentB, mediumHighlightA
+    case smallContentADisabled, smallContentBDisabled, smallHighlightADisabled, mediumContentADisabled, mediumContentBDisabled, mediumHighlightADisabled, none
     
     public var id: Self { self }
     
     public func style() -> AnyDynamicImageStyle {
         switch self {
-        case .smallPrimary:
-            .init(.small(.primary))
-        case .smallSecondary:
-            .init(.small(.secondary))
+        case .smallContentA:
+            .init(.small(.contentA, state: .enabled))
+        case .smallContentB:
+            .init(.small(.contentB, state: .enabled))
         case .smallHighlightA:
-            .init(.small(.highlightA))
-        case .mediumPrimary:
-            .init(.medium(.primary))
-        case .mediumSecondary:
-            .init(.medium(.secondary))
+            .init(.small(.highlightA, state: .enabled))
+        case .mediumContentA:
+            .init(.medium(.contentA, state: .enabled))
+        case .mediumContentB:
+            .init(.medium(.contentB, state: .enabled))
         case .mediumHighlightA:
-            .init(.medium(.highlightA))
+            .init(.medium(.highlightA, state: .enabled))
+        case .smallContentADisabled:
+            .init(.small(.contentA, state: .disabled))
+        case .smallContentBDisabled:
+            .init(.small(.contentB, state: .disabled))
+        case .smallHighlightADisabled:
+            .init(.small(.highlightA, state: .disabled))
+        case .mediumContentADisabled:
+            .init(.medium(.contentA, state: .disabled))
+        case .mediumContentBDisabled:
+            .init(.medium(.contentB, state: .disabled))
+        case .mediumHighlightADisabled:
+            .init(.medium(.highlightA, state: .disabled))
+        case .none:
+            .init(.none())
         }
     }
 }
 
 fileprivate extension View {
     func smallSize() -> some View {
-        frame(width: 16, height: 16)
+        font(.system(size: 16))
+        .frame(width: 16, height: 16)
     }
     func mediumSize() -> some View {
-        frame(width: 24, height: 24)
+        font(.system(size: 24))
+        .frame(width: 24, height: 24)
     }
 }
 
@@ -117,18 +127,12 @@ private struct BaseDynamicImage: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
     let configuration: DynamicImageStyleConfiguration
     let dynamicImageColor: DynamicImageColor
-    
-    init(
-        configuration: DynamicImageStyleConfiguration,
-        color: DynamicImageColor
-    ) {
-        self.configuration = configuration
-        self.dynamicImageColor = color
-    }
+    let state: DSState
     
     var body: some View {
         Group {
             if let dynamicImageColor = dynamicImageColor.color, let color = colors.color(by: dynamicImageColor) {
+                let color = state == .enabled ? color : color.opacity(constants.disabledOpacity)
                 if configuration.type == .async {
                     configuration.asyncImage.foregroundStyle(color).scaledToFit()
                 } else {

@@ -38,7 +38,7 @@ public struct ActionCardStyleConfiguration {
 }
 
 public struct ActionCardStyleKey: EnvironmentKey {
-    public static let defaultValue: any ActionCardStyle = PrimaryActionCardStyle()
+    public static let defaultValue: any ActionCardStyle = ContentAActionCardStyle()
 }
 
 public extension EnvironmentValues {

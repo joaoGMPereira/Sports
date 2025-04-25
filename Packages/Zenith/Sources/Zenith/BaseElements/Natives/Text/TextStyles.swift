@@ -36,7 +36,7 @@ public struct BaseTextStyle: @preconcurrency TextStyle, @preconcurrency BaseThem
     }
     
     var color: Color {
-        colors.color(by: textStyleColor.color) ?? colors.textPrimary
+        colors.color(by: textStyleColor.color) ?? colors.contentA
     }
     
     public init(
@@ -57,18 +57,18 @@ public struct BaseTextStyle: @preconcurrency TextStyle, @preconcurrency BaseThem
 }
 
 public enum TextStyleColor: String, Decodable, CaseIterable, Identifiable, Sendable {
-    case textPrimary
-    case textSecondary
+    case contentA
+    case contentB
     case highlightA
     
     public var id: Self { self }
     
     var color: ColorName {
         switch self {
-        case .textPrimary:
-            .textPrimary
-        case .textSecondary:
-            .textSecondary
+        case .contentA:
+            .contentA
+        case .contentB:
+            .contentB
         case .highlightA:
             .highlightA
         }
@@ -76,17 +76,17 @@ public enum TextStyleColor: String, Decodable, CaseIterable, Identifiable, Senda
 }
 
 public enum TextStyleCase: String, Decodable, CaseIterable, Identifiable {
-    case smallTextPrimary
-    case smallTextSecondary
+    case smallContentA
+    case smallContentB
     case smallHighlightA
-    case mediumTextPrimary
-    case mediumTextSecondary
+    case mediumContentA
+    case mediumContentB
     case mediumHighlightA
-    case mediumBoldTextPrimary
-    case mediumBoldTextSecondary
+    case mediumBoldContentA
+    case mediumBoldContentB
     case mediumBoldHighlightA
-    case BigBoldTextPrimary
-    case BigBoldTextSecondary
+    case BigBoldContentA
+    case BigBoldContentB
     case BigBoldHighlightA
     
     public var id: Self { self }
@@ -94,28 +94,28 @@ public enum TextStyleCase: String, Decodable, CaseIterable, Identifiable {
     @MainActor
     public func style() -> AnyTextStyle {
         switch self {
-        case .smallTextPrimary:
-            return .init(BaseTextStyle.small(.textPrimary))
-        case .smallTextSecondary:
-            return .init(BaseTextStyle.small(.textSecondary))
+        case .smallContentA:
+            return .init(BaseTextStyle.small(.contentA))
+        case .smallContentB:
+            return .init(BaseTextStyle.small(.contentB))
         case .smallHighlightA:
             return .init(BaseTextStyle.small(.highlightA))
-        case .mediumTextPrimary:
-            return .init(BaseTextStyle.medium(.textPrimary))
-        case .mediumTextSecondary:
-            return .init(BaseTextStyle.medium(.textSecondary))
+        case .mediumContentA:
+            return .init(BaseTextStyle.medium(.contentA))
+        case .mediumContentB:
+            return .init(BaseTextStyle.medium(.contentB))
         case .mediumHighlightA:
             return .init(BaseTextStyle.medium(.highlightA))
-        case .mediumBoldTextPrimary:
-            return .init(BaseTextStyle.mediumBold(.textPrimary))
-        case .mediumBoldTextSecondary:
-            return .init(BaseTextStyle.mediumBold(.textSecondary))
+        case .mediumBoldContentA:
+            return .init(BaseTextStyle.mediumBold(.contentA))
+        case .mediumBoldContentB:
+            return .init(BaseTextStyle.mediumBold(.contentB))
         case .mediumBoldHighlightA:
             return .init(BaseTextStyle.mediumBold(.highlightA))
-        case .BigBoldTextPrimary:
-            return .init(BaseTextStyle.bigBold(.textPrimary))
-        case .BigBoldTextSecondary:
-            return .init(BaseTextStyle.bigBold(.textSecondary))
+        case .BigBoldContentA:
+            return .init(BaseTextStyle.bigBold(.contentA))
+        case .BigBoldContentB:
+            return .init(BaseTextStyle.bigBold(.contentB))
         case .BigBoldHighlightA:
             return .init(BaseTextStyle.bigBold(.highlightA))
         }

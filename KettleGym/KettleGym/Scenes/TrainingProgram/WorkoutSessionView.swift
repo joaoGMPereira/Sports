@@ -18,7 +18,7 @@ struct WorkoutSessionView: View, BaseThemeDependencies {
         List {
             ForEach(session.workoutExercises.sorted(by: { ($0.position ?? 0) < ($1.position ?? 0) })) { workoutExercise in
                 if let exercise = workoutExercise.exercise, let setPlan = workoutExercise.setPlan {
-                    BaseCard(alignment: .leading, type: .fill, action: {
+                    Card(alignment: .leading, type: .fill, action: {
                     }) {
                         contentCard(exercise, setPlan)
                     }.listRowSeparator(.hidden)
@@ -27,13 +27,13 @@ struct WorkoutSessionView: View, BaseThemeDependencies {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
-        .background(colors.background, ignoresSafeAreaEdges: .all)
+        .background(colors.backgroundA, ignoresSafeAreaEdges: .all)
         .navigationBarBackButtonHidden()
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Text(session.name)
                     .font(fonts.mediumBold)
-                    .foregroundColor(colors.textPrimary)
+                    .foregroundColor(colors.contentA)
             }
         }
         .toolbar {
@@ -42,7 +42,7 @@ struct WorkoutSessionView: View, BaseThemeDependencies {
                     dismiss()
                 }) {
                     Image(systemName: "chevron.left")
-                        .foregroundColor(colors.textPrimary)
+                        .foregroundColor(colors.contentA)
                 }
             }
         }
@@ -52,7 +52,7 @@ struct WorkoutSessionView: View, BaseThemeDependencies {
         HStack(spacing: spacings.medium) {
             VStack(alignment: .leading, spacing: spacings.medium) {
                 Text("Leg Press 45º")
-                    .textStyle(.small(.textPrimary))
+                    .textStyle(.small(.contentA))
                 Text("\(setPlan.quantity ?? 0) séries de \(setPlan.minRep ?? 0) - \(setPlan.maxRep ?? 0) repetições")
                     .font(fonts.small)
                     .foregroundStyle(Color.init(hex: "#BCBCBC")) // TODO COLOR

@@ -11,7 +11,7 @@ struct SectionView<T: View>: View, @preconcurrency BaseThemeDependencies {
     let content: T
     
     var color: Color {
-        backgroundColor ?? colors.backgroundSecondary
+        backgroundColor ?? colors.backgroundB
     }
     
     init(
@@ -29,18 +29,19 @@ struct SectionView<T: View>: View, @preconcurrency BaseThemeDependencies {
     var body: some View {
         Section(isExpanded: isExpanded) {
             content
+                .listRowSeparator(.hidden)
         } header: {
             Label(
                 title: {
                     Text(title)
-                        .textStyle(.mediumBold(.primary))
+                        .textStyle(.mediumBold(.highlightA))
                 },
                 icon: {
                     Image(systemSymbol: .chevronDown)
                         .rotationEffect(.init(degrees: isExpanded.wrappedValue ? 180 : 0))
                 })
             .font(fonts.mediumBold)
-            .foregroundStyle(colors.textPrimary)
+            .foregroundStyle(colors.contentA)
             .animation(.smooth, value: isExpanded.wrappedValue)
             .onTapGesture {
                 withAnimation {

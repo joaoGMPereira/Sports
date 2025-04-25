@@ -121,19 +121,19 @@ private extension BaseCheckBox {
     }
     var innerCircleColor: Color {
         if isDisabled {
-            return colors.textSecondary.opacity(0.6)
+            return colors.contentB.opacity(0.6)
         }
-        return colors.textSecondary
+        return colors.contentB
     }
     
     var outlineColor: Color {
         if isDisabled {
-            return colors.backgroundTertiary.opacity(0.6)
+            return colors.backgroundC.opacity(0.6)
         }
-        return configuration.isSelected ? colors.highlightA : colors.backgroundTertiary
+        return configuration.isSelected ? colors.highlightA : colors.backgroundC
     }
     
     var labelColor: Color {
-        return isDisabled ? colors.backgroundTertiary.opacity(0.6) : colors.textPrimary
+        return isDisabled ? colors.backgroundC.opacity(0.6) : colors.contentA
     }
 }

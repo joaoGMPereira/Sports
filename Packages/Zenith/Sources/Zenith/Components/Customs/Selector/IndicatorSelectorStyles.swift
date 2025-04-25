@@ -19,7 +19,7 @@ public struct DefaultIndicatorSelectorStyle: @preconcurrency IndicatorSelectorSt
     public func makeBody(configuration: Configuration) -> some View {
         BaseIndicatorSelector(
             configuration: configuration,
-            textStyle: .mediumBold(.textPrimary),
+            textStyle: .mediumBold(.contentA),
             contentColor: colors.highlightA
         )
     }
@@ -37,7 +37,7 @@ public struct HighlightAIndicatorSelectorStyle: @preconcurrency IndicatorSelecto
         BaseIndicatorSelector(
             configuration: configuration,
             textStyle: .mediumBold(.highlightA),
-            contentColor: colors.textPrimary
+            contentColor: colors.contentA
         )
     }
 }
@@ -170,7 +170,7 @@ struct BaseIndicatorSelector<T: TextStyle>: View, @preconcurrency BaseThemeDepen
                     
                     HStack {
                         LinearGradient(
-                            gradient: Gradient(colors: [colors.backgroundSecondary.opacity(0.8), colors.backgroundSecondary.opacity(0.1)]),
+                            gradient: Gradient(colors: [colors.backgroundB.opacity(0.8), colors.backgroundB.opacity(0.1)]),
                             startPoint: .leading,
                             endPoint: .trailing
                         )
@@ -180,7 +180,7 @@ struct BaseIndicatorSelector<T: TextStyle>: View, @preconcurrency BaseThemeDepen
                         Spacer()
                         
                         LinearGradient(
-                            gradient: Gradient(colors: [colors.backgroundSecondary.opacity(0.1), colors.backgroundSecondary.opacity(0.8)]),
+                            gradient: Gradient(colors: [colors.backgroundB.opacity(0.1), colors.backgroundB.opacity(0.8)]),
                             startPoint: .leading,
                             endPoint: .trailing
                         )

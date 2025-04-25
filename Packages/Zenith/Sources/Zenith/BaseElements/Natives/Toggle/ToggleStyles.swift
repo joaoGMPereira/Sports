@@ -31,7 +31,7 @@ public struct SmallToggleStyle: ToggleStyle, @preconcurrency BaseThemeDependenci
             Spacer()
             BaseToggle(
                 onColor: colors.color(by: color.onColor) ?? .primary,
-                offColor: colors.backgroundTertiary,
+                offColor: colors.backgroundC,
                 width: 40,
                 height: 20,
                 isOn: configuration.$isOn
@@ -58,7 +58,7 @@ public struct DefaultToggleStyle: ToggleStyle, @preconcurrency BaseThemeDependen
             Spacer()
             BaseToggle(
                 onColor: colors.color(by: color.onColor) ?? .primary,
-                offColor: colors.backgroundTertiary,
+                offColor: colors.backgroundC,
                 width: 50,
                 height: 30,
                 isOn: configuration.$isOn
@@ -121,7 +121,7 @@ private struct BaseToggle: View {
 
 public enum ToggleColor: CaseIterable, Identifiable, Sendable {
     case highlightA
-    case secondary
+    case contentA
     
     public var id: Self { self }
 
@@ -129,8 +129,8 @@ public enum ToggleColor: CaseIterable, Identifiable, Sendable {
         switch self {
         case .highlightA:
             .highlightA
-        case .secondary:
-            .textPrimary
+        case .contentA:
+            .contentA
         }
     }
 }
@@ -138,8 +138,8 @@ public enum ToggleColor: CaseIterable, Identifiable, Sendable {
 public enum ToggleStyleCase: String, Decodable, CaseIterable, Identifiable {
     case smallHighlightA
     case mediumHighlightA
-    case smallSecondary
-    case mediumSecondary
+    case smallContentA
+    case mediumContentA
     
     public var id: Self { self }
     
@@ -150,10 +150,10 @@ public enum ToggleStyleCase: String, Decodable, CaseIterable, Identifiable {
             .init(.small(.highlightA))
         case .mediumHighlightA:
             .init(.default(.highlightA))
-        case .smallSecondary:
-            .init(.small(.secondary))
-        case .mediumSecondary:
-            .init(.default(.secondary))
+        case .smallContentA:
+            .init(.small(.contentA))
+        case .mediumContentA:
+            .init(.default(.contentA))
         }
     }
 }

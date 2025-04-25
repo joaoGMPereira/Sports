@@ -16,6 +16,7 @@ struct DynamicImageSample: View {
             }
             ForEach(ImageName.allCases, id: \.self) {
                 DynamicImage($0)
+                    .resizable()
                     .frame(width: 300, height: 300)
             }
         }

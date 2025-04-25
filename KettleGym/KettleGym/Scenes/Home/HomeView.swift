@@ -37,12 +37,12 @@ struct HomeView: View, BaseThemeDependencies {
             .listRowSeparator(.hidden)
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
-            .background(colors.background, ignoresSafeAreaEdges: .all)
+            .background(colors.backgroundA, ignoresSafeAreaEdges: .all)
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text("KettleGym")
                         .font(fonts.mediumBold)
-                        .foregroundColor(colors.textPrimary)
+                        .foregroundColor(colors.contentA)
                 }
             }
         }
@@ -70,18 +70,18 @@ struct HomeWithTrainingsView: View, BaseThemeDependencies {
 //            ActionCard(title: trainingProgram.title, description: "Frequências: \(trainingProgram.workoutSessions.count) vezes na semana", image: .play, tags: trainingProgram.workoutSessions.map { $0.name }) {
 //                trainingAction(trainingProgram)
 //            }
-            BaseCard(alignment: .leading, type: .fill, action: {
+            Card(alignment: .leading, type: .fill, action: {
                 trainingAction(trainingProgram)
             }) {
                 HStack(spacing: spacings.medium) {
                     Text(trainingProgram.title)
-                        .textStyle(.mediumBold(.textPrimary))
+                        .textStyle(.mediumBold(.contentA))
                     Spacer()
                     Button {
                         
                     } label: {
                         Text("25%")
-                            .textStyle(.small(.textPrimary))
+                            .textStyle(.small(.contentA))
                             .padding(spacings.extraSmall)
                     }
                     .buttonStyle(.highlightA(shape: .circle))
@@ -89,28 +89,29 @@ struct HomeWithTrainingsView: View, BaseThemeDependencies {
                 }
             }
         }
-        BaseCard(
+        Card(
             alignment: .center,
             type: .bordered,
             action: newTrainingAction
         ) {
             Stack(arrangement: .horizontal(alignment: .center)) {
                 Text("Adicionar treino")
-                    .textStyle(.small(.textPrimary))
+                    .textStyle(.small(.contentA))
                 Spacer()
                 DynamicImage(.plus)
-                    .dynamicImageStyle(.medium(.primary))
+                    .dynamicImageStyle(.medium(.contentA))
             }
             .frame(maxHeight:.infinity)
         }
         .background {
             RoundedRectangle(cornerRadius: 24) // TODO RADIUS
-                .stroke(colors.textPrimary, lineWidth: 1)
+                .stroke(colors.contentA, lineWidth: 1)
         }
-        Card(
+        BasicCard(
             image: .figureRun,
             title: "Entre aqui para contratar sua propaganda",
-            arrangement: .verticalLeading
+            arrangement: .horizontalLeading,
+            contentLayout: .imageText
         ) {
             bannerAction()
         }
@@ -129,11 +130,11 @@ struct HomeEmptyView: View {
             Spacer()
         }
         Text("Você ainda não pussui um treino.")
-            .textStyle(.medium(.textPrimary))
+            .textStyle(.medium(.contentA))
             .frame(maxWidth: .infinity)
             .multilineTextAlignment(.center)
         
-        Card.emptyState(
+        BasicCard.emptyState(
             image: .figureRun,
             title: "Criar treino"
         ) {

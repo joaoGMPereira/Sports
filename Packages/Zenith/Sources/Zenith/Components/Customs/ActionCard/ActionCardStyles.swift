@@ -8,7 +8,7 @@ public extension View {
     }
 }
 
-public struct PrimaryActionCardStyle: @preconcurrency ActionCardStyle, BaseThemeDependencies {
+public struct ContentAActionCardStyle: @preconcurrency ActionCardStyle, BaseThemeDependencies {
     public var id = String(describing: Self.self)
     
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
@@ -18,11 +18,11 @@ public struct PrimaryActionCardStyle: @preconcurrency ActionCardStyle, BaseTheme
     @MainActor
     public func makeBody(configuration: Configuration) -> some View {
         BaseActionCard(configuration: configuration)
-            .foregroundColor(colors.textPrimary)
+            .foregroundColor(colors.contentA)
     }
 }
 
-public struct SecondaryActionCardStyle: @preconcurrency ActionCardStyle, BaseThemeDependencies {
+public struct ContentBActionCardStyle: @preconcurrency ActionCardStyle, BaseThemeDependencies {
     public var id = String(describing: Self.self)
     
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
@@ -32,30 +32,30 @@ public struct SecondaryActionCardStyle: @preconcurrency ActionCardStyle, BaseThe
     @MainActor
     public func makeBody(configuration: Configuration) -> some View {
         BaseActionCard(configuration: configuration)
-            .foregroundColor(colors.textSecondary)
+            .foregroundColor(colors.contentB)
     }
 }
 
-public extension ActionCardStyle where Self == PrimaryActionCardStyle {
-    static func primary() -> Self { .init() }
+public extension ActionCardStyle where Self == ContentAActionCardStyle {
+    static func contentA() -> Self { .init() }
 }
 
-public extension ActionCardStyle where Self == SecondaryActionCardStyle {
-    static func secondary() -> Self { .init() }
+public extension ActionCardStyle where Self == ContentBActionCardStyle {
+    static func contentB() -> Self { .init() }
 }
 
 public enum ActionCardStyleCase: CaseIterable, Identifiable {
-    case primary
-    case secondary
+    case contentA
+    case contentB
     
     public var id: Self { self }
     
     public func style() -> AnyActionCardStyle {
         switch self {
-        case .primary:
-                .init(.primary())
-        case .secondary:
-                .init(.secondary())
+        case .contentA:
+            .init(.contentA())
+        case .contentB:
+            .init(.contentB())
         }
     }
 }
@@ -70,29 +70,29 @@ private struct BaseActionCard: View, @preconcurrency BaseThemeDependencies {
     }
     
     var body: some View {
-        BaseCard(alignment: .center, type: .fill, action: {
+        Card(alignment: .center, type: .fill, action: {
             configuration.action()
         }) {
             Stack(arrangement: .vertical(alignment: .leading)) {
                 HStack(alignment: .top) {
                     Text(configuration.title)
-                        .textStyle(.mediumBold(.textPrimary))
+                        .textStyle(.mediumBold(.contentA))
                     Spacer()
                     Button {
                         configuration.action()
                     } label: {
                         DynamicImage(.arrowRight)
-                            .dynamicImageStyle(.medium(.primary))
+                            .dynamicImageStyle(.medium(.contentA))
                     }
                     .buttonStyle(.highlightA())
                 }
                 Text(configuration.description)
-                    .textStyle(.small(.textPrimary))
+                    .textStyle(.small(.contentA))
                 ScrollView(.horizontal) {
                     HStack {
                         ForEach(configuration.tags, id: \.self) {
                             Tag($0)
-                                .tagStyle(.small(.secondary))
+                                .tagStyle(.small(.default))
                         }
                     }
                 }.scrollIndicators(.hidden)

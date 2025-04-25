@@ -14,42 +14,42 @@ struct ZenithCoreSampleView: View {
         NavigationView {
             List {
                 Section(
-                    header: Text("Themes").font(fonts.bigBold.font).foregroundStyle(colors.textPrimary)
+                    header: Text("Themes").font(fonts.bigBold.font).foregroundStyle(colors.contentA)
                 ) {
                     ForEach(ThemeName.allCases) { theme in
                         Button(theme.rawValue) {
                             themeConfigurator.change(theme)
                         }
                         .font((fonts.small.font))
-                        .tint(colors.textPrimary)
+                        .tint(colors.contentA)
                     }
-                }.listRowBackground(colors.backgroundSecondary)
+                }.listRowBackground(colors.backgroundB)
                 Section(
-                    header: Text("Fonts").font(fonts.bigBold.font).foregroundStyle(colors.textPrimary)
+                    header: Text("Fonts").font(fonts.bigBold.font).foregroundStyle(colors.contentA)
                 ) {
                     FontExampleView()
-                }.listRowBackground(colors.backgroundSecondary)
+                }.listRowBackground(colors.backgroundB)
                 Section(
-                    header: Text("Colors").font(fonts.bigBold.font).foregroundStyle(colors.textPrimary)
+                    header: Text("Colors").font(fonts.bigBold.font).foregroundStyle(colors.contentA)
                 ) {
                     ColorExampleView()
-                }.listRowBackground(colors.backgroundSecondary)
+                }.listRowBackground(colors.backgroundB)
                 Section(
-                    header: Text("Spacing").font(fonts.bigBold.font).foregroundStyle(colors.textPrimary)
+                    header: Text("Spacing").font(fonts.bigBold.font).foregroundStyle(colors.contentA)
                 ) {
                     SpacingExampleView()
-                }.listRowBackground(colors.backgroundSecondary)
+                }.listRowBackground(colors.backgroundB)
             }
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text("Sample")
                         .font(fonts.mediumBold.font)
-                        .foregroundColor(colors.textPrimary)
+                        .foregroundColor(colors.contentA)
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
             .scrollContentBackground(.hidden)
-            .background(colors.background)
+            .background(colors.backgroundA)
         }
     }
 }
@@ -68,7 +68,7 @@ struct FontExampleView: View {
         VStack(alignment: .leading, spacing: 8) {
             ForEach(FontName.allCases, id: \.rawValue) { font in
                 Text(font.rawValue)
-                    .foregroundStyle(colors.textPrimary)
+                    .foregroundStyle(colors.contentA)
                     .font(fonts.font(by: font)?.font)
             }
         }
@@ -91,7 +91,7 @@ struct ColorExampleView: View {
             ForEach(ColorName.allCases, id: \.rawValue) { color in
                 HStack {
                     Text(color.rawValue)
-                        .foregroundStyle(colors.textPrimary)
+                        .foregroundStyle(colors.contentA)
                         .font(fonts.small.font)
                         .frame(width: 100, alignment: .leading)
                     RoundedRectangle(cornerRadius: 6)
@@ -123,10 +123,10 @@ struct SpacingExampleView: View {
             ForEach(SpacingName.allCases, id: \.rawValue) { spacing in
                 HStack {
                     Text(spacing.rawValue)
-                        .foregroundStyle(colors.textPrimary)
+                        .foregroundStyle(colors.contentA)
                         .frame(width: 100, alignment: .leading)
                     Rectangle()
-                        .fill(colors.textSecondary)
+                        .fill(colors.contentB)
                         .frame(width: spacings.spacing(by: spacing), height: 10)
                 }
             }

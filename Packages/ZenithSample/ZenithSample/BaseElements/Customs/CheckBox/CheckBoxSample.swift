@@ -115,7 +115,7 @@ struct CheckBoxSample: View {
             Button(action: showSelectedCount) {
                 Text("Show Selected Count")
             }
-            .buttonStyle(.secondary())
+            .buttonStyle(.highlightA())
             .padding(.top, 16)
         }
         .alert(isPresented: $showAlert) {

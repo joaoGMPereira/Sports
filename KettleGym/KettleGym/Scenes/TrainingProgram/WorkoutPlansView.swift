@@ -18,13 +18,13 @@ struct WorkoutPlansView: View, BaseThemeDependencies {
     var body: some View {
         List {
             ForEach(trainingProgram.workoutSessions.sorted(by: { $0.name < $1.name })) { session in
-                BaseCard(alignment: .leading, type: .fill, action: {
+                Card(alignment: .leading, type: .fill, action: {
                     trainingProgrammingRouter.navigate(to: .workoutSession(session))
                 }) {
                     VStack(spacing: spacings.medium) {
                         HStack(alignment: .top) {
                             Text(session.name)
-                                .textStyle(.mediumBold(.textPrimary))
+                                .textStyle(.mediumBold(.contentA))
                             Spacer()
                             Text("Precisa de evoluir")
                                 .textStyle(.small(.highlightA))
@@ -35,7 +35,7 @@ struct WorkoutPlansView: View, BaseThemeDependencies {
                                     .font(fonts.small)
                                     .foregroundStyle(Color.init(hex: "#BCBCBC")) // TODO COLOR
                                 Text("35 a 40min")
-                                    .textStyle(.small(.textPrimary))
+                                    .textStyle(.small(.contentA))
                             }
                             Spacer()
                             VStack(alignment: .trailing) {
@@ -43,7 +43,7 @@ struct WorkoutPlansView: View, BaseThemeDependencies {
                                     .font(fonts.small)
                                     .foregroundStyle(Color.init(hex: "#BCBCBC")) // TODO COLOR
                                 Text("\(session.workoutExercises.count)x")
-                                    .textStyle(.small(.textPrimary))
+                                    .textStyle(.small(.contentA))
                             }
                         }
                         
@@ -54,13 +54,13 @@ struct WorkoutPlansView: View, BaseThemeDependencies {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
-        .background(colors.background, ignoresSafeAreaEdges: .all)
+        .background(colors.backgroundA, ignoresSafeAreaEdges: .all)
         .navigationBarBackButtonHidden()
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Text(trainingProgram.title)
                     .font(fonts.mediumBold)
-                    .foregroundColor(colors.textPrimary)
+                    .foregroundColor(colors.contentA)
             }
         }
         .toolbar {
@@ -69,7 +69,7 @@ struct WorkoutPlansView: View, BaseThemeDependencies {
                     dismiss()
                 }) {
                     Image(systemName: "chevron.left")
-                        .foregroundColor(colors.textPrimary)
+                        .foregroundColor(colors.contentA)
                 }
             }
         }

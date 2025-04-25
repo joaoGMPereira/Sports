@@ -63,16 +63,16 @@ public extension TagStyle where Self == DefaultTagStyle {
 
 public enum TagColor: CaseIterable, Identifiable, Sendable {
     case highlightA
-    case secondary
+    case `default`
     
     public var id: Self { self }
     
     var foregroundColor: TextStyleColor {
         switch self {
         case .highlightA:
-            .textSecondary
-        case .secondary:
-            .textPrimary
+            .contentB
+        case .default:
+            .contentA
         }
     }
     
@@ -80,8 +80,8 @@ public enum TagColor: CaseIterable, Identifiable, Sendable {
         switch self {
         case .highlightA:
             .highlightA
-        case .secondary:
-            .backgroundTertiary
+        case .default:
+            .backgroundC
         }
     }
 }
@@ -89,8 +89,8 @@ public enum TagColor: CaseIterable, Identifiable, Sendable {
 public enum TagStyleCase: CaseIterable, Identifiable {
     case smallHighlightA
     case mediumHighlightA
-    case smallSecondary
-    case mediumSecondary
+    case smallDefault
+    case mediumDefault
     
     public var id: Self { self }
     
@@ -100,10 +100,10 @@ public enum TagStyleCase: CaseIterable, Identifiable {
             .init(.small(.highlightA))
         case .mediumHighlightA:
             .init(.default(.highlightA))
-        case .smallSecondary:
-            .init(.small(.secondary))
-        case .mediumSecondary:
-            .init(.default(.secondary))
+        case .smallDefault:
+            .init(.small(.default))
+        case .mediumDefault:
+            .init(.default(.default))
         }
     }
 }
