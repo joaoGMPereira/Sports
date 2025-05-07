@@ -25,6 +25,8 @@ public struct ColorsMock: ColorsProtocol {
     
     public let positive = Color.red
     
+    public let none = Color.clear
+    
     var colors: [ColorName: Color] {
         [
             .highlightA: highlightA,
@@ -39,6 +41,7 @@ public struct ColorsMock: ColorsProtocol {
             .attention: attention,
             .danger: danger,
             .positive: positive,
+            .none: none
         ]
     }
     

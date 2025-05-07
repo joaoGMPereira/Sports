@@ -145,12 +145,11 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
             tabType: .components,
             view: HeaderTitleSample()
         ),
-        
         ElementType(
             name: "Blur",
             category: .custom,
-            tabType: .components,
-            view:  BlurSample()
+            tabType: .baseElements,
+            view: BlurSample()
         ),
         // Templates
         ElementType(

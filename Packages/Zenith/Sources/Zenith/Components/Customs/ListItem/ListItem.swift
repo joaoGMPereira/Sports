@@ -18,13 +18,15 @@ public struct ListItem: View {
         description: String = String(),
         leftInfo: Info,
         rightInfo: Info,
-        action: @escaping () -> Void
+        action: @escaping () -> Void,
+        blurStyle: BlurStyleCase = .default(.highlightA)
     ) {
         self.configuration = .init(
             title: title,
             description: description,
             leftInfo: leftInfo,
             rightInfo: rightInfo,
+            blurStyle: blurStyle,
             action: action
         )
     }
@@ -35,6 +37,7 @@ public struct ListItem: View {
         leftInfo: Info,
         rightInfo: Info,
         action: @escaping () -> Void,
+        blurStyle: BlurStyleCase = .default(.highlightA),
         @ViewBuilder trailingContent: () -> TrailingContent
     ) {
         self.configuration = .init(
@@ -42,6 +45,7 @@ public struct ListItem: View {
             description: description,
             leftInfo: leftInfo,
             rightInfo: rightInfo,
+            blurStyle: blurStyle,
             action: action,
             trailingContent: AnyView(trailingContent())
         )

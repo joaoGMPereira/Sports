@@ -67,28 +67,7 @@ private struct BaseListItem: @preconcurrency View, @preconcurrency BaseThemeDepe
         Card(alignment: .center, type: .fill, action: {
             configuration.action()
         }) {
-            ZStack(alignment: .topTrailing) {
-                // Terceira camada de blur (maior e mais suave)
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color(hex: "#80B6FB2D"))
-                    .frame(width: 100, height: 50)
-                    .blur(radius: 50)
-                    .offset(x: -20, y: 20)
-                
-                // Segunda camada de blur (média)
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color(hex: "#80B6FB2D"))
-                    .frame(width: 80, height: 40)
-                    .blur(radius: 40)
-                    .offset(x: -20, y: 20)
-                
-                // Primeira camada de blur (menor e mais próxima)
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color(hex: "#A6ADFF09").opacity(0.9))
-                    .frame(width: 42, height: 24)
-                    .blur(radius: 20)
-                    .offset(x: -25, y: 25)
-                
+            Blur {
                 Stack(arrangement: .vertical(alignment: .leading)) {
                     VStack(alignment: .leading, spacing: spacings.medium) {
                         HStack(alignment: .top) {
@@ -121,11 +100,7 @@ private struct BaseListItem: @preconcurrency View, @preconcurrency BaseThemeDepe
                     }
                 }.padding(spacings.medium)
             }
-            .mask(
-                // Esta máscara garante que o blur respeite as bordas arredondadas
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color.white)
-            )
+            .blurStyle(configuration.blurStyle.style())
         }
     }
 }

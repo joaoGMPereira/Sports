@@ -26,6 +26,7 @@ public struct ListItemStyleConfiguration {
     let description: String
     let leftInfo: ListItem.Info
     let rightInfo: ListItem.Info
+    let blurStyle: BlurStyleCase
     let action: (() -> Void)
     let trailingContent: AnyView?
     
@@ -34,6 +35,7 @@ public struct ListItemStyleConfiguration {
         description: String,
         leftInfo: ListItem.Info,
         rightInfo: ListItem.Info,
+        blurStyle: BlurStyleCase,
         action: @escaping () -> Void,
         trailingContent: AnyView? = nil
     ) {
@@ -41,6 +43,7 @@ public struct ListItemStyleConfiguration {
         self.description = description
         self.leftInfo = leftInfo
         self.rightInfo = rightInfo
+        self.blurStyle = blurStyle
         self.action = action
         self.trailingContent = trailingContent
     }

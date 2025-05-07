@@ -366,8 +366,10 @@ def create_component_sample(component_name):
     """Cria o arquivo [Component]Sample.swift para o ZenithSample"""
     return f"""import SwiftUI
 import Zenith
+import ZenithCoreInterface
 
-struct {component_name}Sample: View {{
+struct {component_name}Sample: View, @preconcurrency BaseThemeDependencies {{
+    @Dependency(\.themeConfigurator) var themeConfigurator
     @State var isExpanded = false
     
     var body: some View {{
@@ -381,7 +383,7 @@ struct {component_name}Sample: View {{
 }}
 """
 
-def update_sample_view(zenith_sample_path, component_name):
+def update_sample_view(zenith_sample_path, component_name, is_native=False, folder_type="Components"):
     """Atualiza o arquivo ZenithSampleView.swift para incluir o novo sample"""
     view_file_path = os.path.join(zenith_sample_path, "ZenithSampleView.swift")
     
@@ -393,26 +395,95 @@ def update_sample_view(zenith_sample_path, component_name):
         with open(view_file_path, 'r') as file:
             content = file.read()
         
-        # Encontra a posição para adicionar o novo componente
-        marker = "//AQUI{Component}"
-        if marker in content:
-            updated_content = content.replace(marker, f"{component_name}Sample()\n                {marker}")
-        else:
-            # Tenta encontrar o último componente na lista para adicionar após ele
-            components_pattern = r'(.*?Sample\(\))'
-            components = re.findall(components_pattern, content)
-            if components:
-                last_component = components[-1]
-                updated_content = content.replace(last_component, f"{last_component}\n                {component_name}Sample()")
+        # Determinar a categoria e o tipo de aba com base nos parâmetros
+        category = ".native" if is_native else ".custom"
+        tab_type = ".baseElements" if folder_type == "BaseElements" else ".components" if folder_type == "Components" else ".templates"
+        
+        # Localizar o array elementTypes no conteúdo
+        element_types_start = content.find("private var elementTypes: [ElementType] = [")
+        if element_types_start == -1:
+            print_warning("Não foi possível localizar a lista de elementTypes no arquivo ZenithSampleView.swift")
+            return False
+        
+        # Encontrar onde inserir o novo elemento
+        insert_marker = None
+        
+        # Comentário que marca a seção (vamos procurar o comentário adequado)
+        if tab_type == ".baseElements" and category == ".native":
+            insert_marker = "// Base Elements - Natives"
+        elif tab_type == ".baseElements" and category == ".custom":
+            insert_marker = "// Base Elements - Customs"
+        elif tab_type == ".components" and category == ".custom":
+            insert_marker = "// Base Elements - Customs"  # Componentes customizados
+        elif tab_type == ".templates":
+            insert_marker = "// Templates"
+        
+        if insert_marker:
+            marker_pos = content.find(insert_marker, element_types_start)
+            if marker_pos != -1:
+                # Encontrar o fechamento do último ElementType nesta seção
+                section_start = marker_pos
+                
+                # Encontrar a próxima seção de comentário ou o fim da definição de elementTypes
+                next_comment = content.find("//", marker_pos + len(insert_marker))
+                end_array = content.find("]", marker_pos)
+                
+                section_end = next_comment if (next_comment != -1 and next_comment < end_array) else end_array
+                
+                if section_end != -1:
+                    # Encontrar o último ElementType na seção atual
+                    last_element_end = content.rfind(")", section_start, section_end)
+                    
+                    if last_element_end != -1:
+                        # Criar o novo ElementType
+                        new_element = f""",
+        ElementType(
+            name: "{component_name}",
+            category: {category},
+            tabType: {tab_type},
+            view: {component_name}Sample()
+        )"""
+                        
+                        # Inserir o novo ElementType após o último da seção
+                        updated_content = content[:last_element_end+1] + new_element + content[last_element_end+1:]
+                        
+                        # Escrever o conteúdo atualizado
+                        with open(view_file_path, 'w') as file:
+                            file.write(updated_content)
+                        
+                        return True
             else:
-                print_warning("Não foi possível localizar o ponto de inserção no arquivo ZenithSampleView.swift")
-                return False
+                print_warning(f"Seção {insert_marker} não encontrada")
         
-        # Escreve o conteúdo atualizado
-        with open(view_file_path, 'w') as file:
-            file.write(updated_content)
+        # Alternativa: Adicionar antes do último elemento (antes do fechamento do array)
+        if element_types_start != -1:
+            # Encontrar o fechamento do array
+            array_end = content.find("]", element_types_start)
+            if array_end != -1:
+                # Encontrar o último elemento
+                last_element_end = content.rfind(")", element_types_start, array_end)
+                
+                if last_element_end != -1:
+                    # Criar o novo ElementType
+                    new_element = f""",
+        ElementType(
+            name: "{component_name}",
+            category: {category},
+            tabType: {tab_type},
+            view: {component_name}Sample()
+        )"""
+                    
+                    # Inserir antes do fechamento do array
+                    updated_content = content[:last_element_end+1] + new_element + content[last_element_end+1:]
+                    
+                    # Escrever o conteúdo atualizado
+                    with open(view_file_path, 'w') as file:
+                        file.write(updated_content)
+                    
+                    return True
         
-        return True
+        print_warning("Não foi possível atualizar o arquivo ZenithSampleView.swift")
+        return False
     
     except Exception as e:
         print_error(f"Erro ao atualizar ZenithSampleView.swift: {str(e)}")
@@ -734,7 +805,7 @@ def generate_component():
         print_success(f"✓ {component_name}Sample.swift criado em {folder_type}/{'Natives' if is_native else 'Customs'}/{component_name}")
         
         # Atualizar o ZenithSampleView.swift para incluir o novo componente
-        if update_sample_view(zenith_sample_path, component_name):
+        if update_sample_view(zenith_sample_path, component_name, is_native, folder_type):
             print_success(f"✓ ZenithSampleView.swift atualizado com {component_name}Sample")
         else:
             print_warning("ZenithSampleView.swift não foi atualizado")

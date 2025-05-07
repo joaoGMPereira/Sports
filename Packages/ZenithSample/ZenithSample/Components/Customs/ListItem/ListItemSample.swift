@@ -5,9 +5,14 @@ import ZenithCoreInterface
 struct ListItemSample: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) var themeConfigurator
     @State var isExpanded = false
+    @State private var selectedColor: ColorName = .highlightA
     
     var body: some View {
         SectionView(title: "ListItem", isExpanded: $isExpanded, backgroundColor: .clear) {
+            // Seletor de cor para o blur
+            ColorSelector(selectedColor: $selectedColor)
+            
+            // Lista de cards
             ForEach(ListItemStyleCase.allCases, id: \.self) { style in
                 ListItem(
                     title: "Treino de Adaptação",
@@ -22,7 +27,8 @@ struct ListItemSample: View, @preconcurrency BaseThemeDependencies {
                     ),
                     action: {
                         print("caiu aqui")
-                    }
+                    },
+                    blurStyle: .default(selectedColor)
                 ) {
                     Button {
                         

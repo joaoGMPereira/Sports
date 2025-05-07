@@ -12,9 +12,9 @@ enum ColorPrimitiveToken {
     static let grayWithOpacity = Color(hex: "#802F2F35")
 
     static let purpleSupport = Color(hex: "#A811CD")
-    static let yellowSupport = Color(hex: "#FBCC34")
+    static let yellowSupport = Color(hex: "#EDFF22")
     static let orangeSupport = Color(hex: "#FB9B2E")
-    static let redSupport = Color(hex: "#FB3434")
+    static let redSupport = Color(hex: "#FF1F1F")
     static let neonGreen = Color(hex: "#B6FB2D")
     static let waterGreen = Color(hex: "#43E58D")
 }
@@ -45,6 +45,8 @@ public struct DarkColors: ColorsProtocol {
     
     public let positive = ColorPrimitiveToken.waterGreen
     
+    public let none = Color.clear
+    
     var colors: [ColorName: Color] {
         [
             .highlightA: highlightA,
@@ -58,6 +60,7 @@ public struct DarkColors: ColorsProtocol {
             .attention: attention,
             .danger: danger,
             .positive: positive,
+            .none: none
         ]
     }
     

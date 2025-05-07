@@ -1,6 +1,6 @@
 import SwiftUI
 
-public enum ColorName: String, Decodable, CaseIterable {
+public enum ColorName: String, Decodable, CaseIterable, Sendable {
     case highlightA,
          backgroundA,
          backgroundB,
@@ -12,7 +12,8 @@ public enum ColorName: String, Decodable, CaseIterable {
          critical,
          attention,
          danger,
-         positive
+         positive,
+         none
 }
 
 public protocol ColorsProtocol: Sendable, Equatable {
@@ -28,6 +29,7 @@ public protocol ColorsProtocol: Sendable, Equatable {
     var attention: Color { get }
     var danger: Color { get }
     var positive: Color { get }
+    var none: Color { get }
     
     func color(by colorName: ColorName) -> Color?
 }
