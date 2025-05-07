@@ -49,7 +49,6 @@ public struct DefaultStepsTemplateStyle: @preconcurrency StepsTemplateStyle, Bas
                         .animation(.easeIn, value: configuration.currentStep.wrappedValue)
                 }
             }
-            Spacer()
             // Navigation Buttons
             HStack {
                 Button(action: configuration.moveToPreviousStep) {
@@ -87,7 +86,6 @@ public struct DefaultStepsTemplateStyle: @preconcurrency StepsTemplateStyle, Bas
                 .id("next-button")
             }
             .padding(.horizontal)
-            .padding(.top, 8)
         }
         .padding()
     }

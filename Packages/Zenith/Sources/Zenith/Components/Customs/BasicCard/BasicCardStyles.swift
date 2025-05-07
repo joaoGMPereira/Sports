@@ -20,7 +20,10 @@ public struct FillBasicCardStyle: @preconcurrency BasicCardStyle, BaseThemeDepen
             if configuration.title.isEmpty {
                 EmptyView()
             } else {
-                CardContent(configuration: configuration) {
+                CardContent(
+                    configuration: configuration,
+                    type: .fill
+                ) {
                     ImageTextContentView(
                         image: configuration.image,
                         title: configuration.title,
@@ -45,18 +48,16 @@ public struct BorderedStyle: @preconcurrency BasicCardStyle, BaseThemeDependenci
             if configuration.title.isEmpty {
                 EmptyView()
             } else {
-                CardContent(configuration: configuration) {
+                CardContent(
+                    configuration: configuration,
+                    type: .bordered
+                ) {
                     ImageTextContentView(
                         image: configuration.image,
                         title: configuration.title,
                         layout: configuration.contentLayout
                     )
                 }
-                .background {
-                    RoundedRectangle(cornerRadius: 24)
-                        .stroke(colors.contentA, lineWidth: 1)
-                }
-                
             }
         }
     }
@@ -86,33 +87,40 @@ public enum BasicCardStyleCase: String, Decodable, CaseIterable, Equatable {
     }
 }
 
-private struct CardContent<Content: View>: View {
+private struct CardContent<Content: View>: View, @preconcurrency BaseThemeDependencies {
+    @Dependency(\.themeConfigurator) var themeConfigurator
+    
     let configuration: BasicCardStyleConfiguration
     let content: Content
+    let type: CardType
     
     init(
         configuration: BasicCardStyleConfiguration,
+        type: CardType,
         @ViewBuilder content: () -> Content
     ) {
         self.configuration = configuration
+        self.type = type
         self.content = content()
     }
     var body: some View {
         Card(
             alignment: configuration.arrangement.alignment(),
-            type: .fill,
+            type: type,
             action: configuration.action
         ) {
             Stack(arrangement: configuration.arrangement.arrangement()) {
                 content
             }
             .frame(maxHeight:.infinity)
+            .padding(.vertical, spacings.extraLarge)
+            .padding(.horizontal, spacings.large)
         }
     }
 }
 
-
-private struct ImageTextContentView: View {
+private struct ImageTextContentView: View, @preconcurrency BaseThemeDependencies {
+    @Dependency(\.themeConfigurator) var themeConfigurator
     let image: String
     let title: String
     let layout: CardLayoutCase
@@ -128,6 +136,7 @@ private struct ImageTextContentView: View {
                 textView
                 if layout.hasSpacer { Spacer() }
                 imageView
+                    .padding(.trailing, spacings.medium)
             }
         }
     }

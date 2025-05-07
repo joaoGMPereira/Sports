@@ -1,4 +1,5 @@
 import SwiftUI
+import TipKit
 import Zenith
 import ZenithCore
 import ZenithCoreInterface
@@ -32,7 +33,7 @@ struct SportsApp: App {
                 PerformedExercise.self,
                 User.self,
                 Exercise.self,
-                SetPlan.self,
+                SetPlanOld.self,
                 CommingSoon.self
             ]
         )
@@ -64,6 +65,10 @@ struct SportsApp: App {
         .environment(tabRouter)
         .environment(toast)
         .modelContainer(sharedModelContainer)
+    }
+    
+    init() {
+        try? Tips.configure()
     }
 }
 

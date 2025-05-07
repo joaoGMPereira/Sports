@@ -1,6 +1,6 @@
 final class ThemeConfiguratorSpy: ThemeConfiguratorProtocol {
     var theme: Theme = Theme(
-        name: .light,
+        name: .dark,
         colors: ColorsMock(),
         fonts: FontsMock(),
         spacings: SpacingsMock(),

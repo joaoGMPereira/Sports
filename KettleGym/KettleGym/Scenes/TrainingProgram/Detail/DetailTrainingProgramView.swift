@@ -9,7 +9,7 @@ struct DetailTrainingProgramView: View, BaseThemeDependencies {
     @State var trainingProgram: TrainingProgram
     
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
-    @Environment(Router<TrainingProgramRoute>.self) var trainingProgrammingRouter
+    @Environment(Router<WorkoutPlanRoute>.self) var workoutPlanRoute
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @State private var isExpanded: Bool = true
@@ -89,6 +89,6 @@ struct DetailTrainingProgramView: View, BaseThemeDependencies {
     }
     
     func editTrainingProgram() {
-        trainingProgrammingRouter.navigate(to: .edit(.init(wrappedValue: $trainingProgram)))
+        workoutPlanRoute.navigate(to: .edit(.init(wrappedValue: $trainingProgram)))
     }
 }

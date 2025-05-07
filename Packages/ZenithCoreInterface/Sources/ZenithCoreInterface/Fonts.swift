@@ -1,7 +1,7 @@
 import SwiftUI
 
 public enum FontName: String, Decodable, CaseIterable, Sendable {
-    case small, medium, mediumBold, bigBold
+    case small, smallBold, medium, mediumBold, bigBold
 }
 
 protocol FontProtocol {
@@ -28,11 +28,13 @@ public struct BaseFont: FontProtocol, Sendable, Equatable {
 
 public protocol FontsProtocol: Sendable, Equatable {
     var baseSmall: BaseFont { get }
+    var baseSmallBold: BaseFont { get }
     var baseMedium: BaseFont { get }
     var baseMediumBold: BaseFont { get }
     var baseBigBold: BaseFont { get }
     
     var small: Font { get }
+    var smallBold: Font { get }
     var medium: Font { get }
     var mediumBold: Font { get }
     var bigBold: Font { get }

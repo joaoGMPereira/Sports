@@ -54,7 +54,7 @@ public extension DynamicImageStyle where Self == NoneDynamicImageStyle {
 
 public enum DynamicImageColor: CaseIterable, Identifiable, Sendable {
     case contentA
-    case contentB
+    case contentC
     case highlightA
     case none
     
@@ -64,8 +64,8 @@ public enum DynamicImageColor: CaseIterable, Identifiable, Sendable {
         switch self {
         case .contentA:
             .contentA
-        case .contentB:
-            .contentB
+        case .contentC:
+            .contentC
         case .highlightA:
             .highlightA
         case .none:
@@ -85,25 +85,25 @@ public enum DynamicImageStyleCase: CaseIterable, Identifiable {
         case .smallContentA:
             .init(.small(.contentA, state: .enabled))
         case .smallContentB:
-            .init(.small(.contentB, state: .enabled))
+            .init(.small(.contentC, state: .enabled))
         case .smallHighlightA:
             .init(.small(.highlightA, state: .enabled))
         case .mediumContentA:
             .init(.medium(.contentA, state: .enabled))
         case .mediumContentB:
-            .init(.medium(.contentB, state: .enabled))
+            .init(.medium(.contentC, state: .enabled))
         case .mediumHighlightA:
             .init(.medium(.highlightA, state: .enabled))
         case .smallContentADisabled:
             .init(.small(.contentA, state: .disabled))
         case .smallContentBDisabled:
-            .init(.small(.contentB, state: .disabled))
+            .init(.small(.contentC, state: .disabled))
         case .smallHighlightADisabled:
             .init(.small(.highlightA, state: .disabled))
         case .mediumContentADisabled:
             .init(.medium(.contentA, state: .disabled))
         case .mediumContentBDisabled:
-            .init(.medium(.contentB, state: .disabled))
+            .init(.medium(.contentC, state: .disabled))
         case .mediumHighlightADisabled:
             .init(.medium(.highlightA, state: .disabled))
         case .none:

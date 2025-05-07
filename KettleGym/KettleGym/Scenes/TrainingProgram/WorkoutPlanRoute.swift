@@ -1,16 +1,20 @@
 import SwiftUI
 import Zenith
 
-enum TrainingProgramRoute: Routable {
-    case trainingProgram
+enum WorkoutPlanRoute: Routable {
+    case createWorkoutPlan
+    case createWorkoutPlanOld
     case workoutPlans(_ trainingProgram: TrainingProgram)
     case workoutSession(_ session: WorkoutSession)
     case detail(_ trainingProgram: TrainingProgram)
     case edit(_ trainingProgram: EquatableBinding<TrainingProgram>)
+    case commingSoonFeature
     
     var body: some View {
         switch self {
-        case .trainingProgram:
+        case .createWorkoutPlan:
+            CreateWorkoutPlanView()
+        case .createWorkoutPlanOld:
             CreateTrainingProgramView()
         case let .workoutPlans(trainingProgram):
             WorkoutPlansView(trainingProgram: trainingProgram)
@@ -20,6 +24,8 @@ enum TrainingProgramRoute: Routable {
             DetailTrainingProgramView(trainingProgram: trainingProgram)
         case let .edit(trainingProgram):
             EditTrainingProgramView(trainingProgram: trainingProgram.wrappedValue)
+        case .commingSoonFeature:
+            CommingSoonFeatureView()
         }
     }
 }

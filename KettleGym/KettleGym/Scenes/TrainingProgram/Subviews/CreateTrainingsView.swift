@@ -4,8 +4,8 @@ import SwiftData
 import SwiftUI
 struct CreateTrainingsView: View {
     let trainingProgram: TrainingProgram
-    @Binding var uniqueSetPlan: SetPlan?
-    init(trainingProgram: TrainingProgram, uniqueSetPlan: Binding<SetPlan?>) {
+    @Binding var uniqueSetPlan: SetPlanOld?
+    init(trainingProgram: TrainingProgram, uniqueSetPlan: Binding<SetPlanOld?>) {
         self.trainingProgram = trainingProgram
         self._uniqueSetPlan = uniqueSetPlan
     }
@@ -25,12 +25,12 @@ struct CreateTrainingView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var workoutSession: WorkoutSession
     @State private var name: String
-    @Binding var uniqueSetPlan: SetPlan?
+    @Binding var uniqueSetPlan: SetPlanOld?
     @Query private var items: [Exercise]
     
     init(
         workoutSession: WorkoutSession,
-        uniqueSetPlan: Binding<SetPlan?>
+        uniqueSetPlan: Binding<SetPlanOld?>
     ) {
         self.workoutSession = workoutSession
         self.name = workoutSession.name

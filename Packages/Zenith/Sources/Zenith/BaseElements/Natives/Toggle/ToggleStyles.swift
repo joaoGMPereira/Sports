@@ -71,7 +71,8 @@ public extension ToggleStyle where Self == DefaultToggleStyle {
     static func `default`(_ color: ToggleColor) -> Self { .init(color: color) }
 }
 
-private struct BaseToggle: View {
+private struct BaseToggle: View, @preconcurrency BaseThemeDependencies {
+    @Dependency(\.themeConfigurator) var themeConfigurator
     var onColor: Color
     var offColor: Color
     var width: CGFloat
@@ -101,7 +102,7 @@ private struct BaseToggle: View {
                 .frame(width: width, height: height)
                 .overlay(
                     RoundedRectangle(cornerRadius: .infinity)
-                        .stroke(offColor, lineWidth: 1)
+                        .stroke(colors.contentA, lineWidth: 1)
                 )
             
             // Polegar (thumb)

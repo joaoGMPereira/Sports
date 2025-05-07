@@ -4,55 +4,59 @@ import Zenith
 import ZenithCoreInterface
 
 struct HomeView: View, BaseThemeDependencies {
-    @State private var trainingProgrammingRouter: Router<TrainingProgramRoute> = .init()
+    @State private var workoutPlanRoute: Router<WorkoutPlanRoute> = .init()
     @Environment(\.modelContext) private var modelContext
     @Query private var trainingPrograms: [TrainingProgram]
     
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
     
     var body: some View {
-        RoutingView(stack: $trainingProgrammingRouter.stack) {
-            List {
-                Group {
-                    if trainingPrograms.isNotEmpty {
-                        HomeWithTrainingsView(
-                            trainingPrograms: trainingPrograms,
-                            trainingAction: { trainingProgram in
-                                trainingProgrammingRouter.navigate(to: .workoutPlans(trainingProgram))
-                            },
-                            newTrainingAction: {
+        RoutingView(stack: $workoutPlanRoute.stack) {
+            PrincipalToolbarView.start(
+                "Meu treinos",
+                trailingImage: .sliderHorizontal3,
+                trailingAction: {
+                    workoutPlanRoute.navigate(to: .commingSoonFeature)
+                }
+            ) {
+                List {
+                    Group {
+                        if trainingPrograms.isNotEmpty {
+                            HomeWithTrainingsView(
+                                trainingPrograms: trainingPrograms,
+                                trainingAction: { trainingProgram in
+                                    workoutPlanRoute.navigate(to: .workoutPlans(trainingProgram))
+                                },
+                                newTrainingAction: {
+                                    addItem()
+                                },
+                                oldTrainingAction: {
+                                    addOldItem()
+                                },
+                                bannerAction: {}
+                            )
+                        } else {
+                            HomeEmptyView {
                                 addItem()
-                            }) {
-                                
                             }
-                    } else {
-                        HomeEmptyView {
-                            addItem()
                         }
                     }
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
                 }
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-            }
-            .listRowSeparator(.hidden)
-            .listStyle(.plain)
-            .scrollContentBackground(.hidden)
-            .background(colors.backgroundA, ignoresSafeAreaEdges: .all)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("KettleGym")
-                        .font(fonts.mediumBold)
-                        .foregroundColor(colors.contentA)
-                }
+                .listStyle(.plain)
             }
         }
-        .environment(trainingProgrammingRouter)
-        .onAppear {
-        }
+        .toolbarTitleDisplayMode(.inline)
+        .environment(workoutPlanRoute)
     }
     
     private func addItem() {
-        trainingProgrammingRouter.navigate(to: .trainingProgram)
+        workoutPlanRoute.navigate(to: .createWorkoutPlan)
+    }
+    
+    private func addOldItem() {
+        workoutPlanRoute.navigate(to: .createWorkoutPlanOld)
     }
 }
 
@@ -63,50 +67,85 @@ struct HomeWithTrainingsView: View, BaseThemeDependencies {
     
     let trainingAction: (TrainingProgram) -> Void
     let newTrainingAction: () -> Void
+    let oldTrainingAction: () -> Void
     let bannerAction: () -> Void
     
     var body: some View {
         ForEach(trainingPrograms) { trainingProgram in
-//            ActionCard(title: trainingProgram.title, description: "Frequências: \(trainingProgram.workoutSessions.count) vezes na semana", image: .play, tags: trainingProgram.workoutSessions.map { $0.name }) {
-//                trainingAction(trainingProgram)
-//            }
             Card(alignment: .leading, type: .fill, action: {
                 trainingAction(trainingProgram)
             }) {
-                HStack(spacing: spacings.medium) {
-                    Text(trainingProgram.title)
-                        .textStyle(.mediumBold(.contentA))
-                    Spacer()
-                    Button {
+                ZStack(alignment: .topTrailing) {
+                    // Terceira camada de blur (maior e mais suave)
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(Color(hex: "#80B6FB2D"))
+                        .frame(width: 100, height: 50)
+                        .blur(radius: 50)
+                        .offset(x: -20, y: 20)
+                    
+                    // Segunda camada de blur (média)
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(Color(hex: "#80B6FB2D"))
+                        .frame(width: 80, height: 40)
+                        .blur(radius: 40)
+                        .offset(x: -20, y: 20)
+                    
+                    // Primeira camada de blur (menor e mais próxima)
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(Color(hex: "#A6ADFF09").opacity(0.9))
+                        .frame(width: 42, height: 24)
+                        .blur(radius: 20)
+                        .offset(x: -25, y: 25)
+                    
+                    // Conteúdo original
+                    VStack(alignment: .leading, spacing: .zero) {
                         
-                    } label: {
-                        Text("25%")
-                            .textStyle(.small(.contentA))
-                            .padding(spacings.extraSmall)
+                        HStack(spacing: spacings.medium) {
+                            Text(trainingProgram.title)
+                                .textStyle(.mediumBold(.contentA))
+                            Spacer()
+                            Button {
+                                
+                            } label: {
+                                Text("25%")
+                                    .textStyle(.small(.highlightA))
+                                    .padding(spacings.extraSmall)
+                            }
+                            .buttonStyle(.highlightA(shape: .circle))
+                            .allowsHitTesting(false)
+                        }
+                        .padding(spacings.medium)
+                        VStack(alignment: .leading, spacing: spacings.small) {
+                            Text("Dias")
+                                .font(fonts.smallBold)
+                                .foregroundStyle(colors.backgroundC)
+                            Text("3x")
+                                .textStyle(.small(.contentA))
+                        }.padding(spacings.medium)
                     }
-                    .buttonStyle(.highlightA(shape: .circle))
-                    .allowsHitTesting(false)
                 }
+                .mask(
+                    // Esta máscara garante que o blur respeite as bordas arredondadas
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(Color.white)
+                )
             }
         }
-        Card(
-            alignment: .center,
-            type: .bordered,
+        BasicCard(
+            image: .plus,
+            title: "Adicionar treino",
+            arrangement: .horizontalCenter,
+            contentLayout: .textSpacerImage,
             action: newTrainingAction
-        ) {
-            Stack(arrangement: .horizontal(alignment: .center)) {
-                Text("Adicionar treino")
-                    .textStyle(.small(.contentA))
-                Spacer()
-                DynamicImage(.plus)
-                    .dynamicImageStyle(.medium(.contentA))
-            }
-            .frame(maxHeight:.infinity)
-        }
-        .background {
-            RoundedRectangle(cornerRadius: 24) // TODO RADIUS
-                .stroke(colors.contentA, lineWidth: 1)
-        }
+        )
+        
+        BasicCard(
+            image: .plus,
+            title: "Adicionar treino Antigo",
+            arrangement: .horizontalCenter,
+            contentLayout: .textSpacerImage,
+            action: oldTrainingAction
+        )
         BasicCard(
             image: .figureRun,
             title: "Entre aqui para contratar sua propaganda",

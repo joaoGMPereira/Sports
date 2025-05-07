@@ -67,10 +67,10 @@ public enum TagColor: CaseIterable, Identifiable, Sendable {
     
     public var id: Self { self }
     
-    var foregroundColor: TextStyleColor {
+    var foregroundColor: ColorName {
         switch self {
         case .highlightA:
-            .contentB
+            .contentC
         case .default:
             .contentA
         }

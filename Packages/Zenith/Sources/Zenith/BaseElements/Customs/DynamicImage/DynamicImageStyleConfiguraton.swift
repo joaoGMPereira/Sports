@@ -25,12 +25,12 @@ public protocol DynamicImageStyle: DynamicProperty, Sendable {
 }
 
 public struct DynamicImageStyleConfiguration {
-    let asyncImage: AsyncImage<_ConditionalContent<_ConditionalContent<Image, Image>, Color>>
+    let asyncImage: AsyncImage<_ConditionalContent<_ConditionalContent<_ConditionalContent<Image, Image>, _ConditionalContent<Image, Image>>, Color>>
     let image: Image
     let type: DynamicImageType
     
     
-    init(asyncImage: AsyncImage<_ConditionalContent<_ConditionalContent<Image, Image>, Color>>, image: Image, type: DynamicImageType) {
+    init(asyncImage: AsyncImage<_ConditionalContent<_ConditionalContent<_ConditionalContent<Image, Image>, _ConditionalContent<Image, Image>>, Color>>, image: Image, type: DynamicImageType) {
         self.asyncImage = asyncImage
         self.image = image
         self.type = type

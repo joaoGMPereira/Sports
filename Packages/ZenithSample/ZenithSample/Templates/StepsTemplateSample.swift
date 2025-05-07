@@ -13,7 +13,12 @@ struct StepsTemplateSample: View, @preconcurrency BaseThemeDependencies {
             headerView
             
             // Content
-            StepsTemplate(totalSteps: 3, currentStep: $currentStep) { step in
+            StepsTemplate(
+                totalSteps: 3,
+                currentStep: $currentStep,
+                canMoveToPreviousStep: .constant(true),
+                canMoveToNextStep: .constant(true)
+            ) { step in
                 stepContent(step)
             }
             .stepsTemplateStyle(selectedStyle.style())
@@ -58,7 +63,7 @@ struct StepsTemplateSample: View, @preconcurrency BaseThemeDependencies {
             )
 
             let titleTextAttributesSelected = [
-                NSAttributedString.Key.foregroundColor: colors.contentB.uiColor(),
+                NSAttributedString.Key.foregroundColor: colors.contentC.uiColor(),
                 NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14, weight: .bold)
             ]
             $0.setTitleTextAttributes(

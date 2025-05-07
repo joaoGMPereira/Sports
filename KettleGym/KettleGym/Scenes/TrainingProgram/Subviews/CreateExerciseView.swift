@@ -22,7 +22,7 @@ struct CreateExerciseData {
     let items: [String]
     let hasJustName: Binding<Bool>
     let name: String?
-    let setPlan: SetPlan?
+    let setPlan: SetPlanOld?
 }
 
 struct CreateExerciseView: View {
@@ -35,12 +35,12 @@ struct CreateExerciseView: View {
     @State private var showPopover = false
     @State private var setPlanSheetModel = GridSheetModel(items: [])
     @State private var exerciseSheetModel = GridSheetModel(items: [])
-    @Query private var fetchedSetPlans: [SetPlan]
-    @State private var setPlan: SetPlan? = nil
+    @Query private var fetchedSetPlans: [SetPlanOld]
+    @State private var setPlan: SetPlanOld? = nil
     
     var completion: ((
         _ name: String,
-        _ setPlan: SetPlan?
+        _ setPlan: SetPlanOld?
     ) -> Void)
     
     var exerciseCreateCompletion: ((
@@ -81,7 +81,7 @@ struct CreateExerciseView: View {
         data: CreateExerciseData,
         completion: @escaping ((
             _ name: String,
-            _ setPlan: SetPlan?
+            _ setPlan: SetPlanOld?
         ) -> Void),
         exerciseCreateCompletion: @escaping ((
             _ name: String
@@ -129,7 +129,7 @@ struct CreateExerciseView: View {
             model: $setPlanSheetModel,
             setPlanCreated: { quantity, minRep, maxRep in
                 guard let quantity = Int(quantity), let minRep = Int(minRep), let maxRep = Int(maxRep) else { return }
-                let selectedSetPlan = SetPlan(quantity: quantity, minRep: minRep, maxRep: maxRep)
+                let selectedSetPlan = SetPlanOld(quantity: quantity, minRep: minRep, maxRep: maxRep)
                 
                 modelContext.insert(selectedSetPlan)
                 try? modelContext.save()

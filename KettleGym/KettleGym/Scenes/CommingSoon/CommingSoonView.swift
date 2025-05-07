@@ -81,120 +81,113 @@ struct CommingSoonView: View, BaseThemeDependencies {
     
     var body: some View {
         NavigationStack {
-            Form {
-                Toggle("Habilitar Text Dinamico", isOn: $isDynamicText)
-                    .toggleStyle(.default(.highlightA))
-                    .foregroundStyle(colors.contentA)
-                    .listRowBackground(colors.backgroundB)
-                if isDynamicText {
-                    TextField("Texto Dinamico", text: $dynamicText)
-                        .onSubmit {
-                            addDynamicItem()
-                        }
+            PrincipalToolbarView.start("Comming Soon") {
+                Form {
+                    Toggle("Habilitar Text Dinamico", isOn: $isDynamicText)
+                        .toggleStyle(.default(.highlightA))
                         .foregroundStyle(colors.contentA)
                         .listRowBackground(colors.backgroundB)
-                } else {
-                    TextField("Nome da Sessão", text: $sectionText)
-                        .onChange(of: sectionText) {
-                            self.applyFilter(with: sectionText)
-                        }
-                        .onSubmit {
-                            addItem()
-                        }
-                        .simultaneousGesture(
-                            TapGesture()
-                                .onEnded {
-                                    self.showPopover = items.isNotEmpty
-                                }
-                        )
-                        .popover(
-                            isPresented: $showPopover,
-                            attachmentAnchor: .point(
-                                .top
+                    if isDynamicText {
+                        TextField("Texto Dinamico", text: $dynamicText)
+                            .onSubmit {
+                                addDynamicItem()
+                            }
+                            .foregroundStyle(colors.contentA)
+                            .listRowBackground(colors.backgroundB)
+                    } else {
+                        TextField("Nome da Sessão", text: $sectionText)
+                            .onChange(of: sectionText) {
+                                self.applyFilter(with: sectionText)
+                            }
+                            .onSubmit {
+                                addItem()
+                            }
+                            .simultaneousGesture(
+                                TapGesture()
+                                    .onEnded {
+                                        self.showPopover = items.isNotEmpty
+                                    }
                             )
-                        ) {
-                            ChipGridView(chips: .constant((filteredItems.isEmpty ? items : filteredItems).map { $0.title })) { section in
-                                self.sectionText = section
-                                DispatchQueue.main.async {
-                                    showPopover = false
+                            .popover(
+                                isPresented: $showPopover,
+                                attachmentAnchor: .point(
+                                    .top
+                                )
+                            ) {
+                                ChipGridView(chips: .constant((filteredItems.isEmpty ? items : filteredItems).map { $0.title })) { section in
+                                    self.sectionText = section
+                                    DispatchQueue.main.async {
+                                        showPopover = false
+                                    }
+                                    hideKeyboard()
                                 }
-                                hideKeyboard()
+                                .padding()
+                                .frame(minWidth: 50, minHeight: 80, maxHeight: 400)
+                                .presentationCompactAdaptation(.popover)
                             }
-                            .padding()
-                            .frame(minWidth: 50, minHeight: 80, maxHeight: 400)
-                            .presentationCompactAdaptation(.popover)
-                        }
-                        .foregroundStyle(colors.contentA)
-                        .listRowBackground(colors.backgroundB)
-                    TextField("Nova Feature", text: $featureText)
-                        .onSubmit {
-                            addItem()
-                        }
-                        .foregroundStyle(colors.contentA)
-                        .listRowBackground(colors.backgroundB)
-                }
-                
-                ForEach(items.indices, id: \.self) { sectionIndex in
-                    if items.count > 0 {
-                        Section(
-                            header:
-                                Text(items[safe: sectionIndex]?.title ?? "")
-                                .font(fonts.mediumBold)
-                        ){
-                            ForEach(items[safe: sectionIndex]?.items ?? [], id: \.self) { item in
-                                Text(item)
-                                    .font(fonts.small)
-                                    .foregroundStyle(colors.contentA)
+                            .foregroundStyle(colors.contentA)
+                            .listRowBackground(colors.backgroundB)
+                        TextField("Nova Feature", text: $featureText)
+                            .onSubmit {
+                                addItem()
                             }
-                            .onDelete { sets in
-                                deleteItems(at: sets, in: sectionIndex)
-                            }
-                        }
-                        .foregroundStyle(colors.contentA)
-                        .listRowBackground(colors.backgroundB)
+                            .foregroundStyle(colors.contentA)
+                            .listRowBackground(colors.backgroundB)
                     }
-                }
-                HStack {
-                    Button(action: {
-                        importData()
-                    }) {
-                        HStack {
-                            Text("Importar")
-                                .textStyle(.small(.contentA))
-                            Image(systemSymbol: .squareAndArrowDownOnSquareFill)
-                                .font(.callout)
+                    
+                    ForEach(items.indices, id: \.self) { sectionIndex in
+                        if items.count > 0 {
+                            Section(
+                                header:
+                                    Text(items[safe: sectionIndex]?.title ?? "")
+                                    .font(fonts.mediumBold)
+                            ){
+                                ForEach(items[safe: sectionIndex]?.items ?? [], id: \.self) { item in
+                                    Text(item)
+                                        .font(fonts.small)
+                                        .foregroundStyle(colors.contentA)
+                                }
+                                .onDelete { sets in
+                                    deleteItems(at: sets, in: sectionIndex)
+                                }
+                            }
+                            .foregroundStyle(colors.contentA)
+                            .listRowBackground(colors.backgroundB)
                         }
                     }
-                    .buttonStyle(.contentA)
-                    Spacer()
-                    Button(action: {
-                        exportData()
-                    }) {
-                        HStack {
-                            Text("Exportar")
-                                .textStyle(.small(.highlightA))
-                            Image(systemSymbol: .squareAndArrowUpOnSquareFill)
-                                .font(.callout)
+                    HStack {
+                        Button(action: {
+                            importData()
+                        }) {
+                            HStack {
+                                Text("Importar")
+                                    .textStyle(.small(.contentA))
+                                Image(systemSymbol: .squareAndArrowDownOnSquareFill)
+                                    .font(.callout)
+                            }
                         }
+                        .buttonStyle(.contentA())
+                        Spacer()
+                        Button(action: {
+                            exportData()
+                        }) {
+                            HStack {
+                                Text("Exportar")
+                                    .textStyle(.small(.highlightA))
+                                Image(systemSymbol: .squareAndArrowUpOnSquareFill)
+                                    .font(.callout)
+                            }
+                        }
+                        .buttonStyle(.highlightA())
                     }
-                    .buttonStyle(.highlightA())
+                    .padding(.vertical, spacings.small)
+                    .listRowBackground(colors.backgroundB)
                 }
-                .padding(.vertical, spacings.small)
-                .listRowBackground(colors.backgroundB)
             }
-            .scrollContentBackground(.hidden)
-            .background(colors.backgroundA, ignoresSafeAreaEdges: .all)
             .toolbar {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     EditButton()
-                }
-            }
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("Comming Soon")
-                        .font(fonts.mediumBold)
-                        .foregroundColor(colors.contentA)
                 }
             }
         }

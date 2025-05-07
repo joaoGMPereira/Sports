@@ -5,16 +5,15 @@ import Zenith
 struct CreateTrainingProgramView: View {
     @State private var name: String = String()
     @State private var trainingDays: String = String()
-    @State private var showDatePicker = true
     @State private var sheetModel = GridSheetModel(items: [])
     @State private var startDate = Date()
     @State private var trainingProgram: TrainingProgram?
     @State var showPopover = false
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @State private var uniqueSetPlan: SetPlan? = nil
+    @State private var uniqueSetPlan: SetPlanOld? = nil
     @Environment(ToastModel.self) var toast
-    @Query private var fetchedSetPlans: [SetPlan]
+    @Query private var fetchedSetPlans: [SetPlanOld]
     
     var body: some View {
         VStack {
@@ -56,7 +55,7 @@ struct CreateTrainingProgramView: View {
             model: $sheetModel,
             setPlanCreated: { quantity, minRep, maxRep in
                 guard let quantity = Int(quantity), let minRep = Int(minRep), let maxRep = Int(maxRep) else { return }
-                let selectedSetPlan = SetPlan(quantity: quantity, minRep: minRep, maxRep: maxRep)
+                let selectedSetPlan = SetPlanOld(quantity: quantity, minRep: minRep, maxRep: maxRep)
                 if let currentTrainingProgram = self.trainingProgram {
                     modelContext.delete(currentTrainingProgram)
                 }

@@ -17,7 +17,33 @@ public struct AnyButtonStyle: ButtonStyle {
     }
 }
 
-public struct ContentAButtonStyle: ButtonStyle, @preconcurrency BaseThemeDependencies {
+// Protocolo para compartilhar métodos comuns entre estilos de botão
+protocol SharedButtonStyleMethods {
+    associatedtype Content: View
+    func buildShapeView(for shape: ButtonShape, isPressed: Bool, pressColor: Color, fillColor: Color, strokeColor: Color) -> Content
+}
+
+extension SharedButtonStyleMethods {
+    @ViewBuilder
+    func buildShapeView(for shapeType: ButtonShape, isPressed: Bool, pressColor: Color, fillColor: Color = .clear, strokeColor: Color) -> some View {
+        let shape: AnyShape = {
+            switch shapeType {
+            case .circle:
+                return AnyShape(Circle())
+            case .rounded(let radius):
+                return AnyShape(RoundedRectangle(cornerRadius: radius))
+            }
+        }()
+        
+        shape
+            .fill(isPressed ? pressColor : fillColor)
+            .overlay(
+                shape.stroke(strokeColor, lineWidth: 1)
+            )
+    }
+}
+
+public struct ContentAButtonStyle: ButtonStyle, @preconcurrency BaseThemeDependencies, SharedButtonStyleMethods {
     @Dependency(\.themeConfigurator) public var themeConfigurator
     
     let shape: ButtonShape
@@ -31,9 +57,9 @@ public struct ContentAButtonStyle: ButtonStyle, @preconcurrency BaseThemeDepende
             .padding(spacings.medium)
             .background(
                 buildShapeView(
-                    shape,
+                    for: shape,
                     isPressed: configuration.isPressed,
-                    fillColor: colors.contentA.opacity(constants.tapOpacity),
+                    pressColor: colors.contentA.opacity(constants.tapOpacity),
                     strokeColor: contentColor
                 )
             )
@@ -41,27 +67,9 @@ public struct ContentAButtonStyle: ButtonStyle, @preconcurrency BaseThemeDepende
             .animation(.default, value: configuration.isPressed)
             .allowsHitTesting(state == .enabled)
     }
-    
-    @ViewBuilder
-    private func buildShapeView(_ shapeType: ButtonShape, isPressed: Bool, fillColor: Color, strokeColor: Color) -> some View {
-        let shape: AnyShape = {
-            switch shapeType {
-            case .circle:
-                return AnyShape(Circle())
-            case .rounded(let radius):
-                return AnyShape(RoundedRectangle(cornerRadius: radius))
-            }
-        }()
-        
-        shape
-            .fill(isPressed ? fillColor : .clear)
-            .overlay(
-                shape.stroke(strokeColor, lineWidth: 1)
-            )
-    }
 }
 
-public struct HighlightAButtonStyle: ButtonStyle, @preconcurrency BaseThemeDependencies {
+public struct HighlightAButtonStyle: ButtonStyle, @preconcurrency BaseThemeDependencies, SharedButtonStyleMethods {
     @Dependency(\.themeConfigurator) public var themeConfigurator
     let shape: ButtonShape
     let state: DSState
@@ -74,9 +82,9 @@ public struct HighlightAButtonStyle: ButtonStyle, @preconcurrency BaseThemeDepen
             .padding(spacings.medium)
             .background(
                 buildShapeView(
-                    shape,
+                    for: shape,
                     isPressed: configuration.isPressed,
-                    fillColor: colors.highlightA.opacity(constants.tapOpacity),
+                    pressColor: colors.highlightA.opacity(constants.tapOpacity),
                     strokeColor: contentColor
                 )
             )
@@ -84,28 +92,7 @@ public struct HighlightAButtonStyle: ButtonStyle, @preconcurrency BaseThemeDepen
             .animation(.default, value: configuration.isPressed)
             .allowsHitTesting(state == .enabled)
     }
-
-    
-    @ViewBuilder
-    private func buildShapeView(_ shapeType: ButtonShape, isPressed: Bool, fillColor: Color, strokeColor: Color) -> some View {
-        let shape: AnyShape = {
-            switch shapeType {
-            case .circle:
-                return AnyShape(Circle())
-            case .rounded(let radius):
-                return AnyShape(RoundedRectangle(cornerRadius: radius))
-            }
-        }()
-        
-        shape
-            .fill(isPressed ? fillColor : .clear)
-            .overlay(
-                shape.stroke(strokeColor, lineWidth: 1)
-            )
-    }
-
 }
-
 
 public extension ButtonStyle where Self == ContentAButtonStyle {
     static func contentA(
@@ -125,38 +112,79 @@ public extension ButtonStyle where Self == HighlightAButtonStyle {
     }
 }
 
+public struct BackgroundDButtonStyle: ButtonStyle, @preconcurrency BaseThemeDependencies, SharedButtonStyleMethods {
+    @Dependency(\.themeConfigurator) public var themeConfigurator
+    
+    let shape: ButtonShape
+    let state: DSState
+    
+    public func makeBody(configuration: Configuration) -> some View {
+        let contentColor = state == .enabled ? colors.contentA : colors.contentA.opacity(constants.disabledOpacity)
+        let disabledColor = colors.backgroundD.opacity(constants.disabledOpacity)
+        let backgroundColor = state == .enabled ? colors.backgroundD : disabledColor
+        
+        configuration
+            .label
+            .font(fonts.small)
+            .padding(spacings.medium)
+            .background(
+                buildShapeView(
+                    for: shape,
+                    isPressed: configuration.isPressed,
+                    pressColor: disabledColor,
+                    fillColor: backgroundColor,
+                    strokeColor: .clear
+                )
+            )
+            .foregroundColor(contentColor)
+            .animation(.default, value: configuration.isPressed)
+            .allowsHitTesting(state == .enabled)
+    }
+}
+
+public extension ButtonStyle where Self == BackgroundDButtonStyle {
+    static func backgroundD(
+        shape: ButtonShape = .rounded(cornerRadius: .infinity),
+        state: DSState = .enabled
+    ) -> Self {
+        Self(shape: shape, state: state)
+    }
+}
 
 public struct CardButtonStyle: ButtonStyle, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) public var themeConfigurator
     let type: CardType
     let state: DSState
     
-    func colors(isPressed: Bool) -> (fillColor: Color, strokeColor: Color, borderedColor: Color) {
-        var fillColor = isPressed ? colors.contentA.opacity(constants.tapOpacity) : colors.backgroundB
-        var borderedColor = isPressed ? colors.contentA.opacity(constants.tapOpacity) : .clear
-        var strokeColor = isPressed ? colors.contentA.opacity(constants.tapOpacity) : colors.contentA
-        if state == .disabled {
-            fillColor = colors.contentA.opacity(constants.disabledOpacity)
-            borderedColor = colors.contentA.opacity(constants.disabledOpacity)
-            strokeColor = colors.contentA.opacity(constants.disabledOpacity)
+    func colors(isPressed: Bool, type: CardType) -> (fillColor: Color, strokeColor: Color) {
+        if type == .fill {
+            var fillColor = isPressed ? colors.contentA.opacity(constants.tapOpacity) : colors.backgroundD
+            var strokeColor = constants.strokeColor.opacity(isPressed ? constants.tapOpacity : 1)
+            if state == .disabled {
+                fillColor = colors.backgroundD.opacity(constants.disabledOpacity)
+                strokeColor = constants.strokeColor.opacity(constants.disabledOpacity)
+            }
+            return (fillColor, strokeColor)
+        } else {
+            var fillColor = isPressed ? colors.contentC.opacity(constants.tapOpacity) : .clear
+            var strokeColor = isPressed ? colors.contentC.opacity(constants.tapOpacity) : colors.contentA
+            if state == .disabled {
+                fillColor = colors.contentA.opacity(constants.disabledOpacity)
+                strokeColor = colors.contentA.opacity(constants.disabledOpacity)
+            }
+            return (fillColor, strokeColor)
         }
-        return (fillColor, strokeColor, borderedColor)
     }
     
     public func makeBody(configuration: Configuration) -> some View {
-        let colors = colors(isPressed: configuration.isPressed)
+        let colors = colors(isPressed: configuration.isPressed, type: type)
         
         configuration.label
             .background(
-                type == .fill ?
                 buildShapeView(
                     fillColor: colors.fillColor,
-                    strokeColor: .clear
-                ) :
-                    buildShapeView(
-                        fillColor: colors.borderedColor,
-                        strokeColor: colors.strokeColor
-                    )
+                    strokeColor: colors.strokeColor
+                )
             )
             .contentShape(Rectangle())
             .animation(.easeInOut(duration: 0.2), value: configuration.isPressed)
@@ -165,14 +193,12 @@ public struct CardButtonStyle: ButtonStyle, @preconcurrency BaseThemeDependencie
     
     @ViewBuilder
     private func buildShapeView(fillColor: Color, strokeColor: Color) -> some View {
-        let shape: RoundedRectangle = {
-            RoundedRectangle(cornerRadius: 24)
-        }()
+        let shape = RoundedRectangle(cornerRadius: constants.cornerRadius)
         
         shape
             .fill(fillColor)
             .overlay(
-                shape.stroke(strokeColor, lineWidth: 1)
+                shape.stroke(strokeColor, lineWidth: 0.4)
             )
     }
 }
@@ -190,34 +216,43 @@ public enum ButtonStyleCase: String, Decodable, Sendable, Identifiable, CaseIter
     case contentACircle, highlightACircle
     case highlightADisabled, contentADisabled, cardAppearanceFillDisabled, cardAppearanceBorderedDisabled
     case contentACircleDisabled, highlightACircleDisabled
+    case backgroundD, backgroundDCircle, backgroundDDisabled, backgroundDCircleDisabled
     
     @MainActor
-    public func style(state: DSState = .enabled) -> AnyButtonStyle {
+    public func style() -> AnyButtonStyle {
         switch self {
         case .contentA:
-            return .init(.contentA(shape: .rounded(cornerRadius: .infinity), state: state))
+            return .init(.contentA(shape: .rounded(cornerRadius: .infinity), state: .enabled))
         case .highlightA:
-            return .init(.highlightA(shape: .rounded(cornerRadius: .infinity), state: state))
+            return .init(.highlightA(shape: .rounded(cornerRadius: .infinity), state: .enabled))
         case .cardAppearanceFill:
-            return .init(.cardAppearance(.fill, state: state))
+            return .init(.cardAppearance(.fill, state: .enabled))
         case .cardAppearanceBordered:
-            return .init(.cardAppearance(.bordered, state: state))
+            return .init(.cardAppearance(.bordered, state: .enabled))
         case .contentADisabled:
-            return .init(.contentA(shape: .rounded(cornerRadius: .infinity), state: state))
+            return .init(.contentA(shape: .rounded(cornerRadius: .infinity), state: .disabled))
         case .contentACircle:
-            return .init(.contentA(shape: .circle, state: state))
+            return .init(.contentA(shape: .circle, state: .enabled))
         case .highlightACircle:
-            return .init(.highlightA(shape: .circle, state: state))
+            return .init(.highlightA(shape: .circle, state: .enabled))
         case .highlightADisabled:
-            return .init(.highlightA(shape: .rounded(cornerRadius: .infinity), state: state))
+            return .init(.highlightA(shape: .rounded(cornerRadius: .infinity), state: .disabled))
         case .cardAppearanceFillDisabled:
-            return .init(.cardAppearance(.fill, state: state))
+            return .init(.cardAppearance(.fill, state: .disabled))
         case .cardAppearanceBorderedDisabled:
-            return .init(.cardAppearance(.bordered, state: state))
+            return .init(.cardAppearance(.bordered, state: .disabled))
         case .contentACircleDisabled:
-            return .init(.contentA(shape: .circle, state: state))
+            return .init(.contentA(shape: .circle, state: .disabled))
         case .highlightACircleDisabled:
-            return .init(.highlightA(shape: .circle, state: state))
+            return .init(.highlightA(shape: .circle, state: .disabled))
+        case .backgroundD:
+            return .init(.backgroundD(shape: .rounded(cornerRadius: .infinity), state: .enabled))
+        case .backgroundDCircle:
+            return .init(.backgroundD(shape: .circle, state: .enabled))
+        case .backgroundDDisabled:
+            return .init(.backgroundD(shape: .rounded(cornerRadius: .infinity), state: .disabled))
+        case .backgroundDCircleDisabled:
+            return .init(.backgroundD(shape: .circle, state: .disabled))
         }
     }
 

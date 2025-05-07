@@ -65,7 +65,6 @@ struct TrainingExecutionView: View {
                         ForEach(0..<quantity, id: \.self) { setPlanIndex in
                             if let text = textFieldData.textFields[safe: setPlanIndex]?.reps {
                                 TextField("Reps", text: text)
-                                    .textFieldStyle(DSRoundedBorderTextFieldStyle(isEnabled: !textFieldData.hasSaved.wrappedValue))
                                     .keyboardType(.numberPad)
                                     .focused($focusedField, equals: FocusField(exerciseIndex: exerciseIndex, setPlanIndex: setPlanIndex, fieldType: .reps))
                                     .onChange(of: textFieldsValues[exerciseIndex].textFields[setPlanIndex].reps) { oldValue, newValue in
@@ -83,7 +82,6 @@ struct TrainingExecutionView: View {
                         ForEach(0..<quantity, id: \.self) { setPlanIndex in
                             if let text = textFieldData.textFields[safe: setPlanIndex]?.weight {
                                 TextField("Peso", text: text)
-                                    .textFieldStyle(DSRoundedBorderTextFieldStyle(isEnabled: !textFieldData.hasSaved.wrappedValue))
                                     .keyboardType(.numberPad)
                                     .focused($focusedField, equals: FocusField(exerciseIndex: exerciseIndex, setPlanIndex: setPlanIndex, fieldType: .weight))
                                     .onChange(of: textFieldsValues[exerciseIndex].textFields[setPlanIndex].weight) {

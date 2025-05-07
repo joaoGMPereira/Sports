@@ -7,7 +7,6 @@ public final class ThemeConfigurator: ThemeConfiguratorProtocol {
     @MainActor public private(set) var theme: Theme = .dark()
     
     @MainActor var themes: [ThemeName: Theme] = [
-        .light: .light(),
         .dark: .dark()
     ]
     

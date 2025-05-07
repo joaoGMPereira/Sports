@@ -36,13 +36,13 @@
     "🕒 %@" : {
 
     },
+    "3x" : {
+
+    },
     "25%" : {
 
     },
     "35 a 40min" : {
-
-    },
-    "Adicionar treino" : {
 
     },
     "Campo 1 é obrigatório" : {
@@ -51,7 +51,7 @@
     "Campo 2 é obrigatório" : {
 
     },
-    "Comming Soon" : {
+    "Configurar Data de Início" : {
 
     },
     "Dados Básicos" : {
@@ -61,6 +61,15 @@
 
     },
     "Data de encerramento" : {
+
+    },
+    "Dias" : {
+
+    },
+    "Dias de Treino" : {
+
+    },
+    "Em breve" : {
 
     },
     "Escolher Série unica" : {
@@ -84,10 +93,10 @@
     "Informações da Gravação" : {
 
     },
-    "KettleGym" : {
+    "Leg Press 45º" : {
 
     },
-    "Leg Press 45º" : {
+    "Passo não encontrado" : {
 
     },
     "Peso: %@, Rep: %@" : {

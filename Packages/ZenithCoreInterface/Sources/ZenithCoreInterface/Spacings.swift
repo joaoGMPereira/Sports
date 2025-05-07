@@ -23,9 +23,9 @@ public protocol SpacingsProtocol: Sendable, Equatable {
     var small: Double { get }
     /// 16 Spacing
     var medium: Double { get }
-    /// 24 Spacing
+    /// 20 Spacing
     var large: Double { get }
-    /// 40 Spacing
+    /// 32 Spacing
     var extraLarge: Double { get }
     /// 64 Spacing
     var ultra: Double { get }

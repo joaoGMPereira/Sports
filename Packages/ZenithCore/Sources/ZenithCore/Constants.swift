@@ -1,3 +1,4 @@
+import SwiftUI
 import ZenithCoreInterface
 
 public struct Constants: ConstantsProtocol {
@@ -11,6 +12,9 @@ public struct Constants: ConstantsProtocol {
     public let animationTimer: Double = 0.5
     
     public let smallCornerRadius: Double = 8
+    public let cornerRadius: Double = 20
+    
+    public let strokeColor = Color(hex: "#646161")
     
     public init() {}
 }

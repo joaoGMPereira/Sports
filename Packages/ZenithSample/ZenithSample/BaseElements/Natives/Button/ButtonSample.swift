@@ -8,7 +8,6 @@ struct ButtonSample: View, @preconcurrency BaseThemeDependencies {
     @State var isExpanded = false
     @State private var buttonText = "Button Text"
     @State private var selectedStyle = ButtonStyleCase.contentA
-    @State private var selectedState = DSState.enabled
     @State private var searchText = ""
     
     var body: some View {
@@ -22,8 +21,7 @@ struct ButtonSample: View, @preconcurrency BaseThemeDependencies {
                             Text(selectedStyle.rawValue.lowercased().contains("circle") ? String(buttonText.prefix(1)) : buttonText)
                                 .padding(spacings.extraSmall)
                         }
-                        .buttonStyle(selectedStyle.style(state: selectedState))
-                        .disabled(selectedState == .disabled)
+                        .buttonStyle(selectedStyle.style())
                         .frame(maxWidth: .infinity)
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
@@ -55,24 +53,16 @@ struct ButtonSample: View, @preconcurrency BaseThemeDependencies {
                 TextField("Filtrar estilos", text: $searchText)
                     .textFieldStyle(.roundedBorder)
                 
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(filteredButtonStyles, id: \.self) { style in
-                            styleButton(style)
+                    ScrollView {
+                        LazyVGrid(columns: [
+                            GridItem(.adaptive(minimum: 80, maximum: 100), spacing: 16)
+                        ], spacing: 16) {
+                            ForEach(filteredButtonStyles, id: \.self) { style in
+                                styleButton(style)
+                            }
                         }
+                        .padding()
                     }
-                    .padding(.vertical, 4)
-                }
-            }
-            
-            // Estado do botão
-            VStack(alignment: .leading) {
-                Text("Estado")
-                HStack(spacing: 8) {
-                    ForEach(DSState.allCases, id: \.id) { state in
-                        stateButton(state)
-                    }
-                }
             }
         }
         .padding(.top, 8)
@@ -88,26 +78,9 @@ struct ButtonSample: View, @preconcurrency BaseThemeDependencies {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(selectedStyle == style ? colors.highlightA : colors.backgroundB)
             )
-            .foregroundColor(selectedStyle == style ? colors.contentB : colors.contentA)
+            .foregroundColor(selectedStyle == style ? colors.contentC : colors.contentA)
             .onTapGesture {
                 selectedStyle = style
-            }
-    }
-    
-    @ViewBuilder
-    private func stateButton(_ state: DSState) -> some View {
-        Text(state.id)
-            .font(fonts.small)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .frame(maxWidth: .infinity)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(selectedState == state ? colors.highlightA : colors.backgroundB)
-            )
-            .foregroundColor(selectedState == state ? colors.contentB : colors.contentA)
-            .onTapGesture {
-                selectedState = state
             }
     }
     

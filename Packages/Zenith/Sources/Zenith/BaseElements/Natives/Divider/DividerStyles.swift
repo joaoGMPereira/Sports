@@ -35,7 +35,7 @@ public struct ContentBDividerStyle: @preconcurrency DividerStyle, BaseThemeDepen
     public func makeBody(configuration: Configuration) -> some View {
         configuration
             .content
-            .overlay(colors.contentB)
+            .overlay(colors.contentC)
     }
 }
 
@@ -57,7 +57,7 @@ public extension DividerStyle where Self == ContentADividerStyle {
 }
 
 public extension DividerStyle where Self == ContentBDividerStyle {
-    static func contentB() -> Self { ContentBDividerStyle() }
+    static func contentC() -> Self { ContentBDividerStyle() }
 }
 
 public extension DividerStyle where Self == HighlightADividerStyle {
@@ -66,7 +66,7 @@ public extension DividerStyle where Self == HighlightADividerStyle {
 
 public enum DividerStyleCase: CaseIterable, Identifiable {
     case contentA
-    case contentB
+    case contentC
     case highlightA
     
     public var id: Self { self }
@@ -75,8 +75,8 @@ public enum DividerStyleCase: CaseIterable, Identifiable {
         switch self {
         case .contentA:
             .init(.contentA())
-        case .contentB:
-            .init(.contentB())
+        case .contentC:
+            .init(.contentC())
         case .highlightA:
             .init(.highlightA())
         }

@@ -97,7 +97,8 @@ public enum ChipStyle {
     }
 }
 
-public struct ChipView: View {
+public struct ChipView: View, @preconcurrency BaseThemeDependencies {
+    @Dependency(\.themeConfigurator) public var themeConfigurator
     var label: String
     var isSelected: Bool
     var style: ChipStyle
@@ -129,13 +130,13 @@ public struct ChipView: View {
         }
         .padding(.horizontal, style.horizontalPadding)
         .padding(.vertical, style.verticalPadding)
-        .background(isSelected ? .purple.opacity(0.6) : .purple.opacity(0.2))
+        .background(colors.highlightA.opacity(isSelected ? 0.6 : 0.2))
         .cornerRadius(style.corner)
         .overlay(
             RoundedRectangle(cornerRadius: style.corner)
-                .stroke(.purple, lineWidth: 1)
+                .stroke(colors.highlightA, lineWidth: 1)
         )
-        .foregroundColor(.purple)
+        .foregroundColor(colors.highlightA)
         .padding(2)
     }
 }

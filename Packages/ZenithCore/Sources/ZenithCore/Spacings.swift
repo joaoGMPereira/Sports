@@ -28,10 +28,10 @@ public struct Spacings: SpacingsProtocol {
     public let medium = SpacingPrimitiveToken.spacing4
     
     /// Espaçamento grande, usado para separar seções
-    public let large = SpacingPrimitiveToken.spacing6
+    public let large = SpacingPrimitiveToken.spacing5
     
     /// Espaçamento extra grande, usado para dar respiro entre blocos de conteúdo
-    public let extraLarge = SpacingPrimitiveToken.spacing8
+    public let extraLarge = SpacingPrimitiveToken.spacing7
     
     /// Espaçamento gigante, usado em layouts mais amplos
     public let ultra = SpacingPrimitiveToken.spacing10

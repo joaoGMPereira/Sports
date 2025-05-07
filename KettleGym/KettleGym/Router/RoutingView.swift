@@ -25,6 +25,7 @@ public struct RoutingView<Root: View, Routes: Routable>: View {
             root()
                 .navigationDestination(for: Routes.self) { view in
                     view
+                    .toolbar( .hidden, for: .tabBar)
                 }
         }
     }

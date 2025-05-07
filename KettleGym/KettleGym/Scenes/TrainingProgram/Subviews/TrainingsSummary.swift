@@ -4,7 +4,7 @@ import SwiftData
 struct TrainingsSummaryView: View {
     @Environment(\.modelContext) private var modelContext
     var workoutSessions: [WorkoutSession]
-    //var exercisesPlans: [(exercises: [Exercise], setPlans: [SetPlan])] = [
+    //var exercisesPlans: [(exercises: [Exercise], setPlans: [SetPlanOld])] = [
 //    self.exercisesPlans = workoutSessions.map { workoutSession in
 //        return (fetchExercises(workoutSession.exercises.compactMap { $0.exerciseId }), fetchSetPlans(workoutSession.exercises.compactMap { $0.setPlanId }))
 //    }
@@ -46,9 +46,9 @@ struct TrainingsSummaryView: View {
         return exercises ?? []
     }
     
-    private func fetchSetPlans(_ ids: [UUID]) -> [SetPlan] {
+    private func fetchSetPlans(_ ids: [UUID]) -> [SetPlanOld] {
         let setPlans = try? modelContext.fetch(
-            FetchDescriptor<SetPlan> (
+            FetchDescriptor<SetPlanOld> (
                 predicate: #Predicate { setPlan in
                     ids.contains(setPlan.id)
                 }

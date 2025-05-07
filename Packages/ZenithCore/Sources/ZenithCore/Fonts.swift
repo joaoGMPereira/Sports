@@ -16,9 +16,17 @@ enum FontLineHeight {
 }
 
 public struct Fonts: FontsProtocol, Sendable {
-    /// Fonte para texto auxiliar e etiquetas
     public let baseSmall = BaseFont(
         font: FontFamily.Gilroy.medium.swiftUIFont(
+            size: FontSize.size16,
+            relativeTo: .body
+        ),
+        fontLineHeight: FontSize.size16,
+        lineHeight: FontLineHeight.height24
+    )
+
+    public let baseSmallBold = BaseFont(
+        font: FontFamily.Gilroy.semibold.swiftUIFont(
             size: FontSize.size16,
             relativeTo: .body
         ),
@@ -59,6 +67,7 @@ public struct Fonts: FontsProtocol, Sendable {
     var fonts: [FontName: BaseFont] {
         [
             .small: baseSmall,
+            .smallBold: baseSmallBold,
             .medium: baseMedium,
             .mediumBold: baseMediumBold,
             .bigBold: baseBigBold
@@ -67,6 +76,10 @@ public struct Fonts: FontsProtocol, Sendable {
     
     public var small: Font {
         baseSmall.font
+    }
+    
+    public var smallBold: Font {
+        baseSmallBold.font
     }
     
     public var medium: Font {

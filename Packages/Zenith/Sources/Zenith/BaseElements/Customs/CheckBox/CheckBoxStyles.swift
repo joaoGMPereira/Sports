@@ -121,9 +121,9 @@ private extension BaseCheckBox {
     }
     var innerCircleColor: Color {
         if isDisabled {
-            return colors.contentB.opacity(0.6)
+            return colors.contentC.opacity(0.6)
         }
-        return colors.contentB
+        return colors.contentC
     }
     
     var outlineColor: Color {

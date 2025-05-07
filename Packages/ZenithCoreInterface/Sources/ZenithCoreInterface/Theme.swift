@@ -1,7 +1,7 @@
 import SwiftUI
 
 public enum ThemeName: String, Decodable, CaseIterable, Equatable, Sendable, Identifiable {
-    case light, dark
+    case dark
 
     public var id: String { self.rawValue }
 }

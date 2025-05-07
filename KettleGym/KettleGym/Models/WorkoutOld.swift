@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 
 typealias TrainingProgram = TrainingProgramSchemaV2.TrainingProgram
-typealias SetPlan = TrainingProgramSchemaV2.SetPlan
+typealias SetPlanOld = TrainingProgramSchemaV2.SetPlanOld
 typealias Exercise = TrainingProgramSchemaV2.Exercise
 typealias WorkoutSession = TrainingProgramSchemaV2.WorkoutSession
 typealias WorkoutExercise = TrainingProgramSchemaV2.WorkoutExercise
@@ -30,7 +30,7 @@ enum TrainingProgramSchemaV2: VersionedSchema {
     static var versionIdentifier = Schema.Version(3, 0, 0)
     
     static var models: [any PersistentModel.Type] {
-        return [TrainingProgram.self, User.self, TrainingLog.self, WorkoutSession.self, WorkoutExercise.self, Exercise.self, ExerciseSet.self, SetPlan.self, ScheduledTraining.self, PerformedExercise.self, CommingSoon.self]
+        return [TrainingProgram.self, User.self, TrainingLog.self, WorkoutSession.self, WorkoutExercise.self, Exercise.self, ExerciseSet.self, SetPlanOld.self, ScheduledTraining.self, PerformedExercise.self, CommingSoon.self]
     }
     
     @Model
@@ -136,10 +136,10 @@ enum TrainingProgramSchemaV2: VersionedSchema {
         @Attribute(.unique)
         var id: UUID
         var name: String
-        var setPlan: SetPlan
+        var setPlan: SetPlanOld
         var exerciseSets: [ExerciseSet]
         
-        init(name: String = String(), setPlan: SetPlan = .init(), exerciseSets: [ExerciseSet] = []) {
+        init(name: String = String(), setPlan: SetPlanOld = .init(), exerciseSets: [ExerciseSet] = []) {
             self.id = .init()
             self.name = name
             self.setPlan = setPlan
@@ -198,9 +198,9 @@ enum TrainingProgramSchemaV2: VersionedSchema {
         var id: UUID
         var position: Int?
         var exercise: Exercise?
-        var setPlan: SetPlan?
+        var setPlan: SetPlanOld?
         
-        init(position: Int, exercise: Exercise? = nil, setPlan: SetPlan? = nil) {
+        init(position: Int, exercise: Exercise? = nil, setPlan: SetPlanOld? = nil) {
             self.id = .init()
             self.position = position
             self.exercise = exercise
@@ -231,7 +231,7 @@ enum TrainingProgramSchemaV2: VersionedSchema {
 
     
     @Model
-    final class SetPlan: CustomStringConvertible {
+    final class SetPlanOld: CustomStringConvertible {
         @Attribute(.unique)
         var id: UUID
         var quantity: Int?
@@ -262,7 +262,7 @@ enum TrainingProgramSchemaV1: VersionedSchema {
     static var versionIdentifier = Schema.Version(2, 0, 0)
     
     static var models: [any PersistentModel.Type] {
-        return [TrainingProgram.self, User.self, TrainingLog.self, WorkoutSession.self, WorkoutExercise.self, Exercise.self, ExerciseSet.self, SetPlan.self, ScheduledTraining.self, PerformedExercise.self, CommingSoon.self]
+        return [TrainingProgram.self, User.self, TrainingLog.self, WorkoutSession.self, WorkoutExercise.self, Exercise.self, ExerciseSet.self, SetPlanOld.self, ScheduledTraining.self, PerformedExercise.self, CommingSoon.self]
     }
     
     @Model
@@ -368,10 +368,10 @@ enum TrainingProgramSchemaV1: VersionedSchema {
         @Attribute(.unique)
         var id: UUID
         var name: String
-        var setPlan: SetPlan
+        var setPlan: SetPlanOld
         var exerciseSets: [ExerciseSet]
         
-        init(name: String = String(), setPlan: SetPlan = .init(), exerciseSets: [ExerciseSet] = []) {
+        init(name: String = String(), setPlan: SetPlanOld = .init(), exerciseSets: [ExerciseSet] = []) {
             self.id = .init()
             self.name = name
             self.setPlan = setPlan
@@ -429,9 +429,9 @@ enum TrainingProgramSchemaV1: VersionedSchema {
         @Attribute(.unique)
         var id: UUID
         var exercise: Exercise?
-        var setPlan: SetPlan?
+        var setPlan: SetPlanOld?
         
-        init(exercise: Exercise? = nil, setPlan: SetPlan? = nil) {
+        init(exercise: Exercise? = nil, setPlan: SetPlanOld? = nil) {
             self.id = .init()
             self.exercise = exercise
             self.setPlan = setPlan
@@ -461,7 +461,7 @@ enum TrainingProgramSchemaV1: VersionedSchema {
 
     
     @Model
-    final class SetPlan: CustomStringConvertible {
+    final class SetPlanOld: CustomStringConvertible {
         @Attribute(.unique)
         var id: UUID
         var quantity: Int?

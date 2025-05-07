@@ -10,9 +10,9 @@ public struct Card<Content: View>: View, @preconcurrency BaseThemeDependencies {
     let action: () -> Void
     
     public init(
-        alignment: Alignment,
-        type: CardType,
-        action: @escaping () -> Void,
+        alignment: Alignment = .center,
+        type: CardType = .fill,
+        action: @escaping () -> Void = {},
         @ViewBuilder content: () -> Content
     ) {
         self.alignment = alignment
@@ -26,7 +26,6 @@ public struct Card<Content: View>: View, @preconcurrency BaseThemeDependencies {
             action()
         }) {
             content
-                .padding(themeConfigurator.theme.spacings.medium)
                 .frame(maxWidth: .infinity, alignment: alignment)
         }
         .buttonStyle(.cardAppearance(type))

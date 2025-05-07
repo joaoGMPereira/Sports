@@ -9,9 +9,13 @@ public struct ColorsMock: ColorsProtocol {
     
     public let backgroundC = Color.red
     
+    public let backgroundD = Color.red
+    
     public let contentA = Color.red
     
     public let contentB = Color.red
+    
+    public let contentC = Color.red
     
     public let critical = Color.red
     
@@ -26,8 +30,11 @@ public struct ColorsMock: ColorsProtocol {
             .highlightA: highlightA,
             .backgroundA: backgroundA,
             .backgroundB: backgroundB,
+            .backgroundC: backgroundC,
+            .backgroundD: backgroundD,
             .contentA: contentA,
             .contentB: contentB,
+            .contentC: contentC,
             .critical: critical,
             .attention: attention,
             .danger: danger,
@@ -45,6 +52,12 @@ public struct FontsMock: FontsProtocol {
     /// Fonte para texto auxiliar e etiquetas
     public let baseSmall = BaseFont(
         font: .callout,
+        fontLineHeight: 16,
+        lineHeight: 24
+    )
+    
+    public let baseSmallBold = BaseFont(
+        font: .caption,
         fontLineHeight: 16,
         lineHeight: 24
     )
@@ -73,6 +86,7 @@ public struct FontsMock: FontsProtocol {
     var fonts: [FontName: BaseFont] {
         [
             .small: baseSmall,
+            .smallBold: baseSmallBold,
             .medium: baseMedium,
             .mediumBold: baseMediumBold,
             .bigBold: baseBigBold
@@ -81,6 +95,10 @@ public struct FontsMock: FontsProtocol {
     
     public var small: Font {
         baseSmall.font
+    }
+    
+    public var smallBold: Font {
+        baseSmallBold.font
     }
     
     public var medium: Font {
@@ -143,11 +161,15 @@ public struct ConstantsMock: ConstantsProtocol {
     public var tapOpacity: Double = 0.3
     
     public let smallCornerRadius: Double = 8
+    public let cornerRadius: Double = 20
     
     public let disabledOpacity: Double = 0.3
     
     public let smallButtonSize: Double = 44
+    
     public let mediumButtonSize: Double = 48
     
     public let animationTimer: Double = 0.5
+    
+    public var strokeColor: Color = Color(hex: "#646161")
 }

@@ -122,7 +122,7 @@ public extension {component_name} {{
     }}
 }}
 
-public struct Primary{component_name}Style: @preconcurrency {component_name}Style, BaseThemeDependencies {{
+public struct ContentA{component_name}Style: @preconcurrency {component_name}Style, BaseThemeDependencies {{
     public var id = String(describing: Self.self)
     
     @Dependency(\\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
@@ -131,11 +131,11 @@ public struct Primary{component_name}Style: @preconcurrency {component_name}Styl
     public func makeBody(configuration: Configuration) -> some View {{
         configuration
             .content
-            .foregroundStyle(colors.textPrimary)
+            .foregroundStyle(colors.contentA)
     }}
 }}
 
-public struct Secondary{component_name}Style: @preconcurrency {component_name}Style, BaseThemeDependencies {{
+public struct ContentB{component_name}Style: @preconcurrency {component_name}Style, BaseThemeDependencies {{
     public var id = String(describing: Self.self)
     
     @Dependency(\\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
@@ -144,11 +144,11 @@ public struct Secondary{component_name}Style: @preconcurrency {component_name}St
     public func makeBody(configuration: Configuration) -> some View {{
         configuration
             .content
-            .foregroundStyle(colors.textSecondary)
+            .foregroundStyle(colors.contentB)
     }}
 }}
 
-public struct Tertiary{component_name}Style: @preconcurrency {component_name}Style, BaseThemeDependencies {{
+public struct HighlightA{component_name}Style: @preconcurrency {component_name}Style, BaseThemeDependencies {{
     public var id = String(describing: Self.self)
     
     @Dependency(\\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
@@ -157,37 +157,37 @@ public struct Tertiary{component_name}Style: @preconcurrency {component_name}Sty
     public func makeBody(configuration: Configuration) -> some View {{
         configuration
             .content
-            .foregroundStyle(colors.primary)
+            .foregroundStyle(colors.highlightA)
     }}
 }}
 
-public extension {component_name}Style where Self == Primary{component_name}Style {{
-    static func primary() -> Self {{ Primary{component_name}Style() }}
+public extension {component_name}Style where Self == ContentA{component_name}Style {{
+    static func contentA() -> Self {{ ContentA{component_name}Style() }}
 }}
 
-public extension {component_name}Style where Self == Secondary{component_name}Style {{
-    static func secondary() -> Self {{ Secondary{component_name}Style() }}
+public extension {component_name}Style where Self == ContentB{component_name}Style {{
+    static func contentB() -> Self {{ ContentB{component_name}Style() }}
 }}
 
-public extension {component_name}Style where Self == Tertiary{component_name}Style {{
-    static func tertiary() -> Self {{ Tertiary{component_name}Style() }}
+public extension {component_name}Style where Self == HighlightA{component_name}Style {{
+    static func highlightA() -> Self {{ HighlightA{component_name}Style() }}
 }}
 
 public enum {component_name}StyleCase: CaseIterable, Identifiable {{
-    case primary
-    case secondary
-    case tertiary
+    case contentA
+    case contentB
+    case highlightA
     
     public var id: Self {{ self }}
     
     public func style() -> Any{component_name}Style {{
         switch self {{
-        case .primary:
-            .init(.primary())
-        case .secondary:
-            .init(.secondary())
-        case .tertiary:
-            .init(.tertiary())
+        case .contentA:
+            .init(.contentA())
+        case .contentB:
+            .init(.contentB())
+        case .highlightA:
+            .init(.highlightA())
         }}
     }}
 }}
@@ -227,7 +227,7 @@ public struct {component_name}StyleConfiguration {{
 }}
 
 public struct {component_name}StyleKey: EnvironmentKey {{
-    public static let defaultValue: any {component_name}Style = Primary{component_name}Style()
+    public static let defaultValue: any {component_name}Style = ContentA{component_name}Style()
 }}
 
 public extension EnvironmentValues {{
@@ -266,7 +266,7 @@ public extension View {{
     }}
 }}
 
-public struct Primary{component_name}Style: @preconcurrency {component_name}Style, BaseThemeDependencies {{
+public struct ContentA{component_name}Style: @preconcurrency {component_name}Style, BaseThemeDependencies {{
     public var id = String(describing: Self.self)
     
     @Dependency(\\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
@@ -276,11 +276,11 @@ public struct Primary{component_name}Style: @preconcurrency {component_name}Styl
     @MainActor
     public func makeBody(configuration: Configuration) -> some View {{
         Base{component_name}(configuration: configuration)
-            .foregroundColor(colors.textPrimary)
+            .foregroundColor(colors.contentA)
     }}
 }}
 
-public struct Secondary{component_name}Style: @preconcurrency {component_name}Style, BaseThemeDependencies {{
+public struct ContentB{component_name}Style: @preconcurrency {component_name}Style, BaseThemeDependencies {{
     public var id = String(describing: Self.self)
     
     @Dependency(\\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
@@ -290,30 +290,30 @@ public struct Secondary{component_name}Style: @preconcurrency {component_name}St
     @MainActor
     public func makeBody(configuration: Configuration) -> some View {{
         Base{component_name}(configuration: configuration)
-            .foregroundColor(colors.textSecondary)
+            .foregroundColor(colors.contentB)
     }}
 }}
 
-public extension {component_name}Style where Self == Primary{component_name}Style {{
-    static func primary() -> Self {{ .init() }}
+public extension {component_name}Style where Self == ContentA{component_name}Style {{
+    static func contentA() -> Self {{ .init() }}
 }}
 
-public extension {component_name}Style where Self == Secondary{component_name}Style {{
-    static func secondary() -> Self {{ .init() }}
+public extension {component_name}Style where Self == ContentB{component_name}Style {{
+    static func contentB() -> Self {{ .init() }}
 }}
 
 public enum {component_name}StyleCase: CaseIterable, Identifiable {{
-    case primary
-    case secondary
+    case contentA
+    case contentB
     
     public var id: Self {{ self }}
     
     public func style() -> Any{component_name}Style {{
         switch self {{
-        case .primary:
-            .init(.primary())
-        case .secondary:
-            .init(.secondary())
+        case .contentA:
+            .init(.contentA())
+        case .contentB:
+            .init(.contentB())
         }}
     }}
 }}
@@ -329,7 +329,7 @@ private struct Base{component_name}: View, @preconcurrency BaseThemeDependencies
     
     var body: some View {{
         Text(configuration.text)
-            .font(fonts.small.font)
+            .font(fonts.small)
     }}
 }}
 """

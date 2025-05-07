@@ -13,7 +13,6 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
         case baseElements = "Base Elements"
         case components = "Components"
         case templates = "Templates"
-        case future = "Future"
 
         var id: String { self.rawValue }
 
@@ -22,7 +21,14 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
             case .baseElements: return .squareGrid2x2
             case .components: return .puzzlepieceExtension
             case .templates: return .rectangle3Group
-            case .future: return .sparkles
+            }
+        }
+        
+        var categories: [ElementCategory] {
+            switch self {
+            case .baseElements: return [.native, .custom]
+            case .components: return [.custom]
+            case .templates: return [.template]
             }
         }
     }
@@ -31,7 +37,6 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
         case custom = "Custom"
         case native = "Native"
         case template = "Template"
-        case other = "Other"
 
         var id: String { self.rawValue }
     }
@@ -54,7 +59,7 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
     // MARK: - State Properties
 
     @State private var selectedTab: TabType = .baseElements
-    @State private var selectedCategory: ElementCategory = .custom
+    @State private var selectedCategory: ElementCategory = .native
 
     // MARK: - Element Definitions
 
@@ -83,6 +88,12 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
             category: .native,
             tabType: .baseElements,
             view: ToggleSample()
+        ),
+        ElementType(
+            name: "TextField",
+            category: .native,
+            tabType: .baseElements,
+            view: TextFieldSample()
         ),
         // Base Elements - Customs
         ElementType(
@@ -123,10 +134,23 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
             view: CardSample()
         ),
         ElementType(
-            name: "ActionCard",
+            name: "ListItem",
             category: .custom,
             tabType: .components,
-            view: ActionCardSample()
+            view: ListItemSample()
+        ),
+        ElementType(
+            name: "HeaderTitle",
+            category: .custom,
+            tabType: .components,
+            view: HeaderTitleSample()
+        ),
+        
+        ElementType(
+            name: "Blur",
+            category: .custom,
+            tabType: .components,
+            view:  BlurSample()
         ),
         // Templates
         ElementType(
@@ -159,9 +183,9 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
             }
         }
         .accentColor(colors.highlightA)
-        .onChange(of: selectedTab) { newValue in
-            if newValue == .templates {
-                selectedCategory = .template
+        .onChange(of: selectedTab) {
+            if selectedTab != .baseElements {
+                selectedCategory = selectedTab.categories.first ?? .native
             }
         }
     }
@@ -170,70 +194,65 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
 
     private func tabContent(for tabType: TabType) -> some View {
         NavigationStack {
-            List {
-                Section {
-                    categoryPicker(for: tabType)
-                        .listRowBackground(Color.clear)
+            PrincipalToolbarView.start(tabType.rawValue) {
+                List {
+                    Section {
+                        categoryPicker(for: tabType)
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                    }
+                    ForEach(filteredElements()) { element in
+                        element.view
+                            .listRowBackground(Color.clear)
+                    }
+                    
+                    if filteredElements().isEmpty {
+                        Text("No \(selectedCategory.rawValue.lowercased()) elements available.")
+                            .font(fonts.medium)
+                            .foregroundColor(colors.contentA)
+                            .listRowBackground(Color.clear)
+                    }
                 }
-                ForEach(filteredElements()) { element in
-                    element.view
-                        .listRowBackground(colors.backgroundB)
-                }
-
-                if filteredElements().isEmpty {
-                    Text("No \(selectedCategory.rawValue.lowercased()) elements available.")
-                        .font(fonts.medium)
-                        .foregroundColor(colors.contentA)
-                        .listRowBackground(colors.backgroundB)
-                }
+                .listRowSeparator(.hidden)
+                .listSectionSeparator(.hidden)
             }
-            .listRowSeparator(.hidden)
-            .listSectionSeparator(.hidden)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text(tabType.rawValue)
-                        .font(fonts.mediumBold)
-                        .foregroundColor(colors.contentA)
-                }
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .scrollContentBackground(.hidden)
-            .background(colors.backgroundA)
         }
     }
 
     // MARK: - Category Picker
 
     private func categoryPicker(for tabType: TabType) -> some View {
-        Picker("Element Category", selection: $selectedCategory) {
-            ForEach(tabType == .templates ? [ElementCategory.template] : ElementCategory.allCases) { category in
-                Text(category.rawValue).font(fonts.mediumBold).tag(category)
+        Group {
+                Picker("Element Category", selection: $selectedCategory) {
+                    ForEach(tabType.categories) { category in
+                        Text(category.rawValue).font(fonts.mediumBold).tag(category)
+                    }
+                }
+                .pickerStyle(SegmentedPickerStyle())
+                .introspect(.picker(style: .segmented), on: .iOS(.v17, .v18)) {
+                    $0.backgroundColor = UIColor.clear
+                    $0.layer.borderColor = colors.highlightA.uiColor().cgColor
+                    $0.selectedSegmentTintColor = colors.highlightA.uiColor()
+                    $0.layer.borderWidth = 1
+                    
+                    let titleTextAttributes = [
+                        NSAttributedString.Key.foregroundColor: colors.contentA.uiColor(),
+                        NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14, weight: .bold)
+                    ]
+                    $0.setTitleTextAttributes(
+                        titleTextAttributes,
+                        for:.normal
+                    )
+                    
+                    let titleTextAttributesSelected = [
+                        NSAttributedString.Key.foregroundColor: colors.contentC.uiColor(),
+                        NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14, weight: .bold)
+                    ]
+                    $0.setTitleTextAttributes(
+                        titleTextAttributesSelected,
+                        for:.selected
+                    )
             }
-        }
-        .pickerStyle(SegmentedPickerStyle())
-        .introspect(.picker(style: .segmented), on: .iOS(.v17, .v18)) {
-            $0.backgroundColor = UIColor.clear
-            $0.layer.borderColor = colors.highlightA.uiColor().cgColor
-            $0.selectedSegmentTintColor = colors.highlightA.uiColor()
-                  $0.layer.borderWidth = 1
-
-            let titleTextAttributes = [
-                NSAttributedString.Key.foregroundColor: colors.contentA.uiColor(),
-                NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14, weight: .bold)
-            ]
-            $0.setTitleTextAttributes(
-                titleTextAttributes,
-                for:.normal
-            )
-
-            let titleTextAttributesSelected = [
-                NSAttributedString.Key.foregroundColor: colors.contentB.uiColor(),
-                NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14, weight: .bold)
-            ]
-            $0.setTitleTextAttributes(
-                titleTextAttributesSelected,
-                for:.selected
-            )
         }
     }
 }

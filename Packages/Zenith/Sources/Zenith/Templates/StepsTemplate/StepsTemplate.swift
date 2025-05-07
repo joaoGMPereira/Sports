@@ -12,23 +12,46 @@ public struct StepsTemplate<Content: View>: View, @preconcurrency BaseThemeDepen
     private let totalSteps: Int
     private let content: (Int) -> Content
     private let useExternalBinding: Bool
+    private var previousStepCallback: ((Int) -> Void)?
+    private var nextStepCallback: ((Int) -> Void)?
+    @Binding private var canMoveToPreviousStep: Bool
+    @Binding private var canMoveToNextStep: Bool
     
     // Inicializador que utiliza um binding externo para currentStep
-    public init(totalSteps: Int, currentStep: Binding<Int>, @ViewBuilder content: @escaping (Int) -> Content) {
+    public init(
+        totalSteps: Int,
+        currentStep: Binding<Int>,
+        canMoveToPreviousStep: Binding<Bool>,
+        canMoveToNextStep: Binding<Bool>,
+        previousStepCallback: ((Int) -> Void)? = nil,
+        nextStepCallback: ((Int) -> Void)? = nil,
+        @ViewBuilder content: @escaping (Int) -> Content
+    ) {
         self._currentStep = currentStep
         self._internalStep = State(initialValue: currentStep.wrappedValue)
         self.totalSteps = totalSteps
         self.content = content
+        self.previousStepCallback = previousStepCallback
+        self.nextStepCallback = nextStepCallback
+        self._canMoveToPreviousStep = canMoveToPreviousStep
+        self._canMoveToNextStep = canMoveToNextStep
         self.useExternalBinding = true
     }
     
     // Inicializador com estado interno (para compatibilidade)
-    public init(initialStep: Int = 0, totalSteps: Int, @ViewBuilder content: @escaping (Int) -> Content) {
+    public init(
+        initialStep: Int = 0,
+        totalSteps: Int,
+        @ViewBuilder content: @escaping (Int) -> Content
+    ) {
         self._currentStep = .constant(initialStep)
         self._internalStep = State(initialValue: initialStep)
         self.totalSteps = totalSteps
         self.content = content
         self.useExternalBinding = false
+        self._canMoveToPreviousStep = .constant(false)
+        self._canMoveToNextStep = .constant(false)
+        
     }
     
     public var body: some View {
@@ -41,8 +64,8 @@ public struct StepsTemplate<Content: View>: View, @preconcurrency BaseThemeDepen
                     moveToNextStep: moveToNextStep,
                     moveToPreviousStep: moveToPreviousStep,
                     moveToStep: moveToStep,
-                    canMoveToNextStep: (useExternalBinding ? currentStep : internalStep) < totalSteps - 1,
-                    canMoveToPreviousStep: (useExternalBinding ? currentStep : internalStep) > 0
+                    canMoveToNextStep: useExternalBinding ? canMoveToNextStep : (internalStep < totalSteps - 1),
+                    canMoveToPreviousStep: useExternalBinding ? canMoveToPreviousStep : (internalStep > 0)
                 )
             )
         )
@@ -59,6 +82,7 @@ public struct StepsTemplate<Content: View>: View, @preconcurrency BaseThemeDepen
                     internalStep += 1
                 }
             }
+            nextStepCallback?(useExternalBinding ? currentStep : internalStep)
         }
     }
     
@@ -73,6 +97,8 @@ public struct StepsTemplate<Content: View>: View, @preconcurrency BaseThemeDepen
                     internalStep -= 1
                 }
             }
+            
+            previousStepCallback?(useExternalBinding ? currentStep : internalStep)
         }
     }
     

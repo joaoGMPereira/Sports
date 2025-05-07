@@ -13,32 +13,62 @@ public struct DynamicImage: View {
     @Environment(\.dynamicImageStyle) private var style
     let image: String
     let type: DynamicImageType
+    private var isResizable: Bool
     
     public init (
-        _ image: String
+        _ image: String,
+        resizable: Bool = false
     ) {
         self.image = image
         self.type = image.starts(with: "https://") ? .async : .local
+        self.isResizable = resizable
     }
     
     public init (
-        _ image: SFSymbol
+        _ image: SFSymbol,
+        resizable: Bool = false
     ) {
         let imageRawValue = image.rawValue
         self.image = imageRawValue
         self.type = .local
+        self.isResizable = resizable
     }
     
     public init (
-        _ image: ImageName
+        _ image: ImageName,
+        resizable: Bool = false
     ) {
         let imageRawValue = image.rawValue
         self.image = imageRawValue
         self.type = .local
+        self.isResizable = resizable
     }
     
     public var body: some View {
-        let asyncImage = AsyncImage(
+        let configuration = DynamicImageStyleConfiguration(asyncImage: asyncImage, image: localImage, type: type)
+        AnyView(style.resolve(configuration: configuration))
+    }
+    
+    private var localImage: Image {
+        if let imageAsset = ImageName(rawValue: image) {
+            let image = Image(asset: ImageAsset(name: imageAsset.rawValue))
+            if isResizable {
+                return image.resizable()
+            } else {
+                return image
+            }
+        } else {
+            let image = Image(systemSymbol: .init(rawValue: image))
+            if isResizable {
+                return image.resizable()
+            } else {
+                return image
+            }
+        }
+    }
+    
+    private var asyncImage: AsyncImage<_ConditionalContent<_ConditionalContent<_ConditionalContent<Image, Image>, _ConditionalContent<Image, Image>>, Color>> {
+        AsyncImage(
             url: URL(
                 string: image
             ),
@@ -47,27 +77,26 @@ public struct DynamicImage: View {
             )
         ) { phase in
             if let image = phase.image {
-                image.resizable()
+                if isResizable {
+                    image.resizable()
+                } else {
+                    image
+                }
             } else if phase.error != nil {
-                Image(systemSymbol: .questionmarkApp)
-                    .resizable()
+                let image = Image(systemSymbol: .questionmarkApp)
+                if isResizable {
+                    image.resizable()
+                } else {
+                    image
+                }
             } else {
                 Color.blue
             }
         }
-        let configuration = DynamicImageStyleConfiguration(asyncImage: asyncImage, image: localImage, type: type)
-        AnyView(style.resolve(configuration: configuration))
     }
     
-    private var localImage: Image {
-        if let imageAsset = ImageName(rawValue: image) {
-            return Image(asset: ImageAsset(name: imageAsset.rawValue))
-        } else {
-            return Image(systemSymbol: .init(rawValue: image))
-        }
-    }
-    
-    public func resizable() -> some View {
-        localImage.resizable()
+    public func resizable(_ enabled: Bool = true) -> some View {
+        DynamicImage(self.image, resizable: enabled)
+            .environment(\.dynamicImageStyle, style)
     }
 }
