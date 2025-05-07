@@ -140,7 +140,7 @@ struct CommingSoonView: View, BaseThemeDependencies {
                             Section(
                                 header:
                                     Text(items[safe: sectionIndex]?.title ?? "")
-                                    .font(fonts.mediumBold)
+                                    .font(fonts.largeBold)
                             ){
                                 ForEach(items[safe: sectionIndex]?.items ?? [], id: \.self) { item in
                                     Text(item)

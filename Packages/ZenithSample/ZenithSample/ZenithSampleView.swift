@@ -207,8 +207,7 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
                     
                     if filteredElements().isEmpty {
                         Text("No \(selectedCategory.rawValue.lowercased()) elements available.")
-                            .font(fonts.medium)
-                            .foregroundColor(colors.contentA)
+                            .textStyle(.large(.contentA))
                             .listRowBackground(Color.clear)
                     }
                 }
@@ -224,7 +223,7 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
         Group {
                 Picker("Element Category", selection: $selectedCategory) {
                     ForEach(tabType.categories) { category in
-                        Text(category.rawValue).font(fonts.mediumBold).tag(category)
+                        Text(category.rawValue).font(fonts.largeBold).tag(category)
                     }
                 }
                 .pickerStyle(SegmentedPickerStyle())

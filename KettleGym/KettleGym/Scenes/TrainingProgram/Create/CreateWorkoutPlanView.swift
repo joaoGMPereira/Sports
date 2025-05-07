@@ -88,7 +88,7 @@ struct CreateWorkoutPlanView: View, BaseThemeDependencies {
         
         HStack {
             Text(title)
-                .textStyle(.mediumBold(.highlightA))
+                .textStyle(.largeBold(.highlightA))
                 .multilineTextAlignment(.leading)
             Spacer()
         }

@@ -34,13 +34,13 @@ struct SectionView<T: View>: View, @preconcurrency BaseThemeDependencies {
             Label(
                 title: {
                     Text(title)
-                        .textStyle(.mediumBold(.highlightA))
+                        .textStyle(.largeBold(.highlightA))
                 },
                 icon: {
                     Image(systemSymbol: .chevronDown)
                         .rotationEffect(.init(degrees: isExpanded.wrappedValue ? 180 : 0))
                 })
-            .font(fonts.mediumBold)
+            .font(fonts.largeBold)
             .foregroundStyle(colors.contentA)
             .animation(.smooth, value: isExpanded.wrappedValue)
             .onTapGesture {

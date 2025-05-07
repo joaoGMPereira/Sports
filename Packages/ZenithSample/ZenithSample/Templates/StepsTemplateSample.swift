@@ -32,7 +32,7 @@ struct StepsTemplateSample: View, @preconcurrency BaseThemeDependencies {
     private var headerView: some View {
         HStack {
             Text("Steps Template")
-                .font(fonts.mediumBold)
+                .font(fonts.largeBold)
                 .foregroundColor(colors.contentA)
             Spacer()
         }
@@ -43,7 +43,7 @@ struct StepsTemplateSample: View, @preconcurrency BaseThemeDependencies {
     private var styleSelectorView: some View {
         Picker("Steps Template", selection: $selectedStyle) {
             ForEach(StepsTemplateStyleCase.allCases, id: \.self) { style in
-                Text(style.rawValue).font(fonts.mediumBold).tag(style)
+                Text(style.rawValue).font(fonts.largeBold).tag(style)
             }
         }
         .pickerStyle(SegmentedPickerStyle())
@@ -212,7 +212,7 @@ struct stepContentView<Content: View>: View {
                     .foregroundColor(imageColor)
                 
                 Text(title)
-                    .font(fonts.mediumBold)
+                    .font(fonts.largeBold)
                     .foregroundColor(colors.contentA)
             }
             

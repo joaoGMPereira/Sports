@@ -33,7 +33,7 @@ struct BlurBasicCardView: View, @preconcurrency BaseThemeDependencies {
                 VStack(alignment: .leading, spacing: .zero) {
                     HStack(spacing: spacings.medium) {
                         Text("Card Básico")
-                            .textStyle(.mediumBold(.contentA))
+                            .textStyle(.largeBold(.contentA))
                         Spacer()
                         Button {
                             

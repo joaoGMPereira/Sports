@@ -10,7 +10,7 @@ struct BlurViewSelector: View, @preconcurrency BaseThemeDependencies {
     var body: some View {
         VStack(alignment: .leading) {
             Text("Tipo de View")
-                .textStyle(.mediumBold(.contentA))
+                .textStyle(.largeBold(.contentA))
                 .padding(.horizontal)
             
             Picker("Tipo de View", selection: $selectedIndex) {

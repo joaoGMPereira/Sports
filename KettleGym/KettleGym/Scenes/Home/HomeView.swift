@@ -102,7 +102,7 @@ struct HomeWithTrainingsView: View, BaseThemeDependencies {
                         
                         HStack(spacing: spacings.medium) {
                             Text(trainingProgram.title)
-                                .textStyle(.mediumBold(.contentA))
+                                .textStyle(.largeBold(.contentA))
                             Spacer()
                             Button {
                                 

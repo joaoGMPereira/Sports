@@ -33,7 +33,7 @@ struct BlurStatsCardView: View, @preconcurrency BaseThemeDependencies {
             ) {
                 VStack(spacing: spacings.medium) {
                     Text("Estatísticas do Mês")
-                        .textStyle(.mediumBold(.contentA))
+                        .textStyle(.largeBold(.contentA))
                         .frame(maxWidth: .infinity, alignment: .leading)
                     
                     HStack(spacing: spacings.large) {
@@ -68,7 +68,7 @@ struct BlurStatsCardView: View, @preconcurrency BaseThemeDependencies {
                     .textStyle(.small(.contentB))
             }
             Text(value)
-                .textStyle(.mediumBold(.contentA))
+                .textStyle(.largeBold(.contentA))
         }
         .frame(maxWidth: .infinity)
     }

@@ -71,13 +71,13 @@ public struct Toast: View, @preconcurrency BaseThemeDependencies {
                 HStack(alignment: .top, spacing: spacings.small) {
                     // Ícone representativo do estado
                     Image(systemName: stateIcon)
-                        .font(fonts.mediumBold)
+                        .font(fonts.largeBold)
                         .foregroundStyle(stateColors.foreground)
                         .padding(.top, spacings.extraSmall / 2)
                     
                     VStack(alignment: .leading, spacing: spacings.extraSmall / 2) {
                         Text(title)
-                            .font(fonts.mediumBold)
+                            .font(fonts.largeBold)
                             .foregroundStyle(stateColors.foreground)
                         
                         Text(message)

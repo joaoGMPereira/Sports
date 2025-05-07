@@ -18,7 +18,7 @@ struct BlurControlSection: View, @preconcurrency BaseThemeDependencies {
         VStack {
             HStack {
                 Text(title)
-                    .textStyle(.mediumBold(.contentA))
+                    .textStyle(.largeBold(.contentA))
                 
                 Spacer()
                 

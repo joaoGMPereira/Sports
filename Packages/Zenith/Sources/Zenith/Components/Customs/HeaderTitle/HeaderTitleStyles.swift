@@ -75,7 +75,7 @@ private struct BaseHeaderTitle: View, @preconcurrency BaseThemeDependencies {
     var body: some View {
         HStack(alignment: .top) {
             Text(configuration.text)
-                .textStyle(.mediumBold(textColor))
+                .textStyle(.largeBold(textColor))
             Spacer()
             if configuration.image.isNotEmpty {
                 Button(

@@ -19,7 +19,7 @@ public struct DefaultIndicatorSelectorStyle: @preconcurrency IndicatorSelectorSt
     public func makeBody(configuration: Configuration) -> some View {
         BaseIndicatorSelector(
             configuration: configuration,
-            textStyle: .mediumBold(.contentA),
+            textStyle: .largeBold(.contentA),
             contentColor: colors.highlightA
         )
     }
@@ -36,7 +36,7 @@ public struct HighlightAIndicatorSelectorStyle: @preconcurrency IndicatorSelecto
     public func makeBody(configuration: Configuration) -> some View {
         BaseIndicatorSelector(
             configuration: configuration,
-            textStyle: .mediumBold(.highlightA),
+            textStyle: .largeBold(.highlightA),
             contentColor: colors.contentA
         )
     }

@@ -11,7 +11,7 @@ struct BlurValoresView: View, @preconcurrency BaseThemeDependencies {
         VStack {
             HStack {
                 Text("Valores Atuais")
-                    .textStyle(.mediumBold(.contentA))
+                    .textStyle(.largeBold(.contentA))
                 
                 Spacer()
                 

@@ -34,7 +34,7 @@ struct BlurProgressCardView: View, @preconcurrency BaseThemeDependencies {
                 VStack(alignment: .leading, spacing: spacings.medium) {
                     HStack {
                         Text("Progresso do Treino")
-                            .textStyle(.mediumBold(.contentA))
+                            .textStyle(.largeBold(.contentA))
                         Spacer()
                         Image(systemSymbol: .chartBarXaxis)
                             .foregroundColor(colors.highlightA)

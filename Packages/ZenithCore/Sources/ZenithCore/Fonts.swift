@@ -3,6 +3,7 @@ import ZenithCoreInterface
 
 enum FontSize {
     static let size16 = 16.0
+    static let size20 = 20.0
     static let size24 = 24.0
     static let size32 = 32.0
     static let size56 = 56.0
@@ -34,8 +35,25 @@ public struct Fonts: FontsProtocol, Sendable {
         lineHeight: FontLineHeight.height24
     )
     
-    /// Fonte para títulos de seções e botões principais
     public let baseMedium = BaseFont(
+        font: FontFamily.Gilroy.medium.swiftUIFont(
+            size: FontSize.size20,
+            relativeTo: .subheadline
+        ),
+        fontLineHeight: FontSize.size20,
+        lineHeight: FontLineHeight.height24
+    )
+    
+    public let baseMediumBold = BaseFont(
+        font: FontFamily.Gilroy.semibold.swiftUIFont(
+            size: FontSize.size20,
+            relativeTo: .subheadline
+        ),
+        fontLineHeight: FontSize.size20,
+        lineHeight: FontLineHeight.height24
+    )
+    
+    public let baseLarge = BaseFont(
         font: FontFamily.Gilroy.semibold.swiftUIFont(
             size: FontSize.size24,
             relativeTo: .title2
@@ -44,8 +62,7 @@ public struct Fonts: FontsProtocol, Sendable {
         lineHeight: FontLineHeight.height36
     )
     
-    /// Fonte para títulos de seções e botões principais
-    public let baseMediumBold = BaseFont(
+    public let baseLargeBold = BaseFont(
         font: FontFamily.Gilroy.medium.swiftUIFont(
             size: FontSize.size32,
             relativeTo: .title
@@ -54,7 +71,6 @@ public struct Fonts: FontsProtocol, Sendable {
         lineHeight: FontLineHeight.height44
     )
     
-    /// Fonte para títulos de destaque e chamadas importantes
     public let baseBigBold = BaseFont(
         font: FontFamily.Gilroy.semibold.swiftUIFont(
             size: FontSize.size56,
@@ -63,36 +79,6 @@ public struct Fonts: FontsProtocol, Sendable {
         fontLineHeight: FontSize.size56,
         lineHeight: FontLineHeight.height64
     )
-    
-    var fonts: [FontName: BaseFont] {
-        [
-            .small: baseSmall,
-            .smallBold: baseSmallBold,
-            .medium: baseMedium,
-            .mediumBold: baseMediumBold,
-            .bigBold: baseBigBold
-        ]
-    }
-    
-    public var small: Font {
-        baseSmall.font
-    }
-    
-    public var smallBold: Font {
-        baseSmallBold.font
-    }
-    
-    public var medium: Font {
-        baseMedium.font
-    }
-    
-    public var mediumBold: Font {
-        baseMediumBold.font
-    }
-    
-    public var bigBold: Font {
-        baseBigBold.font
-    }
 
     public func font(by fontName: FontName) -> Font? {
         fonts[fontName]?.font

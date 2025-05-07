@@ -24,7 +24,7 @@ struct WorkoutPlansView: View, BaseThemeDependencies {
                         VStack(spacing: spacings.medium) {
                             HStack(alignment: .top) {
                                 Text(session.name)
-                                    .textStyle(.mediumBold(.contentA))
+                                    .textStyle(.largeBold(.contentA))
                                 Spacer()
                                 Text("Precisa de evoluir")
                                     .textStyle(.small(.highlightA))

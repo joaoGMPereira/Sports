@@ -43,7 +43,7 @@ struct ZenithCoreSampleView: View {
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text("Sample")
-                        .font(fonts.mediumBold.font)
+                        .font(fonts.largeBold.font)
                         .foregroundColor(colors.contentA)
                 }
             }

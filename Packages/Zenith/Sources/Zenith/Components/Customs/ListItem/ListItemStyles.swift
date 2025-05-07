@@ -72,7 +72,7 @@ private struct BaseListItem: @preconcurrency View, @preconcurrency BaseThemeDepe
                     VStack(alignment: .leading, spacing: spacings.medium) {
                         HStack(alignment: .top) {
                             Text(configuration.title)
-                                .textStyle(.mediumBold(.contentA))
+                                .textStyle(.medium(.contentA))
                             Spacer()
                             if let trailingContent = configuration.trailingContent {
                                 trailingContent
