@@ -18,6 +18,7 @@ public extension Text {
 @MainActor
 public extension TextStyle where Self == BaseTextStyle {
     static func small(_ color: ColorName) -> Self { Self(color: color, fontName: .small) }
+    static func smallBold(_ color: ColorName) -> Self { Self(color: color, fontName: .smallBold) }
     static func medium(_ color: ColorName) -> Self { Self(color: color, fontName: .medium) }
     static func mediumBold(_ color: ColorName) -> Self { Self(color: color, fontName: .mediumBold) }
     static func large(_ color: ColorName) -> Self { Self(color: color, fontName: .large) }

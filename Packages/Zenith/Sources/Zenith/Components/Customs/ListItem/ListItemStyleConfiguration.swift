@@ -22,39 +22,19 @@ public protocol ListItemStyle: StyleProtocol & Identifiable {
 }
 
 public struct ListItemStyleConfiguration {
-    let title: String
-    let description: String
-    let leftInfo: ListItem.Info
-    let rightInfo: ListItem.Info
-    let blurStyle: BlurStyleCase
-    let action: (() -> Void)
-    let trailingContent: AnyView?
+    let text: String
     
-    init(
-        title: String,
-        description: String,
-        leftInfo: ListItem.Info,
-        rightInfo: ListItem.Info,
-        blurStyle: BlurStyleCase,
-        action: @escaping () -> Void,
-        trailingContent: AnyView? = nil
-    ) {
-        self.title = title
-        self.description = description
-        self.leftInfo = leftInfo
-        self.rightInfo = rightInfo
-        self.blurStyle = blurStyle
-        self.action = action
-        self.trailingContent = trailingContent
+    init(text: String) {
+        self.text = text
     }
 }
 
 public struct ListItemStyleKey: EnvironmentKey {
-    public static let defaultValue: any ListItemStyle = DefaultListItemStyle()
+    public static let defaultValue: any ListItemStyle = ContentAListItemStyle()
 }
 
 public extension EnvironmentValues {
-    var actionCardStyle : any ListItemStyle {
+    var listitemStyle : any ListItemStyle {
         get { self[ListItemStyleKey.self] }
         set { self[ListItemStyleKey.self] = newValue }
     }

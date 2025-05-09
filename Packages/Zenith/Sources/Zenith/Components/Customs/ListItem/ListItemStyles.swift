@@ -3,12 +3,12 @@ import ZenithCoreInterface
 
 
 public extension View {
-    func actionCardStyle(_ style: some ListItemStyle) -> some View {
-        environment(\.actionCardStyle, style)
+    func listitemStyle(_ style: some ListItemStyle) -> some View {
+        environment(\.listitemStyle, style)
     }
 }
 
-public struct DefaultListItemStyle: @preconcurrency ListItemStyle, BaseThemeDependencies {
+public struct ContentAListItemStyle: @preconcurrency ListItemStyle, BaseThemeDependencies {
     public var id = String(describing: Self.self)
     
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
@@ -18,27 +18,49 @@ public struct DefaultListItemStyle: @preconcurrency ListItemStyle, BaseThemeDepe
     @MainActor
     public func makeBody(configuration: Configuration) -> some View {
         BaseListItem(configuration: configuration)
+            .foregroundColor(colors.contentA)
     }
 }
 
-public extension ListItemStyle where Self == DefaultListItemStyle {
-    static func `default`() -> Self { .init() }
+public struct ContentBListItemStyle: @preconcurrency ListItemStyle, BaseThemeDependencies {
+    public var id = String(describing: Self.self)
+    
+    @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
+    
+    public init() {}
+    
+    @MainActor
+    public func makeBody(configuration: Configuration) -> some View {
+        BaseListItem(configuration: configuration)
+            .foregroundColor(colors.contentB)
+    }
+}
+
+public extension ListItemStyle where Self == ContentAListItemStyle {
+    static func contentA() -> Self { .init() }
+}
+
+public extension ListItemStyle where Self == ContentBListItemStyle {
+    static func contentB() -> Self { .init() }
 }
 
 public enum ListItemStyleCase: CaseIterable, Identifiable {
-    case `default`
+    case contentA
+    case contentB
     
     public var id: Self { self }
     
     public func style() -> AnyListItemStyle {
         switch self {
-        case .default:
-            .init(.default())
+        case .contentA:
+            .init(.contentA())
+        case .contentB:
+            .init(.contentB())
         }
     }
 }
 
-private struct BaseListItem: @preconcurrency View, @preconcurrency BaseThemeDependencies {
+private struct BaseListItem: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
     
     let configuration: ListItemStyleConfiguration
@@ -47,60 +69,8 @@ private struct BaseListItem: @preconcurrency View, @preconcurrency BaseThemeDepe
         self.configuration = configuration
     }
     
-    fileprivate func info(
-        title: String,
-        description: String,
-        alignment: HorizontalAlignment
-    ) -> some View {
-        return VStack(
-            alignment: alignment,
-            spacing: spacings.extraSmall
-        ) {
-            Text(title)
-                .textStyle(.small(.contentB))
-            Text(description)
-                .textStyle(.small(.contentA))
-        }
-    }
-    
     var body: some View {
-        Card(alignment: .center, type: .fill, action: {
-            configuration.action()
-        }) {
-            Blur {
-                Stack(arrangement: .vertical(alignment: .leading)) {
-                    VStack(alignment: .leading, spacing: spacings.medium) {
-                        HStack(alignment: .top) {
-                            Text(configuration.title)
-                                .textStyle(.medium(.contentA))
-                            Spacer()
-                            if let trailingContent = configuration.trailingContent {
-                                trailingContent
-                            }
-                        }
-                        if configuration.description.isNotEmpty {
-                            Text(configuration.description)
-                                .textStyle(.small(.contentB))
-                                .padding(.bottom, spacings.small)
-                        }
-                    }
-                    .padding(.bottom, spacings.small)
-                    HStack {
-                        info(
-                            title: configuration.leftInfo.title,
-                            description: configuration.leftInfo.description,
-                            alignment: .leading
-                        )
-                        Spacer()
-                        info(
-                            title: configuration.rightInfo.title,
-                            description: configuration.rightInfo.description,
-                            alignment: .trailing
-                        )
-                    }
-                }.padding(spacings.medium)
-            }
-            .blurStyle(configuration.blurStyle.style())
-        }
+        Text(configuration.text)
+            .font(fonts.small)
     }
 }

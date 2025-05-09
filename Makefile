@@ -15,9 +15,12 @@ setuptools: ## Install project required tools
 certificates: ## Install/Update certificates
 	@bundle exec fastlane match_certificates
 
-generate: ## Generate projects, wåorkspace and install pods
+install_all_certificates: ## Install and configure certificates for all projects
+	@./Scripts/Certificates/installCertificates.sh
+
+xcodegen_generate: ## Generate projects, workspace and install pods
 	@./Scripts/killXcode.sh
-	@$(MAKE) generatesources
+	@$(MAKE) tuist_generate
 	@$(MAKE) generateprojects
 	@$(MAKE) generateworkspace
 	@./Scripts/Generate/postGenerate.sh $(open)
@@ -43,3 +46,12 @@ install_bundler: ## Run bundler after installing correct version
 
 generateComponent:
 	python3 ./Scripts/generateComponent.py
+
+generate: ## Generate projects using Tuist instead of XcodeGen
+	@./Scripts/killXcode.sh
+	@$(MAKE) generatesources
+	@./Scripts/tuistGenerate.sh
+	@./Scripts/Generate/postGenerate.sh $(open)
+	
+install_tuist: ## Install Tuist
+	@curl -Ls https://install.tuist.io | bash

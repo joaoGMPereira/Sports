@@ -14,28 +14,28 @@ struct ZenithCoreSampleView: View {
         NavigationView {
             List {
                 Section(
-                    header: Text("Themes").font(fonts.bigBold.font).foregroundStyle(colors.contentA)
+                    header: Text("Themes").font(fonts.bigBold).foregroundStyle(colors.contentA)
                 ) {
                     ForEach(ThemeName.allCases) { theme in
                         Button(theme.rawValue) {
                             themeConfigurator.change(theme)
                         }
-                        .font((fonts.small.font))
+                        .font((fonts.small))
                         .tint(colors.contentA)
                     }
                 }.listRowBackground(colors.backgroundB)
                 Section(
-                    header: Text("Fonts").font(fonts.bigBold.font).foregroundStyle(colors.contentA)
+                    header: Text("Fonts").font(fonts.bigBold).foregroundStyle(colors.contentA)
                 ) {
                     FontExampleView()
                 }.listRowBackground(colors.backgroundB)
                 Section(
-                    header: Text("Colors").font(fonts.bigBold.font).foregroundStyle(colors.contentA)
+                    header: Text("Colors").font(fonts.bigBold).foregroundStyle(colors.contentA)
                 ) {
                     ColorExampleView()
                 }.listRowBackground(colors.backgroundB)
                 Section(
-                    header: Text("Spacing").font(fonts.bigBold.font).foregroundStyle(colors.contentA)
+                    header: Text("Spacing").font(fonts.bigBold).foregroundStyle(colors.contentA)
                 ) {
                     SpacingExampleView()
                 }.listRowBackground(colors.backgroundB)
@@ -43,7 +43,7 @@ struct ZenithCoreSampleView: View {
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text("Sample")
-                        .font(fonts.largeBold.font)
+                        .font(fonts.largeBold)
                         .foregroundColor(colors.contentA)
                 }
             }
@@ -69,7 +69,7 @@ struct FontExampleView: View {
             ForEach(FontName.allCases, id: \.rawValue) { font in
                 Text(font.rawValue)
                     .foregroundStyle(colors.contentA)
-                    .font(fonts.font(by: font)?.font)
+                    .font(fonts.font(by: font))
             }
         }
         .padding()
@@ -92,7 +92,7 @@ struct ColorExampleView: View {
                 HStack {
                     Text(color.rawValue)
                         .foregroundStyle(colors.contentA)
-                        .font(fonts.small.font)
+                        .font(fonts.small)
                         .frame(width: 100, alignment: .leading)
                     RoundedRectangle(cornerRadius: 6)
                         .fill(colors.color(by: color) ?? .clear)

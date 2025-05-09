@@ -1,74 +1,24 @@
 import Dependencies
-import SFSafeSymbols
 import SwiftUI
 import ZenithCoreInterface
 
 public struct ListItem: View {
-    @Environment(\.actionCardStyle) private var style
-    let configuration: ListItemStyleConfiguration
+    @Environment(\.listitemStyle) private var style
+    let text: String
     
     public init(
-        _ configuration: ListItemStyleConfiguration
+        _ text: String
     ) {
-        self.configuration = configuration
-    }
-    
-    public init(
-        title: String,
-        description: String = String(),
-        leftInfo: Info,
-        rightInfo: Info,
-        action: @escaping () -> Void,
-        blurStyle: BlurStyleCase = .default(.highlightA)
-    ) {
-        self.configuration = .init(
-            title: title,
-            description: description,
-            leftInfo: leftInfo,
-            rightInfo: rightInfo,
-            blurStyle: blurStyle,
-            action: action
-        )
-    }
-    
-    public init<TrailingContent: View>(
-        title: String,
-        description: String = String(),
-        leftInfo: Info,
-        rightInfo: Info,
-        action: @escaping () -> Void,
-        blurStyle: BlurStyleCase = .default(.highlightA),
-        @ViewBuilder trailingContent: () -> TrailingContent
-    ) {
-        self.configuration = .init(
-            title: title,
-            description: description,
-            leftInfo: leftInfo,
-            rightInfo: rightInfo,
-            blurStyle: blurStyle,
-            action: action,
-            trailingContent: AnyView(trailingContent())
-        )
+        self.text = text
     }
     
     public var body: some View {
         AnyView(
             style.resolve(
-                configuration: configuration
+                configuration: ListItemStyleConfiguration(
+                    text: text
+                )
             )
         )
     }
-}
-
-extension ListItem {
-    public struct Info: Decodable {
-        let title: String
-        let description: String
-        
-        public init(title: String, description: String) {
-            self.title = title
-            self.description = description
-        }
-    }
-
 }

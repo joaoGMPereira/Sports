@@ -2,6 +2,7 @@ name: ZenithSample
 
 options:
   xcodeVersion: '9999'
+  createFolderReferences: true
   
 packages:
   ZenithCore:

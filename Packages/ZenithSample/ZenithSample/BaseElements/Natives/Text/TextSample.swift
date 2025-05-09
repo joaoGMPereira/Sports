@@ -12,7 +12,6 @@ struct TextSample: View, @preconcurrency BaseThemeDependencies {
     @State private var selectedStyle = TextStyleCase.mediumContentA
     @State private var showAllStyles = false
     @State private var useContrastBackground = true
-    @State private var copySuccess = false
     
     var body: some View {
         SectionView(
@@ -28,11 +27,8 @@ struct TextSample: View, @preconcurrency BaseThemeDependencies {
                 // Área de configuração
                 configurationSection
                 
-                // Botões para gerar código
-                codeGenerationButtons
-                
-                // Preview do código gerado
-                codePreviewSection
+                // Preview do código gerado usando componente reutilizável
+                CodePreviewSection(generateCode: generateSwiftCode)
                 
                 // Exibição de todos os estilos (opcional)
                 if showAllStyles {
@@ -105,48 +101,6 @@ struct TextSample: View, @preconcurrency BaseThemeDependencies {
             }
             .padding(.horizontal)
         }
-    }
-    
-    // Botões para gerar e copiar código
-    private var codeGenerationButtons: some View {
-        VStack(spacing: 12) {
-                Button(copySuccess ? "Código Copiado!" : "Copiar Código") {
-                    UIPasteboard.general.string = generateSwiftCode()
-                    withAnimation {
-                        copySuccess = true
-                    }
-                    
-                    // Reset após 2 segundos
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                        withAnimation {
-                            copySuccess = false
-                        }
-                    }
-                }
-                .buttonStyle(copySuccess ? ButtonStyleCase.highlightA.style() : ButtonStyleCase.contentA.style())
-                .padding(.vertical, 4)
-        }
-    }
-    
-    // Seção de preview do código
-    private var codePreviewSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Código Swift:")
-                .font(fonts.mediumBold)
-                .foregroundColor(colors.contentA)
-            
-            ScrollView {
-                Text(generateSwiftCode())
-                    .font(.system(.body, design: .monospaced))
-                    .foregroundColor(colors.contentA)
-                    .padding()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(colors.backgroundB.opacity(0.5))
-                    .cornerRadius(8)
-            }
-            .frame(height: 150)
-        }
-        .transition(.opacity)
     }
     
     // Calcula a cor de fundo contrastante baseada na cor selecionada

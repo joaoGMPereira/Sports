@@ -1,0 +1,40 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+default_platform(:ios)
+
+platform :ios do
+  # Configurações compartilhadas
+  before_all do
+    setup_ci if ENV['CI']  # Esta linha configura o ambiente quando executado em sistemas de CI
+  end
+
+  # Configuração de certificados com match
+  lane :setup_certificates_appStore do
+    match(
+      type: "appstore", # ou "development" dependendo do tipo de certificado
+      app_identifier: ["com.br.joaogabriel.kettleGym", "com.br.joaogabriel.zenithSample", "com.br.joaogabriel.zenithCoreSample"],
+      username: "gah.mp1@gmail.com"
+    )
+  end
+
+  lane :setup_certificates_dev do
+    match(
+      type: "development", # ou "development" dependendo do tipo de certificado
+      app_identifier: ["com.br.joao.gabriel.kettleGym", "com.br.joao.gabriel.zenithSample", "com.br.joao.gabriel.zenithCoreSample"],
+      username: "gah.mp1@gmail.com"
+    )
+  end
+end

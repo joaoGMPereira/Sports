@@ -134,10 +134,10 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
             view: CardSample()
         ),
         ElementType(
-            name: "ListItem",
+            name: "DetailedListItem",
             category: .custom,
             tabType: .components,
-            view: ListItemSample()
+            view: DetailedListItemSample()
         ),
         ElementType(
             name: "HeaderTitle",
@@ -150,6 +150,18 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
             category: .custom,
             tabType: .baseElements,
             view: BlurSample()
+        ),
+        ElementType(
+            name: "CircularProgress",
+            category: .custom,
+            tabType: .components,
+            view: CircularProgressSample()
+        ),
+        ElementType(
+            name: "ListItem",
+            category: .custom,
+            tabType: .components,
+            view: ListItemSample()
         ),
         // Templates
         ElementType(

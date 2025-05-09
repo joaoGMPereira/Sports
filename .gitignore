@@ -81,10 +81,52 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+fastlane/readme.md
 
-# Code Injection
-#
-# After new code Injection tools there's a generated folder /iOSInjectionProject
-# https://github.com/johnno1962/injectionforxcode
+# Builds gerados
+builds/
+*.ipa
+*.app.dSYM.zip
+*.dSYM
 
-iOSInjectionProject/
+# Credenciais e certificados
+*.cer
+*.mobileprovision
+*.p12
+.env
+.env.*
+
+# Arquivos temporários do fastlane
+/tmp
+
+# Logs
+*.log
+
+# Arquivos específicos do Mac
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Cache do Xcode
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+*.xcuserstate
+*.xcarchive
+DerivedData/
+
+# CocoaPods
+Pods/
+Podfile.lock
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# Carthage
+Carthage/Build/
+
+.bundle
+vendor/
+.package.resolved
+KettleGym/Derived/

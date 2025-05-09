@@ -1,0 +1,11 @@
+import ProjectDescription
+
+let workspace = Workspace(
+    name: "KettleGym",
+    projects: [
+        "KettleGym",
+        "Packages/ZenithCoreSample",
+        "Packages/ZenithSample"
+    ],
+    additionalFiles: []
+)

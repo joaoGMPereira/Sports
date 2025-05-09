@@ -36,8 +36,8 @@ struct BlurSample: View, @preconcurrency BaseThemeDependencies {
                 // Controles para ajustar os blurs
                 BlurControlsView(viewModel: viewModel)
                 
-                // Botões para copiar configurações
-                BlurCopyButtonsView(viewModel: viewModel)
+                // Usando o componente reutilizável para visualização e cópia de código
+                CodePreviewSection(generateCode: generateBlurCode, height: 240)
             }
         }
     }
@@ -56,6 +56,11 @@ struct BlurSample: View, @preconcurrency BaseThemeDependencies {
                 BlurBasicCardView(viewModel: viewModel)
             }
         }
+    }
+    
+    // Função para gerar o código do Blur atual
+    private func generateBlurCode() -> String {
+        return viewModel.generateSwiftCode()
     }
 }
 

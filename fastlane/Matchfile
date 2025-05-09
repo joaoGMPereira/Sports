@@ -1,0 +1,13 @@
+git_url("git@github.com:joaoGMPereira/ios-certificates.git")
+storage_mode("git")
+
+type("development") # ou "development", "adhoc", dependendo do seu caso
+
+app_identifier([
+  "br.com.joao.gabriel.kettleGym",
+  "br.com.joao.gabriel.zenithSample",
+  "br.com.joao.gabriel.zenithCoreSample"
+])
+
+username("gah.mp1@gmail.com")
+team_id("G77MYT7HW8")
