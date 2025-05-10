@@ -12,22 +12,23 @@ typealias PerformedExercise = TrainingProgramSchemaV2.PerformedExercise
 typealias User = TrainingProgramSchemaV2.User
 typealias ExerciseSet = TrainingProgramSchemaV2.ExerciseSet
 
-enum TrainingProgramMigrationPlan: SchemaMigrationPlan {
+enum TrainingProgramMigrationPlan: @preconcurrency SchemaMigrationPlan {
     static var schemas: [any VersionedSchema.Type] {
         [TrainingProgramSchemaV1.self, TrainingProgramSchemaV2.self]
     }
     
+    @MainActor
     static var stages: [MigrationStage] {
         [migrateV1toV2]
     }
     
-    static let migrateV1toV2 = MigrationStage.lightweight(
+    @MainActor static let migrateV1toV2 = MigrationStage.lightweight(
         fromVersion: TrainingProgramSchemaV1.self,
        toVersion: TrainingProgramSchemaV2.self)
 }
 
-enum TrainingProgramSchemaV2: VersionedSchema {
-    static var versionIdentifier = Schema.Version(3, 0, 0)
+enum TrainingProgramSchemaV2: @preconcurrency VersionedSchema {
+    @MainActor static let versionIdentifier = Schema.Version(3, 0, 0)
     
     static var models: [any PersistentModel.Type] {
         return [TrainingProgram.self, User.self, TrainingLog.self, WorkoutSession.self, WorkoutExercise.self, Exercise.self, ExerciseSet.self, SetPlanOld.self, ScheduledTraining.self, PerformedExercise.self, CommingSoon.self]
@@ -258,8 +259,9 @@ enum TrainingProgramSchemaV2: VersionedSchema {
     }
 }
 
-enum TrainingProgramSchemaV1: VersionedSchema {
-    static var versionIdentifier = Schema.Version(2, 0, 0)
+enum TrainingProgramSchemaV1: @preconcurrency VersionedSchema {
+    @MainActor
+    static let versionIdentifier = Schema.Version(2, 0, 0)
     
     static var models: [any PersistentModel.Type] {
         return [TrainingProgram.self, User.self, TrainingLog.self, WorkoutSession.self, WorkoutExercise.self, Exercise.self, ExerciseSet.self, SetPlanOld.self, ScheduledTraining.self, PerformedExercise.self, CommingSoon.self]

@@ -39,20 +39,4 @@ public protocol TabRoutableObject: AnyObject {
     /// An array representing the current navigation stack of destinations.
     /// Modifying this stack updates the navigation state of the application.
     var selectedTab: Destination { get set }
-
-    func tabSelection(onTapAgainInSameTab: @escaping ((Destination) -> Void)) -> Binding<Destination>
-}
-
-extension TabRoutableObject {
-    public func tabSelection(onTapAgainInSameTab: @escaping ((Destination) -> Void)) -> Binding<Destination> {
-        Binding { //this is the get block
-         self.selectedTab
-        } set: { tappedTab in
-            if tappedTab == self.selectedTab {
-                onTapAgainInSameTab(self.selectedTab)
-            }
-            //Set the tab to the tabbed tab
-            self.selectedTab = tappedTab
-        }
-     }
 }

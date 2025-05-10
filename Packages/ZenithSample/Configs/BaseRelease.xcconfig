@@ -5,6 +5,9 @@ BUNDLE_ID = br.com.joao.gabriel.zenithSample
 INFOPLIST_FILE = ZenithSample/Info.plist
 PRODUCT_BUNDLE_IDENTIFIER = ${BUNDLE_ID}
 PRODUCT_NAME = ZenithSample
-PROVISIONING_PROFILE_SPECIFIER = match Development br.com.joao.zenithSample
+CODE_SIGN_IDENTITY = iPhone Developer
+CODE_SIGN_STYLE = Manual
+DEVELOPMENT_TEAM = G77MYT7HW8make 
+PROVISIONING_PROFILE_SPECIFIER = match AppStore br.com.joao.zenithSample
 GCC_PREPROCESSOR_DEFINITIONS = $(inherited) DEBUG=0
 VALIDATE_WORKSPACE = YES

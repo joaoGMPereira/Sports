@@ -22,10 +22,10 @@ platform :ios do
   end
 
   # Configuração de certificados com match
-  lane :setup_certificates_appStore do
+  lane :setup_certificates_prod do
     match(
       type: "appstore", # ou "development" dependendo do tipo de certificado
-      app_identifier: ["com.br.joaogabriel.kettleGym", "com.br.joaogabriel.zenithSample", "com.br.joaogabriel.zenithCoreSample"],
+      app_identifier: ["br.com.joao.gabriel.kettleGym", "br.com.joao.gabriel.zenithSample", "br.com.joao.gabriel.zenithCoreSample"],
       username: "gah.mp1@gmail.com"
     )
   end
@@ -33,7 +33,7 @@ platform :ios do
   lane :setup_certificates_dev do
     match(
       type: "development", # ou "development" dependendo do tipo de certificado
-      app_identifier: ["com.br.joao.gabriel.kettleGym", "com.br.joao.gabriel.zenithSample", "com.br.joao.gabriel.zenithCoreSample"],
+      app_identifier: ["br.com.joao.gabriel.kettleGym-Dev", "br.com.joao.gabriel.zenithSample", "br.com.joao.gabriel.zenithCoreSample"],
       username: "gah.mp1@gmail.com"
     )
   end

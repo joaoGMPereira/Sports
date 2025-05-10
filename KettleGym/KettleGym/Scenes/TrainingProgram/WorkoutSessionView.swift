@@ -8,7 +8,7 @@ import SwiftUI
 import Zenith
 import ZenithCoreInterface
 
-struct WorkoutSessionView: View, BaseThemeDependencies {
+struct WorkoutSessionView: View, @preconcurrency BaseThemeDependencies {
     let session: WorkoutSession
     
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol

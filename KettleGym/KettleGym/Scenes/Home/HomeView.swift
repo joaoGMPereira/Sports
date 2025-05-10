@@ -3,7 +3,7 @@ import SwiftData
 import Zenith
 import ZenithCoreInterface
 
-struct HomeView: View, BaseThemeDependencies {
+struct HomeView: View, @preconcurrency BaseThemeDependencies {
     @State private var workoutPlanRoute: Router<WorkoutPlanRoute> = .init()
     @Environment(\.modelContext) private var modelContext
     @Query private var trainingPrograms: [TrainingProgram]
@@ -60,7 +60,7 @@ struct HomeView: View, BaseThemeDependencies {
     }
 }
 
-struct HomeWithTrainingsView: View, BaseThemeDependencies {
+struct HomeWithTrainingsView: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol
     
     let trainingPrograms: [TrainingProgram]

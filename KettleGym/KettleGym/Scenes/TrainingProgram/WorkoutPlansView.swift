@@ -8,7 +8,7 @@ import SwiftUI
 import Zenith
 import ZenithCoreInterface
 
-struct WorkoutPlansView: View, BaseThemeDependencies {
+struct WorkoutPlansView: View, @preconcurrency BaseThemeDependencies {
     let trainingProgram: TrainingProgram
     @Environment(Router<WorkoutPlanRoute>.self) var workoutPlanRoute
     

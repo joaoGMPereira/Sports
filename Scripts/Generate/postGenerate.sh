@@ -4,7 +4,7 @@
 if [ "$open" != "no" ]
 then
     echo "\nOpening project..."
-	open App.xcworkspace
+	open KettleGym.xcworkspace
 fi
 
 exit 0

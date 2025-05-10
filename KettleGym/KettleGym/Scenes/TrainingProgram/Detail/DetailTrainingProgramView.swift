@@ -5,7 +5,7 @@ import SwiftData
 import SFSafeSymbols
 import SwiftUIIntrospect
 
-struct DetailTrainingProgramView: View, BaseThemeDependencies {
+struct DetailTrainingProgramView: View, @preconcurrency BaseThemeDependencies {
     @State var trainingProgram: TrainingProgram
     
     @Dependency(\.themeConfigurator) public var themeConfigurator: any ThemeConfiguratorProtocol

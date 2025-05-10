@@ -44,7 +44,7 @@ final class CreateWorkoutPlanBasicInfoViewModel: Equatable {
 
 typealias BasicInfoCompletion = (CreateWorkoutPlanBasicInfoViewModel) -> Void
 
-struct CreateWorkoutPlanBasicInfoView: View, BaseThemeDependencies {
+struct CreateWorkoutPlanBasicInfoView: View, @preconcurrency BaseThemeDependencies {
     @Environment(Router<WorkoutPlanRoute>.self) var workoutPlanRoute
     @Environment(ToastModel.self) var toast
     @State private var sheetModel = GridSheetModel(items: [])

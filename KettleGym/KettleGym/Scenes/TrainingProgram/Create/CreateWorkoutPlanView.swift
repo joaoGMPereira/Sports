@@ -34,7 +34,7 @@ final class CreateWorkoutPlanViewModel {
     }
 }
 
-struct CreateWorkoutPlanView: View, BaseThemeDependencies {
+struct CreateWorkoutPlanView: View, @preconcurrency BaseThemeDependencies {
     @Environment(Router<WorkoutPlanRoute>.self) var workoutPlanRoute
     @State private var viewModel = CreateWorkoutPlanViewModel()
     

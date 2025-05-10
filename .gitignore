@@ -130,3 +130,5 @@ Carthage/Build/
 vendor/
 .package.resolved
 KettleGym/Derived/
+Packages/Zenith/Sources/Zenith/Generated/
+Packages/ZenithCore/Sources/ZenithCore/Generated/

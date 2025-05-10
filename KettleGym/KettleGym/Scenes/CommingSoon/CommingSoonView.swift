@@ -66,7 +66,7 @@ extension Encodable {
     }
 }
 
-struct CommingSoonView: View, BaseThemeDependencies {
+struct CommingSoonView: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) var themeConfigurator: any ThemeConfiguratorProtocol
     
     @Environment(\.modelContext) private var modelContext

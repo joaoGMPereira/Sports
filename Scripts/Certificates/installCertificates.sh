@@ -48,6 +48,7 @@ yml_files=$(find "$MONOREPO_ROOT" -name "project.yml" -type f 2>/dev/null)
 
 # Lista de todos os Project.swift encontrados
 tuist_project_files=$(find "$MONOREPO_ROOT" -name "Project.swift" -type f 2>/dev/null)
+echo "Tuist Files $tuist_project_files"
 
 # Processa cada arquivo project.yml encontrado
 for yml_file in $yml_files; do
@@ -74,21 +75,24 @@ for tuist_file in $tuist_project_files; do
     project_dir=$(dirname "$tuist_file")
     project_name=$(basename "$project_dir")
     
-    # Verifica se este diretório já foi processado (tem um project.yml)
-    if ! find "$project_dir" -name "project.yml" -type f -maxdepth 1 | grep -q .; then
-        echo "Encontrado projeto Tuist ($project_name) em: $project_dir"
-        
-        # Encontra outros arquivos Tuist relacionados
-        related_targets_swift=$(find "$project_dir" -name "Targets.swift" -type f 2>/dev/null)
-        related_config_swift=$(find "$project_dir" -name "Config.swift" -type f -path "*/Tuist/ProjectDescriptionHelpers/*" 2>/dev/null)
-        
-        echo "Configurando certificados para o projeto Tuist $project_name..."
-        
-        # Chama o script configProjects.sh para este projeto
-        ./Scripts/Certificates/configProjects.sh "$project_name" "$project_dir" "" "$tuist_file" "$related_targets_swift" "$related_config_swift"
-        
-        echo "  ✅ Certificados configurados para $project_name"
+    # Verifica se este projeto já foi processado na etapa anterior (se tem project.yml)
+    yml_exists=$(find "$project_dir" -name "project.yml" -type f -maxdepth 1 2>/dev/null)
+    if [ -n "$yml_exists" ]; then
+        # Este projeto já foi processado na etapa anterior, pule
+        echo "Projeto $project_name já processado anteriormente, pulando..."
+        continue
     fi
+    
+    # Encontra outros arquivos Tuist relacionados
+    related_targets_swift=$(find "$project_dir" -name "Targets.swift" -type f 2>/dev/null)
+    related_config_swift=$(find "$project_dir" -name "Config.swift" -type f -path "*/Tuist/ProjectDescriptionHelpers/*" 2>/dev/null)
+    
+    echo "Configurando certificados para o projeto Tuist $project_name..."
+    
+    # Chama o script configProjects.sh para este projeto
+    ./Scripts/Certificates/configProjects.sh "$project_name" "$project_dir" "" "$tuist_file" "$related_targets_swift" "$related_config_swift"
+    
+    echo "  ✅ Certificados configurados para $project_name"
 done
 
 echo "==== Configuração de certificados concluída ===="

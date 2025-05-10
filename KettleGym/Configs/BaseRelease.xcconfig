@@ -5,6 +5,9 @@ BUNDLE_ID = br.com.joao.gabriel.kettleGym
 INFOPLIST_FILE = kettleGym/Info.plist
 PRODUCT_BUNDLE_IDENTIFIER = ${BUNDLE_ID}
 PRODUCT_NAME = KettleGym
-PROVISIONING_PROFILE_SPECIFIER = match Development br.com.joao.kettleGym
+CODE_SIGN_IDENTITY = iPhone Developer
+CODE_SIGN_STYLE = Manual
+DEVELOPMENT_TEAM = G77MYT7HW8
+PROVISIONING_PROFILE_SPECIFIER = match AppStore br.com.joao.kettleGym
 GCC_PREPROCESSOR_DEFINITIONS = $(inherited) DEBUG=0
 VALIDATE_WORKSPACE = YES

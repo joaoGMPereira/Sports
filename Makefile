@@ -50,7 +50,7 @@ generateComponent:
 generate: ## Generate projects using Tuist instead of XcodeGen
 	@./Scripts/killXcode.sh
 	@$(MAKE) generatesources
-	@./Scripts/tuistGenerate.sh
+	@./Scripts/tuistGenerate.sh --main-only
 	@./Scripts/Generate/postGenerate.sh $(open)
 	
 install_tuist: ## Install Tuist
