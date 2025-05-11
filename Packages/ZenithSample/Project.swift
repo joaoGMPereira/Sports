@@ -44,7 +44,7 @@ let project = Project(
             settings: .settings(
                 configurations: zenithSampleConfigurations
             )
-        )
+        ),
     ],
     schemes: [
         Scheme.scheme(

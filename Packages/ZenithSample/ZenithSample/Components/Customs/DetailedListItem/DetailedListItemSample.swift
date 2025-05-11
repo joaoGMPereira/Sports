@@ -51,7 +51,10 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
     @State private var showDescription: Bool = true
     
     var body: some View {
-        SectionView(title: "DetailedListItem", isExpanded: $isExpanded, backgroundColor: .clear) {
+        SectionView(
+            title: "DetailedListItem",
+            isExpanded: $isExpanded
+        ) {
             VStack(alignment: .leading) {
                 // Color selector for the style
                 ColorSelector(selectedColor: $selectedColor)

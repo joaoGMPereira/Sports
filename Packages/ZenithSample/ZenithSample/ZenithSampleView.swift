@@ -7,179 +7,10 @@ import SwiftUIIntrospect
 struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) var themeConfigurator
 
-    // MARK: - Data Models
-
-    enum TabType: String, CaseIterable, Identifiable {
-        case baseElements = "Base Elements"
-        case components = "Components"
-        case templates = "Templates"
-
-        var id: String { self.rawValue }
-
-        var icon: SFSymbol {
-            switch self {
-            case .baseElements: return .squareGrid2x2
-            case .components: return .puzzlepieceExtension
-            case .templates: return .rectangle3Group
-            }
-        }
-        
-        var categories: [ElementCategory] {
-            switch self {
-            case .baseElements: return [.native, .custom]
-            case .components: return [.custom]
-            case .templates: return [.template]
-            }
-        }
-    }
-
-    enum ElementCategory: String, CaseIterable, Identifiable {
-        case custom = "Custom"
-        case native = "Native"
-        case template = "Template"
-
-        var id: String { self.rawValue }
-    }
-
-    struct ElementType: Identifiable {
-        var id = UUID()
-        var name: String
-        var category: ElementCategory
-        var tabType: TabType
-        var view: AnyView
-
-        init<V: View>(name: String, category: ElementCategory, tabType: TabType, view: V) {
-            self.name = name
-            self.category = category
-            self.tabType = tabType
-            self.view = AnyView(view)
-        }
-    }
-
     // MARK: - State Properties
 
     @State private var selectedTab: TabType = .baseElements
     @State private var selectedCategory: ElementCategory = .native
-
-    // MARK: - Element Definitions
-
-    private var elementTypes: [ElementType] = [
-        // Base Elements - Natives
-        ElementType(
-            name: "Button",
-            category: .native,
-            tabType: .baseElements,
-            view: ButtonSample()
-        ),
-        ElementType(
-            name: "Text",
-            category: .native,
-            tabType: .baseElements,
-            view: TextSample()
-        ),
-        ElementType(
-            name: "Divider",
-            category: .native,
-            tabType: .baseElements,
-            view: DividerSample()
-        ),
-        ElementType(
-            name: "Toggle",
-            category: .native,
-            tabType: .baseElements,
-            view: ToggleSample()
-        ),
-        ElementType(
-            name: "TextField",
-            category: .native,
-            tabType: .baseElements,
-            view: TextFieldSample()
-        ),
-        // Base Elements - Customs
-        ElementType(
-            name: "Dynamic Image",
-            category: .custom,
-            tabType: .baseElements,
-            view: DynamicImageSample()
-        ),
-        ElementType(
-            name: "Tag",
-            category: .custom,
-            tabType: .baseElements,
-            view: TagSample()
-        ),
-        ElementType(
-            name: "RadioButton",
-            category: .custom,
-            tabType: .baseElements,
-            view: RadioButtonSample()
-        ),
-        ElementType(
-            name: "CheckBox",
-            category: .custom,
-            tabType: .baseElements,
-            view: CheckBoxSample()
-                
-        ),
-        ElementType(
-            name: "IndicatorSelector",
-            category: .custom,
-            tabType: .components,
-            view: IndicatorSelectorSample()
-        ),
-        ElementType(
-            name: "Card",
-            category: .custom,
-            tabType: .components,
-            view: CardSample()
-        ),
-        ElementType(
-            name: "DetailedListItem",
-            category: .custom,
-            tabType: .components,
-            view: DetailedListItemSample()
-        ),
-        ElementType(
-            name: "HeaderTitle",
-            category: .custom,
-            tabType: .components,
-            view: HeaderTitleSample()
-        ),
-        ElementType(
-            name: "Blur",
-            category: .custom,
-            tabType: .baseElements,
-            view: BlurSample()
-        ),
-        ElementType(
-            name: "CircularProgress",
-            category: .custom,
-            tabType: .components,
-            view: CircularProgressSample()
-        ),
-        ElementType(
-            name: "ListItem",
-            category: .custom,
-            tabType: .components,
-            view: ListItemSample()
-        ),
-        // Templates
-        ElementType(
-            name: "StepsTemplate",
-            category: .template,
-            tabType: .templates,
-            view: StepsTemplateSample()
-        )
-    ]
-
-    // MARK: - Filtered Elements
-
-    private func filteredElements() -> [ElementType] {
-        return elementTypes.filter {
-            $0.tabType == selectedTab &&
-            $0.category == selectedCategory
-        }
-    }
 
     // MARK: - Body
 
@@ -212,22 +43,15 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
                             .listRowBackground(Color.clear)
                             .listRowSeparator(.hidden)
                     }
-                    ForEach(filteredElements()) { element in
-                        element.view
-                            .listRowBackground(Color.clear)
-                    }
-                    
-                    if filteredElements().isEmpty {
-                        Text("No \(selectedCategory.rawValue.lowercased()) elements available.")
-                            .textStyle(.large(.contentA))
-                            .listRowBackground(Color.clear)
-                    }
+                    ZenithSampleElementsList(selectedTab: tabType, selectedCategory: $selectedCategory)
                 }
                 .listRowSeparator(.hidden)
                 .listSectionSeparator(.hidden)
             }
         }
     }
+    
+    
 
     // MARK: - Category Picker
 

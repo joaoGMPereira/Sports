@@ -20,7 +20,6 @@ install_all_certificates: ## Install and configure certificates for all projects
 
 xcodegen_generate: ## Generate projects, workspace and install pods
 	@./Scripts/killXcode.sh
-	@$(MAKE) tuist_generate
 	@$(MAKE) generateprojects
 	@$(MAKE) generateworkspace
 	@./Scripts/Generate/postGenerate.sh $(open)
