@@ -3,47 +3,57 @@ import SwiftUI
 import ZenithCoreInterface
 
 public struct CircularProgress: View {
-    @Environment(\.circularprogressStyle) private var style
+    @Environment(\.circularProgressStyle) private var style
     
-    let text: String
-    let progress: Double
-    let size: CGFloat
-    let showText: Bool
-    let animated: Bool
-    
+    private let configuration: CircularProgressStyleConfiguration
     @State private var animatedProgress: Double
-    @State private var isAnimating: Bool = false
+    @State private var isAnimating: Bool
     
+    // Inicializador com configuração completa
+    public init(configuration: CircularProgressStyleConfiguration) {
+        self.configuration = configuration
+        self._animatedProgress = State(initialValue: configuration.progress)
+        self._isAnimating = State(initialValue: configuration.isAnimating)
+    }
+    
+    // Inicializador com parâmetros individuais que cria uma configuração
     public init(
         text: String = "",
         progress: Double,
-        size: CGFloat = 60,
+        size: CGFloat = 54,
         showText: Bool = true,
         animated: Bool = false
     ) {
-        self.text = text
-        self.progress = progress
-        self.size = size
-        self.showText = showText
-        self.animated = animated
+        let config = CircularProgressStyleConfiguration(
+            text: text,
+            progress: progress,
+            size: size,
+            showText: showText,
+            isAnimating: false,
+            animated: animated
+        )
+        self.configuration = config
         self._animatedProgress = State(initialValue: progress)
+        self._isAnimating = State(initialValue: false)
     }
     
     public var body: some View {
         AnyView(
             style.resolve(
-                configuration: CircularProgressStyleConfiguration(
-                    text: text,
-                    progress: animated ? animatedProgress : progress,
-                    size: size,
-                    showText: showText,
-                    isAnimating: isAnimating,
-                    animated: animated
-                )
+                configuration: configuration.animated 
+                    ? CircularProgressStyleConfiguration(
+                        text: configuration.text,
+                        progress: animatedProgress,
+                        size: configuration.size,
+                        showText: configuration.showText,
+                        isAnimating: isAnimating,
+                        animated: configuration.animated
+                      )
+                    : configuration
             )
         )
-        .onChange(of: progress) { newValue in
-            guard animated else { return }
+        .onChange(of: configuration.progress) { newValue in
+            guard configuration.animated else { return }
             
             withAnimation(.easeInOut(duration: 0.8)) {
                 isAnimating = true
@@ -56,11 +66,11 @@ public struct CircularProgress: View {
             }
         }
         .onAppear {
-            guard animated else { return }
+            guard configuration.animated else { return }
             
             // Inicialmente anima para o valor inicial quando o componente aparece
             withAnimation(.easeInOut(duration: 0.5)) {
-                animatedProgress = progress
+                animatedProgress = configuration.progress
             }
         }
     }

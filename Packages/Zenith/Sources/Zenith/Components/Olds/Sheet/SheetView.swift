@@ -1,5 +1,6 @@
 import SwiftUI
 import PopupView
+import ZenithCoreInterface
 
 extension EdgeInsets {
     init(
@@ -116,7 +117,8 @@ public extension View {
     }
 }
 
-struct GridSetPlanSearchView: View {
+struct GridSetPlanSearchView: View, @preconcurrency BaseThemeDependencies {
+    @Dependency(\.themeConfigurator) var themeConfigurator
     @State private var search = String()
     @State var filteredItems: [String]
     @Binding var items: [String]
@@ -177,7 +179,8 @@ struct GridSetPlanSearchView: View {
     }
 }
 
-struct GridSearchView: View {
+struct GridSearchView: View, @preconcurrency BaseThemeDependencies {
+    @Dependency(\.themeConfigurator) var themeConfigurator
     @State private var search = String()
     @State var filteredItems: [String]
     @Binding var items: [String]
@@ -239,7 +242,8 @@ struct GridSearchView: View {
     }
 }
 
-struct CreateNameView: View {
+struct CreateNameView: View, @preconcurrency BaseThemeDependencies {
+    @Dependency(\.themeConfigurator) var themeConfigurator
     @State private var value: String = String()
     @State private var valueError = false
     var completion: (String) -> Void
@@ -280,7 +284,8 @@ struct CreateNameView: View {
     }
 }
 
-struct CreateSerieView: View {
+struct CreateSerieView: View, @preconcurrency BaseThemeDependencies {
+    @Dependency(\.themeConfigurator) var themeConfigurator
     @State private var setPlan: String = String()
     @State private var minRep: String = String()
     @State private var maxRep: String = String()
@@ -402,46 +407,43 @@ public extension View {
 }
 
 
-struct ActionSheetView<Content: View>: View {
+struct ActionSheetView<Content: View>: View, @preconcurrency BaseThemeDependencies {
+    @Dependency(\.themeConfigurator) public var themeConfigurator
     let content: Content
     let topPadding: CGFloat
     let fixedHeight: Bool
-    let bgColor: Color
     
     @State private var screenHeight: CGFloat = UIScreen.main.bounds.height
     @State private var keyboardHeight: CGFloat = 0
     
     
-    init(topPadding: CGFloat = 100, fixedHeight: Bool = false, bgColor: Color = .init(.secondarySystemBackground), @ViewBuilder content: () -> Content) {
+    init(topPadding: CGFloat = 100, fixedHeight: Bool = false, @ViewBuilder content: () -> Content) {
         self.content = content()
         self.topPadding = topPadding
         self.fixedHeight = fixedHeight
-        self.bgColor = bgColor
     }
     
     var body: some View {
-        ZStack {
-            bgColor.cornerRadius(16, corners: [.topLeft, .topRight])
-            VStack {
-                Color(.tertiarySystemBackground)
-                    .opacity(0.8)
-                    .frame(width: 30, height: 6)
-                    .clipShape(Capsule())
-                    .padding(.top, 16)
-                    .padding(.bottom, 16)
-                
-                content
-                    .applyIf(fixedHeight) {
-                        $0.frame(height: UIScreen.main.bounds.height - topPadding)
-                    }
-                    .applyIf(!fixedHeight) {
-                        $0.frame(
-                            maxHeight: calculateMaxHeight(),
-                            alignment: .top
-                        )
-                    }
-            }
+        VStack {
+            Color(colors.backgroundB)
+                .opacity(0.8)
+                .frame(width: 30, height: 6)
+                .clipShape(Capsule())
+                .padding(.top, 16)
+                .padding(.bottom, 16)
+            
+            content
+                .applyIf(fixedHeight) {
+                    $0.frame(height: UIScreen.main.bounds.height - topPadding)
+                }
+                .applyIf(!fixedHeight) {
+                    $0.frame(
+                        maxHeight: calculateMaxHeight(),
+                        alignment: .top
+                    )
+                }
         }
+        .background(colors.backgroundB.opacity(0.9).cornerRadius(16, corners: [.topLeft, .topRight]))
         .fixedSize(horizontal: false, vertical: true)
         .keyboardHeight($keyboardHeight)
         .animation(.easeOut(duration: 0.16), value: keyboardHeight)

@@ -39,25 +39,25 @@ public struct CircularProgressStyleConfiguration {
     }
 }
 
-public struct CircularProgressStyleKey: EnvironmentKey {
+public struct circularProgressStyleKey: EnvironmentKey {
     public static let defaultValue: any CircularProgressStyle = ContentACircularProgressStyle()
 }
 
 public extension EnvironmentValues {
-    var circularprogressStyle: any CircularProgressStyle {
-        get { self[CircularProgressStyleKey.self] }
-        set { self[CircularProgressStyleKey.self] = newValue }
+    var circularProgressStyle: any CircularProgressStyle {
+        get { self[circularProgressStyleKey.self] }
+        set { self[circularProgressStyleKey.self] = newValue }
     }
 }
 
 public extension CircularProgressStyle {
     @MainActor
     func resolve(configuration: Configuration) -> some View {
-        ResolvedCircularProgressStyle(style: self, configuration: configuration)
+        ResolvedcircularProgressStyle(style: self, configuration: configuration)
     }
 }
 
-private struct ResolvedCircularProgressStyle<Style: CircularProgressStyle>: View {
+private struct ResolvedcircularProgressStyle<Style: CircularProgressStyle>: View {
     let style: Style
     let configuration: Style.Configuration
     

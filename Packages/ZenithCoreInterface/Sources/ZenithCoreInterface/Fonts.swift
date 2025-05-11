@@ -1,7 +1,11 @@
 import SwiftUI
 
-public enum FontName: String, Decodable, CaseIterable, Sendable {
-    case small, smallBold, medium, mediumBold, large, largeBold, bigBold
+public enum FontName: String, Decodable, CaseIterable, Sendable, Identifiable {
+    public var id: String {
+        rawValue
+    }
+    
+    case extraSmall, extraSmallBold, small, smallBold, medium, mediumBold, large, largeBold, bigBold
 }
 
 protocol FontProtocol {
@@ -27,6 +31,8 @@ public struct BaseFont: FontProtocol, Sendable, Equatable {
 }
 
 public protocol FontsProtocol: Sendable, Equatable {
+    var baseExtraSmall: BaseFont { get }
+    var baseExtraSmallBold: BaseFont { get }
     var baseSmall: BaseFont { get }
     var baseSmallBold: BaseFont { get }
     var baseMedium: BaseFont { get }
@@ -35,6 +41,8 @@ public protocol FontsProtocol: Sendable, Equatable {
     var baseLargeBold: BaseFont { get }
     var baseBigBold: BaseFont { get }
     
+    var extraSmall: Font { get }
+    var extraSmallBold: Font { get }
     var small: Font { get }
     var smallBold: Font { get }
     var medium: Font { get }
@@ -49,6 +57,8 @@ public protocol FontsProtocol: Sendable, Equatable {
 public extension FontsProtocol {
     var fonts: [FontName: BaseFont] {
         [
+            .extraSmall: baseExtraSmall,
+            .extraSmallBold: baseExtraSmallBold,
             .small: baseSmall,
             .smallBold: baseSmallBold,
             .medium: baseMedium,
@@ -57,6 +67,14 @@ public extension FontsProtocol {
             .largeBold: baseLargeBold,
             .bigBold: baseBigBold
         ]
+    }
+    
+    var extraSmall: Font {
+        baseExtraSmall.font
+    }
+    
+    var extraSmallBold: Font {
+        baseExtraSmallBold.font
     }
     
     var small: Font {

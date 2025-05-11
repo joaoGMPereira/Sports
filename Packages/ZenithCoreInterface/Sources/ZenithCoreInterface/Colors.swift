@@ -1,6 +1,10 @@
 import SwiftUI
 
-public enum ColorName: String, Decodable, CaseIterable, Sendable {
+public enum ColorName: String, Decodable, CaseIterable, Sendable, Identifiable {
+    public var id: String {
+        rawValue
+    }
+    
     case highlightA,
          backgroundA,
          backgroundB,

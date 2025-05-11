@@ -65,9 +65,9 @@ struct CreateWorkoutPlanBasicInfoView: View, @preconcurrency BaseThemeDependenci
     }
     
     var body: some View {
-        Group {
+        VStack(spacing: .zero) {
             TextField(String(), text: $viewModel.name)
-                .textfieldStyle(.contentA(.enabled), placeholder: "Nome")
+                .textFieldStyle(.contentA(.enabled), placeholder: "Nome")
             
             Text("Dias de Treino")
                 .textStyle(.small(.highlightA))
@@ -107,7 +107,7 @@ struct CreateWorkoutPlanBasicInfoView: View, @preconcurrency BaseThemeDependenci
                     )
                 ]
             )
-            .padding(.bottom, spacings.small)
+            .padding(.bottom, spacings.medium)
             Toggle(isOn: $viewModel.showStartDate) {
                 Text("Configurar Data de Início")
                     .textStyle(.small(.contentA))
@@ -169,7 +169,8 @@ struct CreateWorkoutPlanBasicInfoView: View, @preconcurrency BaseThemeDependenci
                 HStack {
                     Text("Escolher Série unica")
                         .textStyle(.small(.contentA))
-                    Image(systemSymbol: .questionmarkCircle)
+                    DynamicImage(.questionmarkCircle)
+                        .dynamicImageStyle(.small(.contentA))
                         .onTapGesture {
                             toast.showInfo(
                                 title:"Informativo",
@@ -186,7 +187,7 @@ struct CreateWorkoutPlanBasicInfoView: View, @preconcurrency BaseThemeDependenci
                             .frame(width: 20, height: 28)
                     }
                     Image(systemSymbol: .chevronRight)
-                        .foregroundColor(.gray)
+                        .foregroundColor(colors.contentA)
                 }
             }
             .foregroundStyle(Color.primary)

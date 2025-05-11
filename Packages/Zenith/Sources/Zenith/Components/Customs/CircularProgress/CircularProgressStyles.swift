@@ -3,8 +3,8 @@ import ZenithCoreInterface
 
 
 public extension View {
-    func circularprogressStyle(_ style: some CircularProgressStyle) -> some View {
-        environment(\.circularprogressStyle, style)
+    func circularProgressStyle(_ style: some CircularProgressStyle) -> some View {
+        environment(\.circularProgressStyle, style)
     }
 }
 

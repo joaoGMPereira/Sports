@@ -52,16 +52,28 @@ public struct ColorsMock: ColorsProtocol {
 
 
 public struct FontsMock: FontsProtocol {
+    public let baseExtraSmall = BaseFont(
+        font: .callout,
+        fontLineHeight: 12,
+        lineHeight: 15
+    )
+    
+    public let baseExtraSmallBold = BaseFont(
+        font: .caption,
+        fontLineHeight: 12,
+        lineHeight: 15
+    )
+    
     public let baseSmall = BaseFont(
         font: .callout,
-        fontLineHeight: 16,
-        lineHeight: 24
+        fontLineHeight: 14,
+        lineHeight: 17
     )
     
     public let baseSmallBold = BaseFont(
         font: .caption,
-        fontLineHeight: 16,
-        lineHeight: 24
+        fontLineHeight: 14,
+        lineHeight: 17
     )
     
     public let baseMedium = BaseFont(

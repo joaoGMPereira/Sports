@@ -2,7 +2,8 @@ import SwiftUI
 import ZenithCoreInterface
 
 enum FontSize {
-    static let size16 = 16.0
+    static let size12 = 12.0
+    static let size14 = 14.0
     static let size20 = 20.0
     static let size24 = 24.0
     static let size32 = 32.0
@@ -10,6 +11,8 @@ enum FontSize {
 }
 
 enum FontLineHeight {
+    static let height15 = 15.0
+    static let height17 = 17.0
     static let height24 = 24.0
     static let height36 = 36.0
     static let height44 = 44.0
@@ -17,22 +20,40 @@ enum FontLineHeight {
 }
 
 public struct Fonts: FontsProtocol, Sendable {
+    public let baseExtraSmall = BaseFont(
+        font: FontFamily.Gilroy.medium.swiftUIFont(
+            size: FontSize.size12,
+            relativeTo: .caption
+        ),
+        fontLineHeight: FontSize.size12,
+        lineHeight: FontLineHeight.height15
+    )
+
+    public let baseExtraSmallBold = BaseFont(
+        font: FontFamily.Gilroy.semibold.swiftUIFont(
+            size: FontSize.size12,
+            relativeTo: .caption
+        ),
+        fontLineHeight: FontSize.size12,
+        lineHeight: FontLineHeight.height15
+    )
+    
     public let baseSmall = BaseFont(
         font: FontFamily.Gilroy.medium.swiftUIFont(
-            size: FontSize.size16,
+            size: FontSize.size14,
             relativeTo: .body
         ),
-        fontLineHeight: FontSize.size16,
-        lineHeight: FontLineHeight.height24
+        fontLineHeight: FontSize.size14,
+        lineHeight: FontLineHeight.height17
     )
 
     public let baseSmallBold = BaseFont(
         font: FontFamily.Gilroy.semibold.swiftUIFont(
-            size: FontSize.size16,
+            size: FontSize.size14,
             relativeTo: .body
         ),
-        fontLineHeight: FontSize.size16,
-        lineHeight: FontLineHeight.height24
+        fontLineHeight: FontSize.size14,
+        lineHeight: FontLineHeight.height17
     )
     
     public let baseMedium = BaseFont(

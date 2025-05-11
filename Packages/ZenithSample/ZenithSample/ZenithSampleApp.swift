@@ -13,6 +13,7 @@ struct ZenithSampleApp: App {
     var body: some Scene {
         WindowGroup {
             ZenithSampleView()
+                .environment(\.colorScheme, .dark)
         }
     }
 }

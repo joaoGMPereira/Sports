@@ -88,14 +88,15 @@ struct CommingSoonView: View, @preconcurrency BaseThemeDependencies {
                         .foregroundStyle(colors.contentA)
                         .listRowBackground(colors.backgroundB)
                     if isDynamicText {
-                        TextField("Texto Dinamico", text: $dynamicText)
+                        TextField(String(), text: $dynamicText)
+                            .textFieldStyle(.contentA(), placeholder: "Texto Dinamico")
                             .onSubmit {
                                 addDynamicItem()
                             }
-                            .foregroundStyle(colors.contentA)
                             .listRowBackground(colors.backgroundB)
                     } else {
-                        TextField("Nome da Sessão", text: $sectionText)
+                        TextField(String(), text: $sectionText)
+                            .textFieldStyle(.contentA(), placeholder: "Nome da Sessão")
                             .onChange(of: sectionText) {
                                 self.applyFilter(with: sectionText)
                             }
@@ -127,7 +128,8 @@ struct CommingSoonView: View, @preconcurrency BaseThemeDependencies {
                             }
                             .foregroundStyle(colors.contentA)
                             .listRowBackground(colors.backgroundB)
-                        TextField("Nova Feature", text: $featureText)
+                        TextField(String(), text: $featureText)
+                            .textFieldStyle(.contentA(), placeholder: "Nova Feature")
                             .onSubmit {
                                 addItem()
                             }

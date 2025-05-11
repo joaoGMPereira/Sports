@@ -3,12 +3,6 @@ import Zenith
 import ZenithCoreInterface
 
 class BlurSampleViewModel: ObservableObject {
-    // Estados para controlar o colapso das seções
-    @Published var isBlur3Expanded = false
-    @Published var isBlur2Expanded = false
-    @Published var isBlur1Expanded = false
-    @Published var isValoresExpandido = true
-    
     // Estado para controlar o estilo selecionado
     @Published var selectedColor: ColorName = .highlightA
     
@@ -38,6 +32,32 @@ class BlurSampleViewModel: ObservableObject {
     @Published var blur1OffsetX: Double = -25
     @Published var blur1OffsetY: Double = 25
     @Published var blur1Opacity: Double = 0.9
+    
+    // Cria um BlurConfig com os valores atuais
+    func createBlurConfig() -> BlurConfig {
+        return BlurConfig(
+            blur1Width: blur1Width,
+            blur1Height: blur1Height,
+            blur1Radius: blur1Radius,
+            blur1OffsetX: blur1OffsetX,
+            blur1OffsetY: blur1OffsetY,
+            blur1Opacity: blur1Opacity,
+            
+            blur2Width: blur2Width,
+            blur2Height: blur2Height,
+            blur2Radius: blur2Radius,
+            blur2OffsetX: blur2OffsetX,
+            blur2OffsetY: blur2OffsetY,
+            blur2Opacity: blur2Opacity,
+            
+            blur3Width: blur3Width,
+            blur3Height: blur3Height,
+            blur3Radius: blur3Radius,
+            blur3OffsetX: blur3OffsetX,
+            blur3OffsetY: blur3OffsetY,
+            blur3Opacity: blur3Opacity
+        )
+    }
     
     // Gera configuração em texto para copiar
     func generateConfigText() -> String {

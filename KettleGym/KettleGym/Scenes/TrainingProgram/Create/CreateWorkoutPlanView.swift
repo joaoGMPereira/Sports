@@ -59,6 +59,7 @@ struct CreateWorkoutPlanView: View, @preconcurrency BaseThemeDependencies {
                         header(step)
                         stepContent(step)
                     }
+                    .padding(spacings.medium)
                 }
                 .padding(.top, spacings.medium)
                 

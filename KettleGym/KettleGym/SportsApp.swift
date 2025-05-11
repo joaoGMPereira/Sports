@@ -60,6 +60,7 @@ struct SportsApp: App {
                     insets = InsetsManager.getInsets()
                 }
                 .toast(toast: $toast)
+                .environment(\.colorScheme, .dark)
         }
         .environment(\.safeAreaInsets, $insets)
         .environment(tabRouter)

@@ -20,7 +20,7 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
                         .textStyle(.small(.contentA))
                     
                     TextField("Texto simples", text: $text)
-                        .textfieldStyle(selectedStyle.style())
+                        .textFieldStyle(selectedStyle.style())
                 }
                 
                 // TextField com placeholder animado
@@ -29,7 +29,7 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
                         .textStyle(.small(.contentA))
                     
                     TextField("", text: $text)
-                        .textfieldStyle(
+                        .textFieldStyle(
                             selectedStyle.style(),
                             placeholder: "Digite seu nome",
                             errorMessage: showError ? .constant("Campo obrigatório") : .constant("")
@@ -42,7 +42,7 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
                         .textStyle(.small(.contentA))
                     
                     TextField("", text: $text2)
-                        .textfieldStyle(
+                        .textFieldStyle(
                             selectedStyle.style(),
                             placeholder: "Digite seu email",
                             errorMessage: showError ? .constant("Campo obrigatório") : .constant("")

@@ -175,15 +175,17 @@ struct TextSample: View, @preconcurrency BaseThemeDependencies {
     // Helper para obter o nome do TextStyle correspondente
     private func getTextStyleName() -> String {
         // Identificamos o TextStyleCase mais próximo com base na fonte e cor selecionadas
-        let fontCaseName: String
-        switch selectedFont {
-        case .small: fontCaseName = "small"
-        case .smallBold: fontCaseName = "smallBold"
-        case .medium: fontCaseName = "medium"
-        case .mediumBold: fontCaseName = "mediumBold"
-        case .large: fontCaseName = "large"
-        case .largeBold: fontCaseName = "largeBold"
-        case .bigBold: fontCaseName = "bigBold"
+        
+        let fontCaseName: String = switch selectedFont {
+        case .extraSmall: "extraSmall"
+        case .extraSmallBold: "extraSmallBold"
+        case .small: "small"
+        case .smallBold: "smallBold"
+        case .medium: "medium"
+        case .mediumBold: "mediumBold"
+        case .large: "large"
+        case .largeBold: "largeBold"
+        case .bigBold: "bigBold"
         }
         
         // Formate o nome conforme esperado pelo TextStyleCase

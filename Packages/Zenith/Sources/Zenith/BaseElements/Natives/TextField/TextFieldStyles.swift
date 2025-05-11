@@ -3,7 +3,7 @@ import ZenithCoreInterface
 import Combine
 
 public extension TextField where Label == Text {
-    func textfieldStyle(
+    func textFieldStyle(
         _ style: some TextFieldStyle, 
         placeholder: String? = nil,
         hasError: Bool = false,
@@ -261,15 +261,15 @@ private struct PlaceholderView: View, @preconcurrency BaseThemeDependencies {
 }
 
 public extension TextFieldStyle where Self == ContentATextFieldStyle {
-    static func contentA(_ state: DSState) -> Self { ContentATextFieldStyle(state: state) }
+    static func contentA(_ state: DSState = .enabled) -> Self { ContentATextFieldStyle(state: state) }
 }
 
 public extension TextFieldStyle where Self == ContentBTextFieldStyle {
-    static func contentC(_ state: DSState) -> Self { ContentBTextFieldStyle(state: state) }
+    static func contentC(_ state: DSState = .enabled) -> Self { ContentBTextFieldStyle(state: state) }
 }
 
 public extension TextFieldStyle where Self == HighlightATextFieldStyle {
-    static func highlightA(_ state: DSState) -> Self { HighlightATextFieldStyle(state: state) }
+    static func highlightA(_ state: DSState = .enabled) -> Self { HighlightATextFieldStyle(state: state) }
 }
 
 public enum TextFieldStyleCase: String, Decodable, CaseIterable, Equatable {

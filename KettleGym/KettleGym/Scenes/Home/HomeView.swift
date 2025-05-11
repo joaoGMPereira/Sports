@@ -163,7 +163,7 @@ struct HomeEmptyView: View {
     var body: some View {
         HStack {
             Spacer()
-            DynamicImage(.logo)
+            DynamicImage(.logo, resizable: true)
                 .frame(width: 200)
                 .scaledToFit()
             Spacer()

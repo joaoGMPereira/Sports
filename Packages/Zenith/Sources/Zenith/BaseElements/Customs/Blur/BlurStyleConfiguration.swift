@@ -1,58 +1,36 @@
 import SwiftUI
 import ZenithCoreInterface
 
-public struct AnyBlurStyle: BlurStyle & Sendable & Identifiable {
-    public let id: UUID = .init()
-    
-    private let _makeBody: @Sendable (BlurStyleConfiguration) -> AnyView
-    
-    public init<S: BlurStyle>(_ style: S) {
-        _makeBody = { @Sendable configuration in
-            AnyView(style.makeBody(configuration: configuration))
-        }
-    }
-    
-    public func makeBody(configuration: BlurStyleConfiguration) -> some View {
-        _makeBody(configuration)
-    }
-}
-
-public protocol BlurStyle: StyleProtocol & Identifiable {
-    typealias Configuration = BlurStyleConfiguration
-}
-
-public struct BlurStyleConfiguration {
-    let content: AnyView
-    
+// Configuração compartilhada de blur que pode ser usada por diferentes componentes
+public struct BlurConfig: Sendable {
     // Primeira camada de blur (menor e mais próxima)
-    let blur1Width: CGFloat
-    let blur1Height: CGFloat
-    let blur1Radius: CGFloat
-    let blur1OffsetX: CGFloat
-    let blur1OffsetY: CGFloat
-    let blur1Opacity: Double
+    public let blur1Width: CGFloat
+    public let blur1Height: CGFloat
+    public let blur1Radius: CGFloat
+    public let blur1OffsetX: CGFloat
+    public let blur1OffsetY: CGFloat
+    public let blur1Opacity: Double
     
     // Segunda camada de blur (média)
-    let blur2Width: CGFloat
-    let blur2Height: CGFloat
-    let blur2Radius: CGFloat
-    let blur2OffsetX: CGFloat
-    let blur2OffsetY: CGFloat
-    let blur2Opacity: Double
+    public let blur2Width: CGFloat
+    public let blur2Height: CGFloat
+    public let blur2Radius: CGFloat
+    public let blur2OffsetX: CGFloat
+    public let blur2OffsetY: CGFloat
+    public let blur2Opacity: Double
     
     // Terceira camada de blur (maior e mais suave)
-    let blur3Width: CGFloat
-    let blur3Height: CGFloat
-    let blur3Radius: CGFloat
-    let blur3OffsetX: CGFloat
-    let blur3OffsetY: CGFloat
-    let blur3Opacity: Double
+    public let blur3Width: CGFloat
+    public let blur3Height: CGFloat
+    public let blur3Radius: CGFloat
+    public let blur3OffsetX: CGFloat
+    public let blur3OffsetY: CGFloat
+    public let blur3Opacity: Double
     
     // Configuração geral
-    let cornerRadius: CGFloat
+    public let cornerRadius: CGFloat
     
-    init(
-        content: AnyView,
+    public init(
         blur1Width: CGFloat = 42,
         blur1Height: CGFloat = 24,
         blur1Radius: CGFloat = 20,
@@ -76,8 +54,6 @@ public struct BlurStyleConfiguration {
         
         cornerRadius: CGFloat = 20
     ) {
-        self.content = content
-        
         self.blur1Width = blur1Width
         self.blur1Height = blur1Height
         self.blur1Radius = blur1Radius
@@ -100,6 +76,66 @@ public struct BlurStyleConfiguration {
         self.blur3Opacity = blur3Opacity
         
         self.cornerRadius = cornerRadius
+    }
+    
+    // Métodos de fábrica para configurações comuns
+    public static func standard() -> BlurConfig {
+        return BlurConfig()
+    }
+    
+    public static func subtle() -> BlurConfig {
+        return BlurConfig(
+            blur1Radius: 10,
+            blur1Opacity: 0.7,
+            blur2Radius: 20,
+            blur2Opacity: 0.8,
+            blur3Radius: 30,
+            blur3Opacity: 0.9
+        )
+    }
+    
+    public static func intense() -> BlurConfig {
+        return BlurConfig(
+            blur1Radius: 30,
+            blur1Opacity: 0.95,
+            blur2Radius: 60,
+            blur2Opacity: 0.9,
+            blur3Radius: 80,
+            blur3Opacity: 0.85
+        )
+    }
+}
+
+public struct AnyBlurStyle: BlurStyle & Sendable & Identifiable {
+    public let id: UUID = .init()
+    
+    private let _makeBody: @Sendable (BlurStyleConfiguration) -> AnyView
+    
+    public init<S: BlurStyle>(_ style: S) {
+        _makeBody = { @Sendable configuration in
+            AnyView(style.makeBody(configuration: configuration))
+        }
+    }
+    
+    public func makeBody(configuration: BlurStyleConfiguration) -> some View {
+        _makeBody(configuration)
+    }
+}
+
+public protocol BlurStyle: StyleProtocol & Identifiable {
+    typealias Configuration = BlurStyleConfiguration
+}
+
+public struct BlurStyleConfiguration {
+    let content: AnyView
+    let blurConfig: BlurConfig
+    
+    init(
+        content: AnyView,
+        blurConfig: BlurConfig = .standard()
+    ) {
+        self.content = content
+        self.blurConfig = blurConfig
     }
 }
 

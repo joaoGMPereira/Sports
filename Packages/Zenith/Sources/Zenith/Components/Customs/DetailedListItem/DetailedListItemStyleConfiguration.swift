@@ -26,26 +26,34 @@ public struct DetailedListItemStyleConfiguration {
     let description: String
     let leftInfo: DetailedListItem.Info
     let rightInfo: DetailedListItem.Info
-    let blurStyle: BlurStyleCase
     let action: (() -> Void)
     let trailingContent: AnyView?
+    let progressText: String?
+    let progressConfig: CircularProgressStyleConfiguration?
+    
+    // Configuração de blur
+    let blurConfig: BlurConfig
     
     init(
         title: String,
         description: String,
         leftInfo: DetailedListItem.Info,
         rightInfo: DetailedListItem.Info,
-        blurStyle: BlurStyleCase,
         action: @escaping () -> Void,
-        trailingContent: AnyView? = nil
+        trailingContent: AnyView? = nil,
+        progressText: String? = nil,
+        progressConfig: CircularProgressStyleConfiguration? = nil,
+        blurConfig: BlurConfig = .standard()
     ) {
         self.title = title
         self.description = description
         self.leftInfo = leftInfo
         self.rightInfo = rightInfo
-        self.blurStyle = blurStyle
         self.action = action
         self.trailingContent = trailingContent
+        self.progressText = progressText
+        self.progressConfig = progressConfig
+        self.blurConfig = blurConfig
     }
 }
 

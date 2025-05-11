@@ -29,7 +29,7 @@ public struct DefaultBlurStyle: @preconcurrency BlurStyle, BaseThemeDependencies
 }
 
 public extension BlurStyle where Self == DefaultBlurStyle {
-    static func `default`(colorName: ColorName) -> Self { .init(colorName: colorName) }
+    static func `default`(_ colorName: ColorName) -> Self { .init(colorName: colorName) }
 }
 
 public enum BlurStyleCase: Identifiable {
@@ -53,7 +53,7 @@ public enum BlurStyleCase: Identifiable {
     public func style() -> AnyBlurStyle {
         switch self {
         case .default(let colorName):
-            .init(.default(colorName: colorName))
+            .init(.default(colorName))
         }
     }
     
@@ -74,34 +74,34 @@ private struct BaseBlur: View, @preconcurrency BaseThemeDependencies {
     var body: some View {
         ZStack(alignment: .topTrailing) {
             // Terceira camada de blur (maior e mais suave)
-            RoundedRectangle(cornerRadius: configuration.cornerRadius)
+            RoundedRectangle(cornerRadius: configuration.blurConfig.cornerRadius)
                 .fill(color.opacity(0.5))
-                .frame(width: configuration.blur3Width, height: configuration.blur3Height)
-                .blur(radius: configuration.blur3Radius)
-                .offset(x: configuration.blur3OffsetX, y: configuration.blur3OffsetY)
-                .opacity(configuration.blur3Opacity)
+                .frame(width: configuration.blurConfig.blur3Width, height: configuration.blurConfig.blur3Height)
+                .blur(radius: configuration.blurConfig.blur3Radius)
+                .offset(x: configuration.blurConfig.blur3OffsetX, y: configuration.blurConfig.blur3OffsetY)
+                .opacity(configuration.blurConfig.blur3Opacity)
             
             // Segunda camada de blur (média)
-            RoundedRectangle(cornerRadius: configuration.cornerRadius)
+            RoundedRectangle(cornerRadius: configuration.blurConfig.cornerRadius)
                 .fill(color.opacity(0.5))
-                .frame(width: configuration.blur2Width, height: configuration.blur2Height)
-                .blur(radius: configuration.blur2Radius)
-                .offset(x: configuration.blur2OffsetX, y: configuration.blur2OffsetY)
-                .opacity(configuration.blur2Opacity)
+                .frame(width: configuration.blurConfig.blur2Width, height: configuration.blurConfig.blur2Height)
+                .blur(radius: configuration.blurConfig.blur2Radius)
+                .offset(x: configuration.blurConfig.blur2OffsetX, y: configuration.blurConfig.blur2OffsetY)
+                .opacity(configuration.blurConfig.blur2Opacity)
             
             // Primeira camada de blur (menor e mais próxima)
-            RoundedRectangle(cornerRadius: configuration.cornerRadius)
+            RoundedRectangle(cornerRadius: configuration.blurConfig.cornerRadius)
                 .fill(color.opacity(0.7))
-                .frame(width: configuration.blur1Width, height: configuration.blur1Height)
-                .blur(radius: configuration.blur1Radius)
-                .offset(x: configuration.blur1OffsetX, y: configuration.blur1OffsetY)
-                .opacity(configuration.blur1Opacity)
+                .frame(width: configuration.blurConfig.blur1Width, height: configuration.blurConfig.blur1Height)
+                .blur(radius: configuration.blurConfig.blur1Radius)
+                .offset(x: configuration.blurConfig.blur1OffsetX, y: configuration.blurConfig.blur1OffsetY)
+                .opacity(configuration.blurConfig.blur1Opacity)
             
             configuration.content
         }
         .mask(
             // Esta máscara garante que o blur respeite as bordas arredondadas
-            RoundedRectangle(cornerRadius: configuration.cornerRadius)
+            RoundedRectangle(cornerRadius: configuration.blurConfig.cornerRadius)
                 .fill(Color.white)
         )
     }

@@ -18,16 +18,16 @@ public struct DetailedListItem: View {
         description: String = String(),
         leftInfo: Info,
         rightInfo: Info,
-        action: @escaping () -> Void,
-        blurStyle: BlurStyleCase = .default(.highlightA)
+        blurConfig: BlurConfig = .standard(),
+        action: @escaping () -> Void
     ) {
         self.configuration = .init(
             title: title,
             description: description,
             leftInfo: leftInfo,
             rightInfo: rightInfo,
-            blurStyle: blurStyle,
-            action: action
+            action: action,
+            blurConfig: blurConfig
         )
     }
     
@@ -36,8 +36,8 @@ public struct DetailedListItem: View {
         description: String = String(),
         leftInfo: Info,
         rightInfo: Info,
+        blurConfig: BlurConfig = .standard(),
         action: @escaping () -> Void,
-        blurStyle: BlurStyleCase = .default(.highlightA),
         @ViewBuilder trailingContent: () -> TrailingContent
     ) {
         self.configuration = .init(
@@ -45,9 +45,139 @@ public struct DetailedListItem: View {
             description: description,
             leftInfo: leftInfo,
             rightInfo: rightInfo,
-            blurStyle: blurStyle,
             action: action,
-            trailingContent: AnyView(trailingContent())
+            trailingContent: AnyView(trailingContent()),
+            blurConfig: blurConfig
+        )
+    }
+    
+    public init(
+        title: String,
+        description: String = String(),
+        leftInfo: Info,
+        rightInfo: Info,
+        action: @escaping () -> Void,
+        progressText: String,
+        blurConfig: BlurConfig = .standard()
+    ) {
+        self.configuration = .init(
+            title: title,
+            description: description,
+            leftInfo: leftInfo,
+            rightInfo: rightInfo,
+            action: action,
+            progressText: progressText,
+            blurConfig: blurConfig
+        )
+    }
+    
+    public init(
+        title: String,
+        description: String = String(),
+        leftInfo: Info,
+        rightInfo: Info,
+        action: @escaping () -> Void,
+        progress: Double,
+        size: CGFloat = 54,
+        showText: Bool = true,
+        animated: Bool = true,
+        blurConfig: BlurConfig = .standard()
+    ) {
+        let config = CircularProgressStyleConfiguration(
+            text: "",
+            progress: progress,
+            size: size,
+            showText: showText,
+            isAnimating: false,
+            animated: animated
+        )
+        self.configuration = .init(
+            title: title,
+            description: description,
+            leftInfo: leftInfo,
+            rightInfo: rightInfo,
+            action: action,
+            progressConfig: config,
+            blurConfig: blurConfig
+        )
+    }
+    
+    public init(
+        title: String,
+        description: String = String(),
+        leftInfo: Info,
+        rightInfo: Info,
+        action: @escaping () -> Void,
+        progressConfig: CircularProgressStyleConfiguration
+    ) {
+        self.configuration = .init(
+            title: title,
+            description: description,
+            leftInfo: leftInfo,
+            rightInfo: rightInfo,
+            action: action,
+            progressConfig: progressConfig
+        )
+    }
+    
+    // Inicializador com BlurConfig personalizado
+    public init(
+        title: String,
+        description: String = String(),
+        leftInfo: Info,
+        rightInfo: Info,
+        action: @escaping () -> Void,
+        blurConfig: BlurConfig
+    ) {
+        self.configuration = .init(
+            title: title,
+            description: description,
+            leftInfo: leftInfo,
+            rightInfo: rightInfo,
+            action: action,
+            blurConfig: blurConfig
+        )
+    }
+    
+    // Inicializador com BlurConfig personalizado e progressConfig
+    public init(
+        title: String,
+        description: String = String(),
+        leftInfo: Info,
+        rightInfo: Info,
+        action: @escaping () -> Void,
+        progressConfig: CircularProgressStyleConfiguration,
+        blurConfig: BlurConfig
+    ) {
+        self.configuration = .init(
+            title: title,
+            description: description,
+            leftInfo: leftInfo,
+            rightInfo: rightInfo,
+            action: action,
+            progressConfig: progressConfig,
+            blurConfig: blurConfig
+        )
+    }
+    
+    // Inicializador com BlurConfig personalizado e conteúdo trailing customizado
+    public init<TrailingContent: View>(
+        title: String,
+        description: String = String(),
+        leftInfo: Info,
+        rightInfo: Info,
+        action: @escaping () -> Void,
+        blurConfig: BlurConfig,
+        @ViewBuilder trailingContent: () -> TrailingContent
+    ) {
+        self.configuration = .init(
+            title: title,
+            description: description,
+            leftInfo: leftInfo,
+            rightInfo: rightInfo,
+            action: action,
+            trailingContent: AnyView(trailingContent()),
+            blurConfig: blurConfig
         )
     }
     
@@ -70,5 +200,4 @@ extension DetailedListItem {
             self.description = description
         }
     }
-
 }

@@ -6,7 +6,7 @@ struct CircularProgressSample: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) var themeConfigurator
     @State var isExpanded = false
     @State private var progress: Double = 0.25
-    @State private var size: Double = 60
+    @State private var size: Double = 54
     @State private var showText: Bool = true
     @State private var animated: Bool = true
     
@@ -71,7 +71,7 @@ struct CircularProgressSample: View, @preconcurrency BaseThemeDependencies {
                                 showText: showText,
                                 animated: animated
                             )
-                            .circularprogressStyle(style.style())
+                            .circularProgressStyle(style.style())
                             
                             Text(String(describing: style))
                                 .font(fonts.small)
@@ -184,7 +184,7 @@ struct CircularProgressSample: View, @preconcurrency BaseThemeDependencies {
             showText: \(showTextString),
             animated: \(animatedString)
         )
-        .circularprogressStyle(.\(styleName)())
+        .circularProgressStyle(.\(styleName)())
         """
     }
     
@@ -199,7 +199,7 @@ struct CircularProgressSample: View, @preconcurrency BaseThemeDependencies {
                 size: 50,
                 showText: false
             )
-            .circularprogressStyle(style.style())
+            .circularProgressStyle(style.style())
             
             Text(value)
                 .font(fonts.small)
@@ -229,7 +229,7 @@ struct CircularProgressSample: View, @preconcurrency BaseThemeDependencies {
                 showText: showText,
                 animated: animated
             )
-            .circularprogressStyle(style.style())
+            .circularProgressStyle(style.style())
             
             Button(action: {
                 if progress.wrappedValue == initialValue {
