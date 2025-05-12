@@ -34,6 +34,7 @@ public struct FloatingComponent: View {
             // Conteúdo principal
             content
                 .padding()
+                .allowsHitTesting(false)
             
             // Botão para fechar
             Button(action: {

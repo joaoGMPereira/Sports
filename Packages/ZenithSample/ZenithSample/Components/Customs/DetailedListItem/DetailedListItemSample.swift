@@ -1,6 +1,7 @@
 import SwiftUI
 import Zenith
 import ZenithCoreInterface
+import Combine
 
 struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) var themeConfigurator
@@ -55,6 +56,10 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
     // Referência ao estado do componente flutuante
     @ObservedObject private var floatingState = FloatingComponentState.shared
     
+    // Um publisher para atualizar o componente flutuante sempre que qualquer estado relevante mudar
+    @State private var updatePublisher = PassthroughSubject<Void, Never>()
+    @State private var cancellables = Set<AnyCancellable>()
+    
     var body: some View {
         ZStack {
             ScrollView {
@@ -89,7 +94,6 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                         // Color selector for the style
                         ColorSelector(selectedColor: $selectedColor)
                             .padding(.bottom, spacings.small)
-                            .onChange(of: selectedColor) { _ in updateFloatingView() }
                         
                         // Display mode selector using GridSelector
                         GridSelector(
@@ -99,7 +103,6 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                             height: 140
                         )
                         .padding(.bottom, spacings.small)
-                        .onChange(of: selectedMode) { _ in updateFloatingView() }
                         
                         // Description settings
                         VStack(alignment: .leading, spacing: spacings.small) {
@@ -110,12 +113,10 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                             Toggle("Show Description", isOn: $showDescription)
                                 .toggleStyle(.default(.highlightA))
                                 .foregroundColor(colors.contentA)
-                                .onChange(of: showDescription) { _ in updateFloatingView() }
                             
                             if showDescription {
                                 TextField("Description text", text: $descriptionText)
                                     .textFieldStyle(.roundedBorder)
-                                    .onChange(of: descriptionText) { _ in updateFloatingView() }
                             }
                         }
                         .padding(.bottom, spacings.medium)
@@ -130,7 +131,6 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                             TextField("Progress text", text: $customText)
                                 .textFieldStyle(.roundedBorder)
                                 .padding(.bottom, spacings.small)
-                                .onChange(of: customText) { _ in updateFloatingView() }
                         }
                         
                         if selectedMode == .simpleProgress ||
@@ -147,7 +147,6 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                                 
                                 Slider(value: $progressValue, in: 0...1, step: 0.01)
                                     .accentColor(colors.highlightA)
-                                    .onChange(of: progressValue) { _ in updateFloatingView() }
                                 
                                 if selectedMode == .detailedProgress || selectedMode == .customProgress {
                                     HStack {
@@ -159,17 +158,14 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                                     
                                     Slider(value: $size, in: 20...60, step: 1)
                                         .accentColor(colors.highlightA)
-                                        .onChange(of: size) { _ in updateFloatingView() }
                                     
                                     Toggle("Show text", isOn: $showText)
                                         .toggleStyle(.default(.highlightA))
                                         .foregroundColor(colors.contentA)
-                                        .onChange(of: showText) { _ in updateFloatingView() }
                                     
                                     Toggle("Animated", isOn: $animated)
                                         .toggleStyle(.default(.highlightA))
                                         .foregroundColor(colors.contentA)
-                                        .onChange(of: animated) { _ in updateFloatingView() }
                                 }
                             }
                             .padding(.bottom, spacings.small)
@@ -199,24 +195,6 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                             blur3Opacity: $blur3Opacity
                         )
                         .padding(.bottom, spacings.small)
-                        .onChange(of: blur1Width) { _ in updateFloatingView() }
-                        .onChange(of: blur1Height) { _ in updateFloatingView() }
-                        .onChange(of: blur1Radius) { _ in updateFloatingView() }
-                        .onChange(of: blur1OffsetX) { _ in updateFloatingView() }
-                        .onChange(of: blur1OffsetY) { _ in updateFloatingView() }
-                        .onChange(of: blur1Opacity) { _ in updateFloatingView() }
-                        .onChange(of: blur2Width) { _ in updateFloatingView() }
-                        .onChange(of: blur2Height) { _ in updateFloatingView() }
-                        .onChange(of: blur2Radius) { _ in updateFloatingView() }
-                        .onChange(of: blur2OffsetX) { _ in updateFloatingView() }
-                        .onChange(of: blur2OffsetY) { _ in updateFloatingView() }
-                        .onChange(of: blur2Opacity) { _ in updateFloatingView() }
-                        .onChange(of: blur3Width) { _ in updateFloatingView() }
-                        .onChange(of: blur3Height) { _ in updateFloatingView() }
-                        .onChange(of: blur3Radius) { _ in updateFloatingView() }
-                        .onChange(of: blur3OffsetX) { _ in updateFloatingView() }
-                        .onChange(of: blur3OffsetY) { _ in updateFloatingView() }
-                        .onChange(of: blur3Opacity) { _ in updateFloatingView() }
                     }
                     .padding(.horizontal, spacings.small)
                     
@@ -229,15 +207,56 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
             // Adiciona o componente flutuante como overlay
             FloatingComponent()
         }
+        // Um único onChange que observa todas as propriedades relevantes
+        .onChange(of: selectedColor) { _ in updatePublisher.send() }
+        .onChange(of: selectedMode) { _ in updatePublisher.send() }
+        .onChange(of: showDescription) { _ in updatePublisher.send() }
+        .onChange(of: descriptionText) { _ in updatePublisher.send() }
+        .onChange(of: customText) { _ in updatePublisher.send() }
+        .onChange(of: progressValue) { _ in updatePublisher.send() }
+        .onChange(of: size) { _ in updatePublisher.send() }
+        .onChange(of: showText) { _ in updatePublisher.send() }
+        .onChange(of: animated) { _ in updatePublisher.send() }
+        .onChange(of: blur1Width) { _ in updatePublisher.send() }
+        .onChange(of: blur1Height) { _ in updatePublisher.send() }
+        .onChange(of: blur1Radius) { _ in updatePublisher.send() }
+        .onChange(of: blur1OffsetX) { _ in updatePublisher.send() }
+        .onChange(of: blur1OffsetY) { _ in updatePublisher.send() }
+        .onChange(of: blur1Opacity) { _ in updatePublisher.send() }
+        .onChange(of: blur2Width) { _ in updatePublisher.send() }
+        .onChange(of: blur2Height) { _ in updatePublisher.send() }
+        .onChange(of: blur2Radius) { _ in updatePublisher.send() }
+        .onChange(of: blur2OffsetX) { _ in updatePublisher.send() }
+        .onChange(of: blur2OffsetY) { _ in updatePublisher.send() }
+        .onChange(of: blur2Opacity) { _ in updatePublisher.send() }
+        .onChange(of: blur3Width) { _ in updatePublisher.send() }
+        .onChange(of: blur3Height) { _ in updatePublisher.send() }
+        .onChange(of: blur3Radius) { _ in updatePublisher.send() }
+        .onChange(of: blur3OffsetX) { _ in updatePublisher.send() }
+        .onChange(of: blur3OffsetY) { _ in updatePublisher.send() }
+        .onChange(of: blur3Opacity) { _ in updatePublisher.send() }
+        .onAppear {
+            // Configura o subscriber para atualizar o componente flutuante
+            updatePublisher
+                .debounce(for: .milliseconds(10), scheduler: RunLoop.main) // Pequeno debounce para evitar múltiplas atualizações simultâneas
+                .sink { _ in
+                    self.updateFloatingView()
+                }
+                .store(in: &cancellables)
+        }
     }
     
     // Função para atualizar o componente flutuante quando as propriedades mudam
     private func updateFloatingView() {
         if floatingState.isVisible {
-            // Força uma atualização imediata
+            // Captura o componente atual no momento da atualização
+            let latestComponent = AnyView(currentDetailedListItem)
+            let latestBackgroundColor = colors.backgroundB
+            
+            // Atualiza o componente flutuante imediatamente com os valores mais recentes
             floatingState.show(
-                content: { currentDetailedListItem },
-                backgroundColor: colors.backgroundB
+                content: { latestComponent },
+                backgroundColor: latestBackgroundColor
             )
         }
     }
@@ -398,6 +417,7 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                 .buttonStyle(PlainButtonStyle())
             }
         }
+        .frame(maxWidth: .infinity)
     }
     
     // Ação do card para mostrar o componente flutuante
