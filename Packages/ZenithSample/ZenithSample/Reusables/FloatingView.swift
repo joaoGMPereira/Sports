@@ -16,7 +16,6 @@ struct FloatingView<Content: View>: View, @preconcurrency BaseThemeDependencies 
     var backgroundBlur: Double = 20
     var scale: Double = 1.05
     var animation: Animation = .spring(response: 0.3, dampingFraction: 0.8)
-    var showCloseButton: Bool = true
     var isDraggable: Bool = true
     
     // Estado para gerenciar a posição do componente
@@ -35,7 +34,6 @@ struct FloatingView<Content: View>: View, @preconcurrency BaseThemeDependencies 
          backgroundBlur: Double = 20,
          scale: Double = 1.05,
          animation: Animation = .spring(response: 0.3, dampingFraction: 0.8),
-         showCloseButton: Bool = true,
          isDraggable: Bool = true,
          @ViewBuilder content: @escaping () -> Content) {
         self._isFloating = isFloating
@@ -43,7 +41,6 @@ struct FloatingView<Content: View>: View, @preconcurrency BaseThemeDependencies 
         self.backgroundBlur = backgroundBlur
         self.scale = scale
         self.animation = animation
-        self.showCloseButton = showCloseButton
         self.isDraggable = isDraggable
         self.content = content
     }
@@ -73,32 +70,7 @@ struct FloatingView<Content: View>: View, @preconcurrency BaseThemeDependencies 
                         // Conteúdo do componente
                         content()
                             .scaleEffect(scale)
-                        
-                        // Botão para fechar o componente flutuante
-                        if showCloseButton {
-                            VStack {
-                                HStack {
-                                    Spacer()
-                                    
-                                    Button(action: {
-                                        withAnimation(animation) {
-                                            isFloating = false
-                                        }
-                                    }) {
-                                        Image(systemName: "xmark.circle.fill")
-                                            .font(.system(size: 22))
-                                            .foregroundColor(colors.highlightA)
-                                            .background(
-                                                Circle()
-                                                    .fill(colors.backgroundA)
-                                                    .frame(width: 24, height: 24)
-                                            )
-                                    }
-                                    .padding(8)
-                                }
-                                Spacer()
-                            }
-                        }
+                            .allowsHitTesting(false)
                     }
                     .position(calculatePosition(in: geometry.size))
                     .gesture(
@@ -183,7 +155,6 @@ extension View {
                     backgroundBlur: Double = 20,
                     scale: Double = 1.05,
                     animation: Animation = .spring(response: 0.3, dampingFraction: 0.8),
-                    showCloseButton: Bool = true,
                     isDraggable: Bool = true) -> some View {
         FloatingView(
             isFloating: isFloating,
@@ -191,7 +162,6 @@ extension View {
             backgroundBlur: backgroundBlur,
             scale: scale,
             animation: animation,
-            showCloseButton: showCloseButton,
             isDraggable: isDraggable
         ) {
             self

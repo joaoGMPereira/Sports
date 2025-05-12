@@ -10,7 +10,6 @@ public struct FloatingCardModifier<FloatingContent: View>: ViewModifier {
     let backgroundOpacity: Double
     let backgroundBlur: Double
     let scale: CGFloat
-    let showCloseButton: Bool
     let isDraggable: Bool
     
     // Estado interno para o drag
@@ -26,7 +25,6 @@ public struct FloatingCardModifier<FloatingContent: View>: ViewModifier {
         backgroundOpacity: Double = 0.6,
         backgroundBlur: Double = 10,
         scale: CGFloat = 1.1,
-        showCloseButton: Bool = true,
         isDraggable: Bool = true,
         @ViewBuilder content: () -> FloatingContent
     ) {
@@ -34,7 +32,6 @@ public struct FloatingCardModifier<FloatingContent: View>: ViewModifier {
         self.backgroundOpacity = backgroundOpacity
         self.backgroundBlur = backgroundBlur
         self.scale = scale
-        self.showCloseButton = showCloseButton
         self.isDraggable = isDraggable
         self.floatingContent = content()
     }
@@ -55,29 +52,6 @@ public struct FloatingCardModifier<FloatingContent: View>: ViewModifier {
                     .onTapGesture {
                         closeCard()
                     }
-                
-                VStack {
-                    if showCloseButton {
-                        HStack {
-                            Spacer()
-                            Button(action: closeCard) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .resizable()
-                                    .frame(width: 24, height: 24)
-                                    .foregroundColor(.white)
-                                    .padding(8)
-                            }
-                            .shadow(radius: 2)
-                        }
-                    }
-                    
-                    self.floatingContent
-                        .scaleEffect(scale)
-                }
-                .offset(x: dragOffset.width, y: dragOffset.height)
-                .gesture(dragGesture)
-                .transition(.opacity.combined(with: .scale))
-                .zIndex(100) // Garantir que esteja acima de tudo
             }
         }
     }
@@ -122,7 +96,6 @@ public extension View {
         backgroundOpacity: Double = 0.6,
         backgroundBlur: Double = 10,
         scale: CGFloat = 1.1,
-        showCloseButton: Bool = true,
         isDraggable: Bool = true,
         @ViewBuilder content: @escaping () -> Content
     ) -> some View {
@@ -132,7 +105,6 @@ public extension View {
                 backgroundOpacity: backgroundOpacity,
                 backgroundBlur: backgroundBlur,
                 scale: scale,
-                showCloseButton: showCloseButton,
                 isDraggable: isDraggable,
                 content: content
             )

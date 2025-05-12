@@ -7,7 +7,6 @@ public struct WindowFloatingButtonModifier<ButtonContent: View>: ViewModifier {
     let scale: CGFloat
     let backgroundOpacity: Double
     let backgroundBlur: Double
-    let showCloseButton: Bool
     let isDraggable: Bool
     let backgroundColor: Color
     let buttonContent: ButtonContent
@@ -17,7 +16,6 @@ public struct WindowFloatingButtonModifier<ButtonContent: View>: ViewModifier {
         scale: CGFloat = 1.05,
         backgroundOpacity: Double = 0.6,
         backgroundBlur: Double = 5,
-        showCloseButton: Bool = true,
         isDraggable: Bool = true,
         backgroundColor: Color,
         @ViewBuilder buttonContent: () -> ButtonContent
@@ -26,7 +24,6 @@ public struct WindowFloatingButtonModifier<ButtonContent: View>: ViewModifier {
         self.scale = scale
         self.backgroundOpacity = backgroundOpacity
         self.backgroundBlur = backgroundBlur
-        self.showCloseButton = showCloseButton
         self.isDraggable = isDraggable
         self.backgroundColor = backgroundColor
         self.buttonContent = buttonContent()
@@ -55,7 +52,6 @@ public extension View {
     ///   - scale: Fator de escala quando flutuando
     ///   - backgroundOpacity: Opacidade do fundo
     ///   - backgroundBlur: Intensidade do blur no fundo
-    ///   - showCloseButton: Se deve mostrar um botão para fechar
     ///   - isDraggable: Se a view pode ser arrastada
     ///   - backgroundColor: Cor de fundo do card flutuante
     ///   - buttonContent: Conteúdo personalizado para exibir no botão flutuante
@@ -64,7 +60,6 @@ public extension View {
         scale: CGFloat = 1.05,
         backgroundOpacity: Double = 0.6,
         backgroundBlur: Double = 5,
-        showCloseButton: Bool = true,
         isDraggable: Bool = true,
         backgroundColor: Color,
         @ViewBuilder buttonContent: @escaping () -> ButtonContent
@@ -75,7 +70,6 @@ public extension View {
                 scale: scale,
                 backgroundOpacity: backgroundOpacity,
                 backgroundBlur: backgroundBlur,
-                showCloseButton: showCloseButton,
                 isDraggable: isDraggable,
                 backgroundColor: backgroundColor,
                 buttonContent: buttonContent
@@ -89,7 +83,6 @@ public extension View {
     ///   - scale: Fator de escala quando flutuando
     ///   - backgroundOpacity: Opacidade do fundo
     ///   - backgroundBlur: Intensidade do blur no fundo
-    ///   - showCloseButton: Se deve mostrar um botão para fechar
     ///   - isDraggable: Se a view pode ser arrastada
     ///   - backgroundColor: Cor de fundo do card flutuante
     func makeWindowFloating(
@@ -97,7 +90,6 @@ public extension View {
         scale: CGFloat = 1.05,
         backgroundOpacity: Double = 0.6,
         backgroundBlur: Double = 5,
-        showCloseButton: Bool = true,
         isDraggable: Bool = true,
         backgroundColor: Color
     ) -> some View {
@@ -106,7 +98,6 @@ public extension View {
             scale: scale,
             backgroundOpacity: backgroundOpacity,
             backgroundBlur: backgroundBlur,
-            showCloseButton: showCloseButton,
             isDraggable: isDraggable,
             backgroundColor: backgroundColor
         ) {

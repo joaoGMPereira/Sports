@@ -54,7 +54,6 @@ struct FloatingCardExample: View, @preconcurrency BaseThemeDependencies {
             backgroundOpacity: 0.7,
             backgroundBlur: 5,
             scale: 1.05,
-            showCloseButton: true,
             isDraggable: true
         ) {
             // Este é o conteúdo que será mostrado quando o card estiver flutuando

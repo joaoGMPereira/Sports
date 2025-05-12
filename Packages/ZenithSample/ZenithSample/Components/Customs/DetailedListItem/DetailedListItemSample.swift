@@ -9,12 +9,7 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
     @State private var showText: Bool = true
     @State private var animated: Bool = true
     @State private var size: Double = 30
-    @State private var isFloating: Bool = false // Estado para controlar a visualização flutuante
-    
-    // Configurações da visualização flutuante
-    @State private var isDraggable: Bool = true
-    @State private var showCloseButton: Bool = true
-    @State private var useWindowFloating: Bool = true // Controla se a flutuação ocorre na window ou na view
+    @State private var isFloating: Bool = false // Inicialmente não está flutuando
     
     // Valores para configuração avançada do blur
     @State private var blur1Width: Double = 42
@@ -71,69 +66,26 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                     
                     // Componente DetailedListItem no topo da tela
                     VStack(alignment: .leading) {
-                        Text("Preview - Toque para flutuar")
+                        Text("Preview - Clique no card para abrir floating")
                             .font(fonts.mediumBold)
                             .foregroundColor(colors.contentA)
                             .padding(.horizontal, spacings.small)
                         
-                        // Preview visível sempre, mesmo quando isFloating for true
-                        if !showFloatingOption {
-                            // Se não estiver usando opção de floating, mostra o componente normal
-                            currentDetailedListItem
-                                .padding(.horizontal, spacings.small)
-                        } else {
-                            // Quando a opção de floating está ativa, mostramos o componente real
-                            // em vez de um placeholder para garantir visualização correta
-                            currentDetailedListItem
-                                .padding(.horizontal, spacings.small)
-                                .onTapGesture {
-                                    withAnimation {
-                                        isFloating = true
-                                    }
-                                }
-                        }
+                        // Preview do componente com interação de clique
+                        currentDetailedListItem
+                            .makeWindowFloating(
+                                isFloating: $isFloating,
+                                scale: 1.0,
+                                backgroundOpacity: 0.7,
+                                backgroundBlur: 10,
+                                isDraggable: true,
+                                backgroundColor: colors.backgroundB
+                            )
+                                
                     }
                     .padding(.vertical, spacings.small)
                     .background(colors.backgroundB)
                     .animation(.easeInOut(duration: 0.2), value: isFloating)
-                    
-                    // Opções de configuração de floating
-                    VStack(alignment: .leading, spacing: spacings.small) {
-                        Text("Configurações Flutuantes")
-                            .font(fonts.mediumBold)
-                            .foregroundColor(colors.contentA)
-                            .padding(.bottom, 4)
-                        
-                        Toggle("Permitir flutuação ao pressionar", isOn: $showFloatingOption)
-                            .toggleStyle(.default(.highlightA))
-                            .foregroundColor(colors.contentA)
-                        
-                        if showFloatingOption {
-                            Picker("Tipo de Flutuação", selection: $useWindowFloating) {
-                                Text("Na View").tag(false)
-                                Text("Na Window").tag(true)
-                            }
-                            .pickerStyle(.segmented)
-                            .padding(.vertical, spacings.small)
-                            
-                            Toggle("Permitir arrastar componente", isOn: $isDraggable)
-                                .toggleStyle(.default(.highlightA))
-                                .foregroundColor(colors.contentA)
-                            
-                            Toggle("Mostrar botão de fechar", isOn: $showCloseButton)
-                                .toggleStyle(.default(.highlightA))
-                                .foregroundColor(colors.contentA)
-                            
-                            Button("Abrir Floating View") {
-                                withAnimation {
-                                    isFloating = true
-                                }
-                            }
-                            .buttonStyle(.highlightA())
-                            .padding(.top, spacings.small)
-                        }
-                    }
-                    .padding(.horizontal, spacings.small)
                     
                     // Configurações
                     VStack(alignment: .leading) {
@@ -253,33 +205,10 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                     CodePreviewSection(generateCode: generateCode)
                         .padding(.top, spacings.medium)
                 }
+                .onTapGesture {
+                    isFloating = false
+                }
             }
-            
-            // Aplicamos o FloatingView fora do ScrollView, diretamente na ZStack principal
-            // apenas quando não estamos usando o modo de window floating
-            if showFloatingOption && isFloating && !useWindowFloating {
-                currentDetailedListItem
-                    .makeFloating(
-                        isFloating: $isFloating,
-                        backgroundOpacity: 0.7,
-                        backgroundBlur: 10, 
-                        scale: 1.0,
-                        showCloseButton: showCloseButton,
-                        isDraggable: isDraggable
-                    )
-            }
-        }
-        // Anexamos o FloatingView à Window do aplicativo quando useWindowFloating é true
-        .makeWindowFloating(
-            isFloating: showFloatingOption && useWindowFloating ? $isFloating : .constant(false),
-            backgroundOpacity: 0.7,
-            backgroundBlur: 10,
-            showCloseButton: showCloseButton,
-            isDraggable: isDraggable,
-            backgroundColor: colors.backgroundB
-        ) {
-            currentDetailedListItem
-                .frame(width: UIScreen.main.bounds.width * 0.95) // Define largura fixa para o card
         }
     }
     
@@ -300,12 +229,9 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                         description: "5x"
                     ),
                     action: {
-                        if showFloatingOption {
-                            withAnimation {
-                                isFloating = true
-                            }
-                        } else {
-                            print("Action with progress text")
+                        // Ativar floating ao clicar no botão de ação
+                        withAnimation {
+                            isFloating.toggle()
                         }
                     },
                     progressText: customText,
@@ -326,12 +252,9 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                         description: "8x"
                     ),
                     action: {
-                        if showFloatingOption {
-                            withAnimation {
-                                isFloating = true
-                            }
-                        } else {
-                            print("Action with progress value")
+                        // Ativar floating ao clicar no botão de ação
+                        withAnimation {
+                            isFloating = true
                         }
                     },
                     progress: progressValue,
@@ -471,39 +394,36 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
         let animatedString = animated ? "true" : "false"
         let descriptionParam = showDescription ? "\"\(descriptionText)\"" : "\"\""
         
-        // Código para flutuação, variando de acordo com o tipo selecionado
-        let floatingCode = showFloatingOption ?
-            useWindowFloating ?
-            """
-            
-            // Estado para controlar a flutuação
-            @State private var isFloating: Bool = false
-            
-            // Para fazer o componente flutuar na Window do aplicativo quando pressionado
-            .makeWindowFloating(
-                isFloating: $isFloating,
-                backgroundOpacity: 0.7,
-                backgroundBlur: 10,
-                scale: 1.1,
-                showCloseButton: \(showCloseButton ? "true" : "false"),
-                isDraggable: \(isDraggable ? "true" : "false")
-            )
-            """ : 
-            """
-            
-            // Estado para controlar a flutuação
-            @State private var isFloating: Bool = false
-            
-            // Para fazer o componente flutuar na View quando pressionado
-            .makeFloating(
-                isFloating: $isFloating,
-                backgroundOpacity: 0.7,
-                backgroundBlur: 10,
-                scale: 1.1,
-                showCloseButton: \(showCloseButton ? "true" : "false"),
-                isDraggable: \(isDraggable ? "true" : "false")
-            )
-            """ : ""
+        // Código para flutuação em window
+        let floatingCode = """
+        
+        // Estado para controlar a flutuação quando clicado
+        @State private var isFloating: Bool = false
+        
+        // Função para ativar o floating ao clicar
+        func ativarFloating() {
+            withAnimation {
+                isFloating = true
+            }
+        }
+        
+        // Envolver o componente em um Button para detectar cliques no card
+        Button(action: {
+            ativarFloating()
+        }) {
+            // Seu componente DetailedListItem aqui
+        }
+        .buttonStyle(PlainButtonStyle())
+        
+        // Aplicar o floating em window
+        .makeWindowFloating(
+            isFloating: $isFloating,
+            backgroundOpacity: 0.7,
+            backgroundBlur: 10,
+            scale: 1.0,
+            isDraggable: true
+        )
+        """
         
         switch selectedMode {
         case .text:

@@ -19,7 +19,6 @@ public class WindowFloatingManager {
     ///   - size: Tamanho da view (se nil, calcula automaticamente)
     ///   - isDraggable: Se a view pode ser arrastada
     ///   - backgroundColor: Cor de fundo do card
-    ///   - showCloseButton: Se deve mostrar o botão de fechar
     /// - Returns: Identificador único para a view flutuante
     @MainActor
     public func show<Content: View>(
@@ -27,8 +26,7 @@ public class WindowFloatingManager {
         position: CGPoint? = nil,
         size: CGSize? = nil,
         isDraggable: Bool = true,
-        backgroundColor: Color,
-        showCloseButton: Bool = true
+        backgroundColor: Color
     ) -> UUID {
         let id = UUID()
         
@@ -41,8 +39,7 @@ public class WindowFloatingManager {
             content: content(),
             onDismiss: { [weak self] in self?.dismiss() },
             isDraggable: isDraggable,
-            backgroundColor: backgroundColor,
-            showCloseButton: showCloseButton
+            backgroundColor: backgroundColor
         )
         
         // Cria o controlador de hospedagem para a view SwiftUI
@@ -96,7 +93,6 @@ struct FloatingWindowWrapper<Content: View>: View {
     let onDismiss: () -> Void
     let isDraggable: Bool
     let backgroundColor: Color
-    let showCloseButton: Bool
     
     @State private var offset: CGSize = .zero
     @State private var position: CGPoint?
@@ -113,21 +109,6 @@ struct FloatingWindowWrapper<Content: View>: View {
             // Conteúdo principal
             content
                 .allowsHitTesting(false) // Desativa interações do card durante arrasto
-            
-            // Botão de fechar
-            if showCloseButton {
-                Button(action: onDismiss) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 28))
-                        .foregroundColor(.white)
-                        .background(Color.black.opacity(0.6))
-                        .clipShape(Circle())
-                        .shadow(radius: 2)
-                }
-                .padding(8)
-                .offset(x: 10, y: -20)
-                .zIndex(10) // Mantém o botão na frente
-            }
         }
         .offset(x: offset.width, y: offset.height)
         .gesture(isDraggable ? dragGesture : nil)
@@ -170,7 +151,6 @@ public struct WindowFloatingViewModifier<FloatingContent: View>: ViewModifier {
     let position: CGPoint?
     let size: CGSize?
     let backgroundColor: Color
-    let showCloseButton: Bool
     
     public func body(content: Content) -> some View {
         content
@@ -182,8 +162,7 @@ public struct WindowFloatingViewModifier<FloatingContent: View>: ViewModifier {
                             position: position,
                             size: size,
                             isDraggable: isDraggable,
-                            backgroundColor: backgroundColor,
-                            showCloseButton: showCloseButton
+                            backgroundColor: backgroundColor
                         )
                     }
                 } else {
@@ -213,7 +192,6 @@ public extension View {
     ///   - position: Posição inicial opcional (centro da tela por padrão)
     ///   - size: Tamanho opcional da view (automático por padrão)
     ///   - backgroundColor: Cor de fundo para o card flutuante
-    ///   - showCloseButton: Se deve mostrar o botão de fechar
     ///   - content: View SwiftUI a ser exibida como flutuante
     func windowFloatingView<FloatingContent: View>(
         isPresented: Binding<Bool>,
@@ -221,7 +199,6 @@ public extension View {
         position: CGPoint? = nil,
         size: CGSize? = nil,
         backgroundColor: Color,
-        showCloseButton: Bool = true,
         @ViewBuilder content: @escaping () -> FloatingContent
     ) -> some View {
         modifier(
@@ -231,8 +208,7 @@ public extension View {
                 isDraggable: isDraggable,
                 position: position,
                 size: size,
-                backgroundColor: backgroundColor,
-                showCloseButton: showCloseButton
+                backgroundColor: backgroundColor
             )
         )
     }
