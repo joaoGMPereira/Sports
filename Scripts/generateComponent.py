@@ -369,30 +369,30 @@ import Zenith
 import ZenithCoreInterface
 
 struct {component_name}Sample: View, @preconcurrency BaseThemeDependencies {{
-    @Dependency(\.themeConfigurator) var themeConfigurator
-    @State var isExpanded = false
+    @Dependency(\\.themeConfigurator) var themeConfigurator
     
     var body: some View {{
-        SectionView(title: "{component_name.upper()}", isExpanded: $isExpanded) {{
+        VStack(spacing: 16) {{
             ForEach({component_name}StyleCase.allCases, id: \\.self) {{ style in
                 {component_name}("Sample {component_name}")
                     .{component_name.lower()}Style(style.style())
             }}
         }}
+        .padding(.vertical, 8)
     }}
 }}
 """
 
-def update_sample_view(zenith_sample_path, component_name, is_native=False, folder_type="Components"):
-    """Atualiza o arquivo ZenithSampleView.swift para incluir o novo sample"""
-    view_file_path = os.path.join(zenith_sample_path, "ZenithSampleView.swift")
+def update_elements_list(zenith_sample_path, component_name, is_native=False, folder_type="Components"):
+    """Atualiza o arquivo ZenithSampleElementsList.swift para incluir o novo sample"""
+    list_file_path = os.path.join(zenith_sample_path, "ZenithSampleElementsList.swift")
     
-    if not os.path.exists(view_file_path):
-        print_warning(f"Arquivo ZenithSampleView.swift não encontrado em {zenith_sample_path}")
+    if not os.path.exists(list_file_path):
+        print_warning(f"Arquivo ZenithSampleElementsList.swift não encontrado em {zenith_sample_path}")
         return False
     
     try:
-        with open(view_file_path, 'r') as file:
+        with open(list_file_path, 'r') as file:
             content = file.read()
         
         # Determinar a categoria e o tipo de aba com base nos parâmetros
@@ -402,7 +402,7 @@ def update_sample_view(zenith_sample_path, component_name, is_native=False, fold
         # Localizar o array elementTypes no conteúdo
         element_types_start = content.find("private var elementTypes: [ElementType] = [")
         if element_types_start == -1:
-            print_warning("Não foi possível localizar a lista de elementTypes no arquivo ZenithSampleView.swift")
+            print_warning("Não foi possível localizar a lista de elementTypes no arquivo ZenithSampleElementsList.swift")
             return False
         
         # Encontrar onde inserir o novo elemento
@@ -414,7 +414,7 @@ def update_sample_view(zenith_sample_path, component_name, is_native=False, fold
         elif tab_type == ".baseElements" and category == ".custom":
             insert_marker = "// Base Elements - Customs"
         elif tab_type == ".components" and category == ".custom":
-            insert_marker = "// Base Elements - Customs"  # Componentes customizados
+            insert_marker = "// Components"  # Componentes customizados
         elif tab_type == ".templates":
             insert_marker = "// Templates"
         
@@ -435,20 +435,19 @@ def update_sample_view(zenith_sample_path, component_name, is_native=False, fold
                     last_element_end = content.rfind(")", section_start, section_end)
                     
                     if last_element_end != -1:
-                        # Criar o novo ElementType
+                        # Criar o novo ElementType usando o novo formato com BaseSampleView
                         new_element = f""",
         ElementType(
-            name: "{component_name}",
             category: {category},
             tabType: {tab_type},
-            view: {component_name}Sample()
+            elementView: .element(title: "{component_name.upper()}", {component_name}Sample())
         )"""
                         
                         # Inserir o novo ElementType após o último da seção
                         updated_content = content[:last_element_end+1] + new_element + content[last_element_end+1:]
                         
                         # Escrever o conteúdo atualizado
-                        with open(view_file_path, 'w') as file:
+                        with open(list_file_path, 'w') as file:
                             file.write(updated_content)
                         
                         return True
@@ -464,29 +463,28 @@ def update_sample_view(zenith_sample_path, component_name, is_native=False, fold
                 last_element_end = content.rfind(")", element_types_start, array_end)
                 
                 if last_element_end != -1:
-                    # Criar o novo ElementType
+                    # Criar o novo ElementType usando o novo formato com BaseSampleView
                     new_element = f""",
         ElementType(
-            name: "{component_name}",
             category: {category},
             tabType: {tab_type},
-            view: {component_name}Sample()
+            elementView: .element(title: "{component_name.upper()}", {component_name}Sample())
         )"""
                     
                     # Inserir antes do fechamento do array
                     updated_content = content[:last_element_end+1] + new_element + content[last_element_end+1:]
                     
                     # Escrever o conteúdo atualizado
-                    with open(view_file_path, 'w') as file:
+                    with open(list_file_path, 'w') as file:
                         file.write(updated_content)
                     
                     return True
         
-        print_warning("Não foi possível atualizar o arquivo ZenithSampleView.swift")
+        print_warning("Não foi possível atualizar o arquivo ZenithSampleElementsList.swift")
         return False
     
     except Exception as e:
-        print_error(f"Erro ao atualizar ZenithSampleView.swift: {str(e)}")
+        print_error(f"Erro ao atualizar ZenithSampleElementsList.swift: {str(e)}")
         return False
 
 def find_zenith_path():
@@ -805,7 +803,7 @@ def generate_component():
         print_success(f"✓ {component_name}Sample.swift criado em {folder_type}/{'Natives' if is_native else 'Customs'}/{component_name}")
         
         # Atualizar o ZenithSampleView.swift para incluir o novo componente
-        if update_sample_view(zenith_sample_path, component_name, is_native, folder_type):
+        if update_elements_list(zenith_sample_path, component_name, is_native, folder_type):
             print_success(f"✓ ZenithSampleView.swift atualizado com {component_name}Sample")
         else:
             print_warning("ZenithSampleView.swift não foi atualizado")
@@ -833,27 +831,31 @@ def generate_component():
     return True
 
 def main_menu():
-    """Menu principal do programa"""
-    while True:
-        print_header()
-        print("1. Gerar novo componente")
-        print("2. Sair")
-        print()
-        choice = input("Escolha uma opção: ")
+    """Exibe o menu principal do programa"""
+    print_header()
+    
+    print_info("O que você deseja fazer?")
+    print("1. Gerar um novo componente")
+    print("2. Sair")
+    
+    choice = input("> ")
+    
+    if choice == "1":
+        generate_component()
         
-        if choice == "1":
-            generate_component()
-            print("\nPressione Enter para continuar...")
-            input()
-        elif choice == "2":
-            print_info("Saindo...")
-            time.sleep(0.5)
-            clear_screen()
-            break
-        else:
-            print_error("Opção inválida!")
-            time.sleep(1)
+        print("\n")
+        print_info("Pressione Enter para voltar ao menu principal...")
+        input()
+        main_menu()
+    elif choice == "2":
+        clear_screen()
+        print_info("Programa encerrado. Até mais!")
+    else:
+        print_error("Opção inválida!")
+        time.sleep(1.5)
+        main_menu()
 
+# Adicionar essa função ao final do script
 if __name__ == "__main__":
     try:
         main_menu()

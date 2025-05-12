@@ -51,13 +51,11 @@ enum ElementView {
 
 struct ElementType: Identifiable {
     var id = UUID()
-    var name: String
     var category: ElementCategory
     var tabType: TabType
     var elementView: ElementView
     
-    init(name: String, category: ElementCategory, tabType: TabType, elementView: ElementView) {
-        self.name = name
+    init(category: ElementCategory, tabType: TabType, elementView: ElementView) {
         self.category = category
         self.tabType = tabType
         self.elementView = elementView

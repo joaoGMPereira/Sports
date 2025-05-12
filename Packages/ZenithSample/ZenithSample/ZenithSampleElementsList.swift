@@ -20,105 +20,94 @@ struct ZenithSampleElementsList: View, @preconcurrency BaseThemeDependencies {
     private var elementTypes: [ElementType] = [
         // Base Elements - Natives
         ElementType(
-            name: "Button",
             category: .native,
             tabType: .baseElements,
             elementView: .element(title: "BUTTON", ButtonSample())
         ),
         ElementType(
-            name: "Text",
             category: .native,
             tabType: .baseElements,
             elementView: .element(title: "TEXT", TextSample())
         ),
         ElementType(
-            name: "Divider",
             category: .native,
             tabType: .baseElements,
             elementView: .element(title: "DIVIDER", DividerSample())
         ),
         ElementType(
-            name: "Toggle",
             category: .native,
             tabType: .baseElements,
             elementView: .element(title: "TOGGLE", ToggleSample())
         ),
         ElementType(
-            name: "TextField",
             category: .native,
             tabType: .baseElements,
             elementView: .element(title: "TEXTFIELD", TextFieldSample())
         ),
         // Base Elements - Customs
         ElementType(
-            name: "Dynamic Image",
             category: .custom,
             tabType: .baseElements,
             elementView: .element(title: "DYNAMIC IMAGE", DynamicImageSample())
         ),
         ElementType(
-            name: "Tag",
             category: .custom,
             tabType: .baseElements,
             elementView: .element(title: "TAG", TagSample())
         ),
         ElementType(
-            name: "RadioButton",
             category: .custom,
             tabType: .baseElements,
             elementView: .element(title: "RADIOBUTTON", RadioButtonSample())
         ),
         ElementType(
-            name: "CheckBox",
             category: .custom,
             tabType: .baseElements,
             elementView: .element(title: "CHECKBOX", CheckBoxSample())
         ),
         ElementType(
-            name: "IndicatorSelector",
+            category: .custom,
+            tabType: .baseElements,
+            elementView: .element(title: "BLUR", type: .pushed, BlurSample())
+        ),
+        // Components - Customs
+        ElementType(
             category: .custom,
             tabType: .components,
             elementView: .element(title: "SELECTOR", IndicatorSelectorSample())
         ),
         ElementType(
-            name: "Card",
             category: .custom,
             tabType: .components,
             elementView: .element(title: "CARD", CardSample())
         ),
         ElementType(
-            name: "DetailedListItem",
             category: .custom,
             tabType: .components,
             elementView: .element(title: "DETAILEDLISTITEM", type: .pushed, DetailedListItemSample())
         ),
         ElementType(
-            name: "HeaderTitle",
             category: .custom,
             tabType: .components,
             elementView: .element(title: "HEADERTITLE", HeaderTitleSample())
         ),
         ElementType(
-            name: "Blur",
-            category: .custom,
-            tabType: .baseElements,
-            elementView: .element(title: "BLUR", type: .pushed, BlurSample())
-        ),
-        ElementType(
-            name: "CircularProgress",
             category: .custom,
             tabType: .components,
             elementView: .element(title: "CIRCULARPROGRESS", CircularProgressSample())
         ),
         ElementType(
-            name: "ListItem",
             category: .custom,
             tabType: .components,
             elementView: .element(title: "LISTITEM", ListItemSample())
         ),
+        ElementType(
+            category: .custom,
+            tabType: .components,
+            elementView: .element(title: "FLOATING CARD", type: .pushed, FloatingCardExample())
+        ),
         // Templates
         ElementType(
-            name: "StepsTemplate",
             category: .template,
             tabType: .templates,
             elementView: .element(title: "STEPS TEMPLATE", StepsTemplateSample())

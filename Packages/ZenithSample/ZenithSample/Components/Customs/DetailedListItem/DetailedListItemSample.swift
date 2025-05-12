@@ -9,6 +9,12 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
     @State private var showText: Bool = true
     @State private var animated: Bool = true
     @State private var size: Double = 30
+    @State private var isFloating: Bool = false // Estado para controlar a visualização flutuante
+    
+    // Configurações da visualização flutuante
+    @State private var isDraggable: Bool = true
+    @State private var showCloseButton: Bool = true
+    @State private var useWindowFloating: Bool = true // Controla se a flutuação ocorre na window ou na view
     
     // Valores para configuração avançada do blur
     @State private var blur1Width: Double = 42
@@ -49,246 +55,387 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
     @State private var customText: String = "Feito hoje"
     @State private var descriptionText: String = "Frequência: 5 vezes na semana"
     @State private var showDescription: Bool = true
+    @State private var showFloatingOption: Bool = true // Opção para mostrar a configuração flutuante
     
     var body: some View {
-        VStack(alignment: .leading) {
-            // Color selector for the style
-            ColorSelector(selectedColor: $selectedColor)
-                .padding(.bottom, spacings.small)
-            
-            // Display mode selector using GridSelector
-            GridSelector(
-                title: "Display Mode",
-                selection: $selectedMode,
-                columnsCount: 2,
-                height: 140
-            )
-            .padding(.bottom, spacings.small)
-            
-            // Description settings
-            VStack(alignment: .leading, spacing: spacings.small) {
-                Text("Description")
-                    .font(fonts.smallBold)
-                    .foregroundColor(colors.contentA)
-                
-                Toggle("Show Description", isOn: $showDescription)
-                    .toggleStyle(.default(.highlightA))
-                    .foregroundColor(colors.contentA)
-                
-                if showDescription {
-                    TextField("Description text", text: $descriptionText)
-                        .textFieldStyle(.roundedBorder)
-                }
-            }
-            .padding(.bottom, spacings.medium)
-            
-            // Settings based on the selected mode
-            if selectedMode == .text {
-                Text("Progress Text")
-                    .font(fonts.smallBold)
-                    .foregroundColor(colors.contentA)
-                    .padding(.bottom, 4)
-                
-                TextField("Progress text", text: $customText)
-                    .textFieldStyle(.roundedBorder)
-                    .padding(.bottom, spacings.small)
-            }
-            
-            if selectedMode == .simpleProgress ||
-                selectedMode == .detailedProgress ||
-                selectedMode == .customProgress {
-                
-                VStack(spacing: spacings.small) {
-                    HStack {
-                        Text("Progress: \(Int(progressValue * 100))%")
-                            .font(fonts.small)
+        ZStack {
+            // Conteúdo principal com ScrollView
+            ScrollView {
+                VStack(alignment: .leading, spacing: spacings.medium) {
+                    // Título da amostra
+                    Text("DetailedListItem")
+                        .font(fonts.largeBold)
+                        .foregroundColor(colors.contentA)
+                        .padding(.top, spacings.small)
+                        .padding(.horizontal, spacings.small)
+                    
+                    // Componente DetailedListItem no topo da tela
+                    VStack(alignment: .leading) {
+                        Text("Preview - Toque para flutuar")
+                            .font(fonts.mediumBold)
                             .foregroundColor(colors.contentA)
-                        Spacer()
+                            .padding(.horizontal, spacings.small)
+                        
+                        // Preview visível sempre, mesmo quando isFloating for true
+                        if !showFloatingOption {
+                            // Se não estiver usando opção de floating, mostra o componente normal
+                            currentDetailedListItem
+                                .padding(.horizontal, spacings.small)
+                        } else {
+                            // Quando a opção de floating está ativa, mostramos o componente real
+                            // em vez de um placeholder para garantir visualização correta
+                            currentDetailedListItem
+                                .padding(.horizontal, spacings.small)
+                                .onTapGesture {
+                                    withAnimation {
+                                        isFloating = true
+                                    }
+                                }
+                        }
                     }
+                    .padding(.vertical, spacings.small)
+                    .background(colors.backgroundB)
+                    .animation(.easeInOut(duration: 0.2), value: isFloating)
                     
-                    Slider(value: $progressValue, in: 0...1, step: 0.01)
-                        .accentColor(colors.highlightA)
-                    
-                    if selectedMode == .detailedProgress || selectedMode == .customProgress {
-                        HStack {
-                            Text("Size: \(Int(size))px")
-                                .font(fonts.small)
+                    // Opções de configuração de floating
+                    VStack(alignment: .leading, spacing: spacings.small) {
+                        Text("Configurações Flutuantes")
+                            .font(fonts.mediumBold)
+                            .foregroundColor(colors.contentA)
+                            .padding(.bottom, 4)
+                        
+                        Toggle("Permitir flutuação ao pressionar", isOn: $showFloatingOption)
+                            .toggleStyle(.default(.highlightA))
+                            .foregroundColor(colors.contentA)
+                        
+                        if showFloatingOption {
+                            Picker("Tipo de Flutuação", selection: $useWindowFloating) {
+                                Text("Na View").tag(false)
+                                Text("Na Window").tag(true)
+                            }
+                            .pickerStyle(.segmented)
+                            .padding(.vertical, spacings.small)
+                            
+                            Toggle("Permitir arrastar componente", isOn: $isDraggable)
+                                .toggleStyle(.default(.highlightA))
                                 .foregroundColor(colors.contentA)
-                            Spacer()
+                            
+                            Toggle("Mostrar botão de fechar", isOn: $showCloseButton)
+                                .toggleStyle(.default(.highlightA))
+                                .foregroundColor(colors.contentA)
+                            
+                            Button("Abrir Floating View") {
+                                withAnimation {
+                                    isFloating = true
+                                }
+                            }
+                            .buttonStyle(.highlightA())
+                            .padding(.top, spacings.small)
+                        }
+                    }
+                    .padding(.horizontal, spacings.small)
+                    
+                    // Configurações
+                    VStack(alignment: .leading) {
+                        Text("Configurações do Componente")
+                            .font(fonts.mediumBold)
+                            .foregroundColor(colors.contentA)
+                            .padding(.bottom, spacings.small)
+                        
+                        // Color selector for the style
+                        ColorSelector(selectedColor: $selectedColor)
+                            .padding(.bottom, spacings.small)
+                        
+                        // Display mode selector using GridSelector
+                        GridSelector(
+                            title: "Display Mode",
+                            selection: $selectedMode,
+                            columnsCount: 2,
+                            height: 140
+                        )
+                        .padding(.bottom, spacings.small)
+                        
+                        // Description settings
+                        VStack(alignment: .leading, spacing: spacings.small) {
+                            Text("Description")
+                                .font(fonts.smallBold)
+                                .foregroundColor(colors.contentA)
+                            
+                            Toggle("Show Description", isOn: $showDescription)
+                                .toggleStyle(.default(.highlightA))
+                                .foregroundColor(colors.contentA)
+                            
+                            if showDescription {
+                                TextField("Description text", text: $descriptionText)
+                                    .textFieldStyle(.roundedBorder)
+                            }
+                        }
+                        .padding(.bottom, spacings.medium)
+                        
+                        // Settings based on the selected mode
+                        if selectedMode == .text {
+                            Text("Progress Text")
+                                .font(fonts.smallBold)
+                                .foregroundColor(colors.contentA)
+                                .padding(.bottom, 4)
+                            
+                            TextField("Progress text", text: $customText)
+                                .textFieldStyle(.roundedBorder)
+                                .padding(.bottom, spacings.small)
                         }
                         
-                        Slider(value: $size, in: 20...60, step: 1)
-                            .accentColor(colors.highlightA)
+                        if selectedMode == .simpleProgress ||
+                            selectedMode == .detailedProgress ||
+                            selectedMode == .customProgress {
+                            
+                            VStack(spacing: spacings.small) {
+                                HStack {
+                                    Text("Progress: \(Int(progressValue * 100))%")
+                                        .font(fonts.small)
+                                        .foregroundColor(colors.contentA)
+                                    Spacer()
+                                }
+                                
+                                Slider(value: $progressValue, in: 0...1, step: 0.01)
+                                    .accentColor(colors.highlightA)
+                                
+                                if selectedMode == .detailedProgress || selectedMode == .customProgress {
+                                    HStack {
+                                        Text("Size: \(Int(size))px")
+                                            .font(fonts.small)
+                                            .foregroundColor(colors.contentA)
+                                        Spacer()
+                                    }
+                                    
+                                    Slider(value: $size, in: 20...60, step: 1)
+                                        .accentColor(colors.highlightA)
+                                    
+                                    Toggle("Show text", isOn: $showText)
+                                        .toggleStyle(.default(.highlightA))
+                                        .foregroundColor(colors.contentA)
+                                    
+                                    Toggle("Animated", isOn: $animated)
+                                        .toggleStyle(.default(.highlightA))
+                                        .foregroundColor(colors.contentA)
+                                }
+                            }
+                            .padding(.bottom, spacings.small)
+                        }
                         
-                        Toggle("Show text", isOn: $showText)
-                            .toggleStyle(.default(.highlightA))
-                            .foregroundColor(colors.contentA)
-                        
-                        Toggle("Animated", isOn: $animated)
-                            .toggleStyle(.default(.highlightA))
-                            .foregroundColor(colors.contentA)
+                        // Editor avançado de blur
+                        BlurConfigEditor(
+                            blur1Width: $blur1Width,
+                            blur1Height: $blur1Height,
+                            blur1Radius: $blur1Radius,
+                            blur1OffsetX: $blur1OffsetX,
+                            blur1OffsetY: $blur1OffsetY,
+                            blur1Opacity: $blur1Opacity,
+                            
+                            blur2Width: $blur2Width,
+                            blur2Height: $blur2Height,
+                            blur2Radius: $blur2Radius,
+                            blur2OffsetX: $blur2OffsetX,
+                            blur2OffsetY: $blur2OffsetY,
+                            blur2Opacity: $blur2Opacity,
+                            
+                            blur3Width: $blur3Width,
+                            blur3Height: $blur3Height,
+                            blur3Radius: $blur3Radius,
+                            blur3OffsetX: $blur3OffsetX,
+                            blur3OffsetY: $blur3OffsetY,
+                            blur3Opacity: $blur3Opacity
+                        )
+                        .padding(.bottom, spacings.small)
                     }
+                    .padding(.horizontal, spacings.small)
+                    
+                    // Using the reusable component for code preview
+                    CodePreviewSection(generateCode: generateCode)
+                        .padding(.top, spacings.medium)
                 }
-                .padding(.bottom, spacings.small)
             }
             
-            // Editor avançado de blur
-            BlurConfigEditor(
-                blur1Width: $blur1Width,
-                blur1Height: $blur1Height,
-                blur1Radius: $blur1Radius,
-                blur1OffsetX: $blur1OffsetX,
-                blur1OffsetY: $blur1OffsetY,
-                blur1Opacity: $blur1Opacity,
-                
-                blur2Width: $blur2Width,
-                blur2Height: $blur2Height,
-                blur2Radius: $blur2Radius,
-                blur2OffsetX: $blur2OffsetX,
-                blur2OffsetY: $blur2OffsetY,
-                blur2Opacity: $blur2Opacity,
-                
-                blur3Width: $blur3Width,
-                blur3Height: $blur3Height,
-                blur3Radius: $blur3Radius,
-                blur3OffsetX: $blur3OffsetX,
-                blur3OffsetY: $blur3OffsetY,
-                blur3Opacity: $blur3Opacity
-            )
-            .padding(.bottom, spacings.small)
-            
-            Text("Preview")
-                .font(fonts.mediumBold)
-                .foregroundColor(colors.contentA)
-                .padding(.vertical, spacings.small)
-            
-            // Customizable card based on the selected mode and style
-            Group {
-                switch selectedMode {
-                case .text:
-                    DetailedListItem(
-                        title: "Treino de Adaptação",
-                        description: showDescription ? descriptionText : "",
-                        leftInfo: .init(
-                            title: "Dias",
-                            description: "3x"
-                        ),
-                        rightInfo: .init(
-                            title: "Exercícios",
-                            description: "5x"
-                        ),
-                        action: {
+            // Aplicamos o FloatingView fora do ScrollView, diretamente na ZStack principal
+            // apenas quando não estamos usando o modo de window floating
+            if showFloatingOption && isFloating && !useWindowFloating {
+                currentDetailedListItem
+                    .makeFloating(
+                        isFloating: $isFloating,
+                        backgroundOpacity: 0.7,
+                        backgroundBlur: 10, 
+                        scale: 1.0,
+                        showCloseButton: showCloseButton,
+                        isDraggable: isDraggable
+                    )
+            }
+        }
+        // Anexamos o FloatingView à Window do aplicativo quando useWindowFloating é true
+        .makeWindowFloating(
+            isFloating: showFloatingOption && useWindowFloating ? $isFloating : .constant(false),
+            backgroundOpacity: 0.7,
+            backgroundBlur: 10,
+            showCloseButton: showCloseButton,
+            isDraggable: isDraggable,
+            backgroundColor: colors.backgroundB
+        ) {
+            currentDetailedListItem
+                .frame(width: UIScreen.main.bounds.width * 0.95) // Define largura fixa para o card
+        }
+    }
+    
+    // View que retorna o DetailedListItem atual com base nas configurações
+    private var currentDetailedListItem: some View {
+        Group {
+            switch selectedMode {
+            case .text:
+                DetailedListItem(
+                    title: "Treino de Adaptação",
+                    description: showDescription ? descriptionText : "",
+                    leftInfo: .init(
+                        title: "Dias",
+                        description: "3x"
+                    ),
+                    rightInfo: .init(
+                        title: "Exercícios",
+                        description: "5x"
+                    ),
+                    action: {
+                        if showFloatingOption {
+                            withAnimation {
+                                isFloating = true
+                            }
+                        } else {
                             print("Action with progress text")
-                        },
-                        progressText: customText,
-                        blurConfig: createCurrentBlurConfig()
-                    )
-                    .detailedListItemStyle(.default(selectedColor))
-                    
-                case .simpleProgress:
-                    DetailedListItem(
-                        title: "Treino de Força",
-                        description: showDescription ? descriptionText : "",
-                        leftInfo: .init(
-                            title: "Dias",
-                            description: "4x"
-                        ),
-                        rightInfo: .init(
-                            title: "Exercícios",
-                            description: "8x"
-                        ),
-                        action: {
+                        }
+                    },
+                    progressText: customText,
+                    blurConfig: createCurrentBlurConfig()
+                )
+                .detailedListItemStyle(.default(selectedColor))
+                
+            case .simpleProgress:
+                DetailedListItem(
+                    title: "Treino de Força",
+                    description: showDescription ? descriptionText : "",
+                    leftInfo: .init(
+                        title: "Dias",
+                        description: "4x"
+                    ),
+                    rightInfo: .init(
+                        title: "Exercícios",
+                        description: "8x"
+                    ),
+                    action: {
+                        if showFloatingOption {
+                            withAnimation {
+                                isFloating = true
+                            }
+                        } else {
                             print("Action with progress value")
-                        },
-                        progress: progressValue,
-                        blurConfig: createCurrentBlurConfig()
-                    )
-                    .detailedListItemStyle(.default(selectedColor))
-                    
-                case .detailedProgress:
-                    DetailedListItem(
-                        title: "Treino Avançado",
-                        description: showDescription ? descriptionText : "",
-                        leftInfo: .init(
-                            title: "Dias",
-                            description: "6x"
-                        ),
-                        rightInfo: .init(
-                            title: "Exercícios",
-                            description: "12x"
-                        ),
-                        action: {
+                        }
+                    },
+                    progress: progressValue,
+                    blurConfig: createCurrentBlurConfig()
+                )
+                .detailedListItemStyle(.default(selectedColor))
+                
+            case .detailedProgress:
+                DetailedListItem(
+                    title: "Treino Avançado",
+                    description: showDescription ? descriptionText : "",
+                    leftInfo: .init(
+                        title: "Dias",
+                        description: "6x"
+                    ),
+                    rightInfo: .init(
+                        title: "Exercícios",
+                        description: "12x"
+                    ),
+                    action: {
+                        if showFloatingOption {
+                            withAnimation {
+                                isFloating = true
+                            }
+                        } else {
                             print("Action with detailed parameters")
-                        },
+                        }
+                    },
+                    progress: progressValue,
+                    size: size,
+                    showText: showText,
+                    animated: animated,
+                    blurConfig: createCurrentBlurConfig()
+                )
+                .detailedListItemStyle(.default(selectedColor))
+                
+            case .customProgress:
+                DetailedListItem(
+                    title: "Treino Customizado",
+                    description: showDescription ? descriptionText : "",
+                    leftInfo: .init(
+                        title: "Dias",
+                        description: "5x"
+                    ),
+                    rightInfo: .init(
+                        title: "Exercícios",
+                        description: "10x"
+                    ),
+                    action: {
+                        if showFloatingOption {
+                            withAnimation {
+                                isFloating = true
+                            }
+                        } else {
+                            print("Action with custom configuration")
+                        }
+                    },
+                    progressConfig: CircularProgressStyleConfiguration(
+                        text: "\(Int(progressValue * 100))%",
                         progress: progressValue,
                         size: size,
                         showText: showText,
-                        animated: animated,
-                        blurConfig: createCurrentBlurConfig()
-                    )
-                    .detailedListItemStyle(.default(selectedColor))
-                    
-                case .customProgress:
-                    DetailedListItem(
-                        title: "Treino Customizado",
-                        description: showDescription ? descriptionText : "",
-                        leftInfo: .init(
-                            title: "Dias",
-                            description: "5x"
-                        ),
-                        rightInfo: .init(
-                            title: "Exercícios",
-                            description: "10x"
-                        ),
-                        action: {
-                            print("Action with custom configuration")
-                        },
-                        progressConfig: CircularProgressStyleConfiguration(
-                            text: "\(Int(progressValue * 100))%",
-                            progress: progressValue,
-                            size: size,
-                            showText: showText,
-                            isAnimating: false,
-                            animated: animated
-                        ),
-                        blurConfig: createCurrentBlurConfig()
-                    )
-                    .detailedListItemStyle(.default(selectedColor))
-                    
-                case .customContent:
-                    DetailedListItem(
-                        title: "Treino Cardiovascular",
-                        description: showDescription ? descriptionText : "",
-                        leftInfo: .init(
-                            title: "Dias",
-                            description: "2x"
-                        ),
-                        rightInfo: .init(
-                            title: "Exercícios",
-                            description: "6x"
-                        ),
-                        action: {
+                        isAnimating: false,
+                        animated: animated
+                    ),
+                    blurConfig: createCurrentBlurConfig()
+                )
+                .detailedListItemStyle(.default(selectedColor))
+                
+            case .customContent:
+                DetailedListItem(
+                    title: "Treino Cardiovascular",
+                    description: showDescription ? descriptionText : "",
+                    leftInfo: .init(
+                        title: "Dias",
+                        description: "2x"
+                    ),
+                    rightInfo: .init(
+                        title: "Exercícios",
+                        description: "6x"
+                    ),
+                    action: {
+                        if showFloatingOption {
+                            withAnimation {
+                                isFloating = true
+                            }
+                        } else {
                             print("Action with custom content")
-                        },
-                        blurConfig: createCurrentBlurConfig()
-                    ) {
-                        VStack(alignment: .trailing) {
-                            Text("Conteúdo")
-                                .textStyle(.medium(.attention))
-                            Text("Personalizado")
-                                .textStyle(.smallBold(.danger))
                         }
+                    },
+                    blurConfig: createCurrentBlurConfig()
+                ) {
+                    VStack(alignment: .trailing) {
+                        Text("Conteúdo")
+                            .textStyle(.medium(.attention))
+                        Text("Personalizado")
+                            .textStyle(.smallBold(.danger))
                     }
-                    .detailedListItemStyle(.default(selectedColor))
                 }
+                .detailedListItemStyle(.default(selectedColor))
             }
-            .padding(.bottom, spacings.medium)
         }
-        .padding(.horizontal, spacings.small)
-        
-        // Using the reusable component for code preview
-        CodePreviewSection(generateCode: generateCode)
-            .padding(.top, spacings.medium)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, spacings.small)
     }
     
     // Cria um BlurConfig com os valores atuais definidos nos sliders
@@ -323,6 +470,40 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
         let showTextString = showText ? "true" : "false"
         let animatedString = animated ? "true" : "false"
         let descriptionParam = showDescription ? "\"\(descriptionText)\"" : "\"\""
+        
+        // Código para flutuação, variando de acordo com o tipo selecionado
+        let floatingCode = showFloatingOption ?
+            useWindowFloating ?
+            """
+            
+            // Estado para controlar a flutuação
+            @State private var isFloating: Bool = false
+            
+            // Para fazer o componente flutuar na Window do aplicativo quando pressionado
+            .makeWindowFloating(
+                isFloating: $isFloating,
+                backgroundOpacity: 0.7,
+                backgroundBlur: 10,
+                scale: 1.1,
+                showCloseButton: \(showCloseButton ? "true" : "false"),
+                isDraggable: \(isDraggable ? "true" : "false")
+            )
+            """ : 
+            """
+            
+            // Estado para controlar a flutuação
+            @State private var isFloating: Bool = false
+            
+            // Para fazer o componente flutuar na View quando pressionado
+            .makeFloating(
+                isFloating: $isFloating,
+                backgroundOpacity: 0.7,
+                backgroundBlur: 10,
+                scale: 1.1,
+                showCloseButton: \(showCloseButton ? "true" : "false"),
+                isDraggable: \(isDraggable ? "true" : "false")
+            )
+            """ : ""
         
         switch selectedMode {
         case .text:
@@ -362,11 +543,14 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                     description: "5x"
                 ),
                 action: {
-                    // your action here
+                    withAnimation {
+                        isFloating = true
+                    }
                 },
-                progressText: "\(customText)"
+                progressText: "\(customText)",
+                blurConfig: customBlurConfig
             )
-            .detailedListItemStyle(.default(.\(selectedColor.rawValue)))
+            .detailedListItemStyle(.default(.\(selectedColor.rawValue)))\(floatingCode)
             """
             
         case .simpleProgress:
@@ -407,11 +591,14 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                     description: "8x"
                 ),
                 action: {
-                    // your action here
+                    withAnimation {
+                        isFloating = true
+                    }
                 },
-                progress: \(progressValueString) // \(Int(progressValue * 100))% progress
+                progress: \(progressValueString), // \(Int(progressValue * 100))% progress
+                blurConfig: customBlurConfig
             )
-            .detailedListItemStyle(.default(.\(selectedColor.rawValue)))
+            .detailedListItemStyle(.default(.\(selectedColor.rawValue)))\(floatingCode)
             """
             
         case .detailedProgress:
@@ -452,14 +639,17 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                     description: "12x"
                 ),
                 action: {
-                    // your action here
+                    withAnimation {
+                        isFloating = true
+                    }
                 },
                 progress: \(progressValueString),
                 size: \(sizeInt),
                 showText: \(showTextString),
-                animated: \(animatedString)
+                animated: \(animatedString),
+                blurConfig: customBlurConfig
             )
-            .detailedListItemStyle(.default(.\(selectedColor.rawValue)))
+            .detailedListItemStyle(.default(.\(selectedColor.rawValue)))\(floatingCode)
             """
             
         case .customProgress:
@@ -500,7 +690,9 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                     description: "10x"
                 ),
                 action: {
-                    // your action here
+                    withAnimation {
+                        isFloating = true
+                    }
                 },
                 progressConfig: CircularProgressStyleConfiguration(
                     text: "\(Int(progressValue * 100))%",
@@ -509,9 +701,10 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                     showText: \(showTextString),
                     isAnimating: false,
                     animated: \(animatedString)
-                )
+                ),
+                blurConfig: customBlurConfig
             )
-            .detailedListItemStyle(.default(.\(selectedColor.rawValue)))
+            .detailedListItemStyle(.default(.\(selectedColor.rawValue)))\(floatingCode)
             """
             
         case .customContent:
@@ -552,8 +745,11 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                     description: "6x"
                 ),
                 action: {
-                    // your action here
-                }
+                    withAnimation {
+                        isFloating = true
+                    }
+                },
+                blurConfig: customBlurConfig
             ) {
                 VStack(alignment: .trailing) {
                     Text("Conteúdo Personalizado")
@@ -562,7 +758,7 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                         .textStyle(.smallBold(.danger))
                 }
             }
-            .detailedListItemStyle(.default(.\(selectedColor.rawValue)))
+            .detailedListItemStyle(.default(.\(selectedColor.rawValue)))\(floatingCode)
             """
         }
     }
