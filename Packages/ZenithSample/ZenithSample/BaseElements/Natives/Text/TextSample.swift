@@ -5,7 +5,6 @@ import ZenithCoreInterface
 struct TextSample: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) var themeConfigurator
     
-    @State var isExpanded = false
     @State private var sampleText = "Lorem ipsum dolor sit amet"
     @State private var selectedColor: ColorName = .contentA
     @State private var selectedFont: FontName = .medium
@@ -14,51 +13,46 @@ struct TextSample: View, @preconcurrency BaseThemeDependencies {
     @State private var useContrastBackground = true
     
     var body: some View {
-        SectionView(
-            title: "TEXT",
-            isExpanded: $isExpanded
-        ) {
-            VStack(spacing: 16) {
-                // Preview do texto com configurações atuais
-                previewText
-                
+        VStack(spacing: 16) {
+            // Preview do texto com configurações atuais
+            previewText
+            
+            Divider().padding(.vertical, 4)
+            
+            // Área de configuração
+            configurationSection
+            
+            // Preview do código gerado usando componente reutilizável
+            CodePreviewSection(generateCode: generateSwiftCode)
+            
+            // Exibição de todos os estilos (opcional)
+            if showAllStyles {
                 Divider().padding(.vertical, 4)
                 
-                // Área de configuração
-                configurationSection
-                
-                // Preview do código gerado usando componente reutilizável
-                CodePreviewSection(generateCode: generateSwiftCode)
-                
-                // Exibição de todos os estilos (opcional)
-                if showAllStyles {
-                    Divider().padding(.vertical, 4)
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Todos os Estilos de Texto")
+                        .font(fonts.mediumBold)
+                        .foregroundColor(colors.contentA)
                     
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Todos os Estilos de Texto")
-                            .font(fonts.mediumBold)
-                            .foregroundColor(colors.contentA)
-                        
-                        ScrollView {
-                            VStack(alignment: .leading, spacing: 8) {
-                                ForEach(TextStyleCase.allCases, id: \.self) { style in
-                                    Text("\(String(describing: style))")
-                                        .textStyle(style.style())
-                                        .padding(.vertical, 4)
-                                        .padding(.horizontal, 8)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 4)
-                                                .fill(colors.backgroundB.opacity(0.5))
-                                        )
-                                }
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 8) {
+                            ForEach(TextStyleCase.allCases, id: \.self) { style in
+                                Text("\(String(describing: style))")
+                                    .textStyle(style.style())
+                                    .padding(.vertical, 4)
+                                    .padding(.horizontal, 8)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 4)
+                                            .fill(colors.backgroundB.opacity(0.5))
+                                    )
                             }
                         }
-                        .frame(maxHeight: 200)
                     }
+                    .frame(maxHeight: 200)
                 }
             }
-            .padding(.horizontal)
         }
+        .padding(.horizontal)
     }
     
     // Preview do texto com as configurações selecionadas

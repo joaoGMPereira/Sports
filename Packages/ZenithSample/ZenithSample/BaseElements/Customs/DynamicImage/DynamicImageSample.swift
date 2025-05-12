@@ -6,7 +6,6 @@ import SFSafeSymbols
 struct DynamicImageSample: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) var themeConfigurator
     
-    @State var isExpanded = false
     @State private var selectedStyle = DynamicImageStyleCase.smallContentA
     @State private var imageSource = ImageSource.systemImage
     @State private var systemImageName = "checkmark"
@@ -28,26 +27,24 @@ struct DynamicImageSample: View, @preconcurrency BaseThemeDependencies {
     }
     
     var body: some View {
-        SectionView(title: "IMAGES", isExpanded: $isExpanded) {
-            VStack(spacing: 16) {
-                // Preview da imagem com estilo selecionado
-                VStack {
-                    previewImage
-                        .frame(width: imageWidth, height: imageHeight)
-                        .scaledToFit()
-                        .frame(maxWidth: .infinity, alignment: .center)
-                }
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding()
-                .background(colors.backgroundC)
-                .cornerRadius(16)
-                
-                Divider().padding(.top)
-                
-                configurationSection
+        VStack(spacing: 16) {
+            // Preview da imagem com estilo selecionado
+            VStack {
+                previewImage
+                    .frame(width: imageWidth, height: imageHeight)
+                    .scaledToFit()
+                    .frame(maxWidth: .infinity, alignment: .center)
             }
-            .padding(.horizontal)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding()
+            .background(colors.backgroundC)
+            .cornerRadius(16)
+            
+            Divider().padding(.top)
+            
+            configurationSection
         }
+        .padding(.horizontal)
     }
     
     var previewImage: some View {

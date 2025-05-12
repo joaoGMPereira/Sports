@@ -6,7 +6,6 @@ import SFSafeSymbols
 struct CardSample: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) var themeConfigurator
 
-    @State private var isExpanded = false
     @State private var title = "Sample Card"
     @State private var selectedSymbol = "figure.run"
     @State private var symbolSearch = ""
@@ -23,27 +22,23 @@ struct CardSample: View, @preconcurrency BaseThemeDependencies {
     }
 
     var body: some View {
-        SectionView(
-            title: "Basic Card",
-            isExpanded: $isExpanded
-        ) {
-            VStack(spacing: 16) {
-                BasicCard(
-                    image: SFSymbol(rawValue: selectedSymbol),
-                    title: title,
-                    arrangement: selectedArrangement,
-                    contentLayout: selectedContentLayout
-                ) {
-                    // ação de toque
-                }
-                .cardStyle(selectedStyle.style())
-                .listRowSeparator(.hidden)
-
-                Divider().padding(.top)
-
-                configurationSection
+        VStack(spacing: 16) {
+            BasicCard(
+                image: SFSymbol(rawValue: selectedSymbol),
+                title: title,
+                arrangement: selectedArrangement,
+                contentLayout: selectedContentLayout
+            ) {
+                // ação de toque
             }
+            .cardStyle(selectedStyle.style())
+            .listRowSeparator(.hidden)
+
+            Divider().padding(.top)
+
+            configurationSection
         }
+        .padding(.horizontal)
     }
 
     var configurationSection: some View {

@@ -26,21 +26,15 @@ struct HeaderTitleSample: View, @preconcurrency BaseThemeDependencies {
     }
     
     var body: some View {
-        SectionView(
-            title: "HEADERTITLE",
-            isExpanded: $isExpanded,
-            backgroundColor: backgroundColor
-        ) {
-            VStack(spacing: 16) {
-                // Preview do HeaderTitle com os valores selecionados
-                HeaderTitle(headerText, image: SFSymbol(rawValue: selectedSymbol))
-                    .headerTitleStyle(selectedStyle.style())
-                    .listRowSeparator(.hidden)
-                
-                Divider().padding(.top)
-                
-                configurationSection
-            }
+        VStack(spacing: 16) {
+            // Preview do HeaderTitle com os valores selecionados
+            HeaderTitle(headerText, image: SFSymbol(rawValue: selectedSymbol))
+                .headerTitleStyle(selectedStyle.style())
+                .listRowSeparator(.hidden)
+            
+            Divider().padding(.top)
+            
+            configurationSection
         }
     }
     
@@ -79,11 +73,11 @@ struct HeaderTitleSample: View, @preconcurrency BaseThemeDependencies {
                                 .frame(width: 44, height: 44)
                                 .background(
                                     Circle()
-                                        .fill(symbol == selectedSymbol ? 
+                                        .fill(symbol == selectedSymbol ?
                                               colors.highlightA : colors.backgroundB)
                                 )
-                                .foregroundColor(symbol == selectedSymbol ? 
-                                                colors.contentC : colors.contentA)
+                                .foregroundColor(symbol == selectedSymbol ?
+                                                 colors.contentC : colors.contentA)
                             
                             Text(symbol)
                                 .font(fonts.small)

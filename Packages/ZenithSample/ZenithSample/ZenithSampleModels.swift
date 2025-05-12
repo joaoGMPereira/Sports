@@ -36,21 +36,16 @@ enum ElementCategory: String, CaseIterable, Identifiable {
     var id: String { self.rawValue }
 }
 
+enum ElementViewType {
+    case section
+    case pushed
+}
+
 enum ElementView {
-    case inline(AnyView)
-    case navigation(title: String, AnyView)
-    case section(AnyView)
+    case element(_ title: String, type: ElementViewType, AnyView)
     
-    static func inline<V: View>(_ view: V) -> ElementView {
-        ElementView.inline(AnyView(view))
-    }
-    
-    static func navigation<V: View>(_ title: String, _ view: V) -> ElementView {
-        ElementView.navigation(title: title, AnyView(view))
-    }
-    
-    static func section<V: View>(_ view: V) -> ElementView {
-        ElementView.section(AnyView(view))
+    static func element<V: View>(title: String, type: ElementViewType = .section, _ view: V) -> ElementView {
+        ElementView.element(title, type: type, AnyView(view))
     }
 }
 

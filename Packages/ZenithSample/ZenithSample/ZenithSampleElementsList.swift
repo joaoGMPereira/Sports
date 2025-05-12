@@ -23,111 +23,105 @@ struct ZenithSampleElementsList: View, @preconcurrency BaseThemeDependencies {
             name: "Button",
             category: .native,
             tabType: .baseElements,
-            elementView: .section(ButtonSample())
+            elementView: .element(title: "BUTTON", ButtonSample())
         ),
         ElementType(
             name: "Text",
             category: .native,
             tabType: .baseElements,
-            elementView: .section(TextSample())
+            elementView: .element(title: "TEXT", TextSample())
         ),
         ElementType(
             name: "Divider",
             category: .native,
             tabType: .baseElements,
-            elementView: .section(DividerSample())
+            elementView: .element(title: "DIVIDER", DividerSample())
         ),
         ElementType(
             name: "Toggle",
             category: .native,
             tabType: .baseElements,
-            elementView: .section(ToggleSample())
+            elementView: .element(title: "TOGGLE", ToggleSample())
         ),
         ElementType(
             name: "TextField",
             category: .native,
             tabType: .baseElements,
-            elementView: .section(TextFieldSample())
+            elementView: .element(title: "TEXTFIELD", TextFieldSample())
         ),
         // Base Elements - Customs
         ElementType(
             name: "Dynamic Image",
             category: .custom,
             tabType: .baseElements,
-            elementView: .section(DynamicImageSample())
+            elementView: .element(title: "DYNAMIC IMAGE", DynamicImageSample())
         ),
         ElementType(
             name: "Tag",
             category: .custom,
             tabType: .baseElements,
-            elementView: .section(TagSample())
+            elementView: .element(title: "TAG", TagSample())
         ),
         ElementType(
             name: "RadioButton",
             category: .custom,
             tabType: .baseElements,
-            elementView: .section(RadioButtonSample())
+            elementView: .element(title: "RADIOBUTTON", RadioButtonSample())
         ),
         ElementType(
             name: "CheckBox",
             category: .custom,
             tabType: .baseElements,
-            elementView: .section(CheckBoxSample())
+            elementView: .element(title: "CHECKBOX", CheckBoxSample())
         ),
         ElementType(
             name: "IndicatorSelector",
             category: .custom,
             tabType: .components,
-            elementView: .section(IndicatorSelectorSample())
+            elementView: .element(title: "SELECTOR", IndicatorSelectorSample())
         ),
         ElementType(
             name: "Card",
             category: .custom,
             tabType: .components,
-            elementView: .section(CardSample())
+            elementView: .element(title: "CARD", CardSample())
         ),
         ElementType(
             name: "DetailedListItem",
             category: .custom,
             tabType: .components,
-            elementView: .navigation(
-                "DetailedListItem",
-                DetailedListItemSample()
-            )
+            elementView: .element(title: "DETAILEDLISTITEM", type: .pushed, DetailedListItemSample())
         ),
         ElementType(
             name: "HeaderTitle",
             category: .custom,
             tabType: .components,
-            elementView: .section(HeaderTitleSample())
+            elementView: .element(title: "HEADERTITLE", HeaderTitleSample())
         ),
         ElementType(
             name: "Blur",
             category: .custom,
             tabType: .baseElements,
-            elementView: .navigation(
-                "Blur",
-                BlurSample()
-            )
+            elementView: .element(title: "BLUR", type: .pushed, BlurSample())
         ),
         ElementType(
             name: "CircularProgress",
             category: .custom,
             tabType: .components,
-            elementView: .section(CircularProgressSample())
+            elementView: .element(title: "CIRCULARPROGRESS", CircularProgressSample())
         ),
         ElementType(
             name: "ListItem",
             category: .custom,
             tabType: .components,
-            elementView: .section(ListItemSample())
+            elementView: .element(title: "LISTITEM", ListItemSample())
         ),
         // Templates
         ElementType(
             name: "StepsTemplate",
             category: .template,
             tabType: .templates,
-            elementView: .section(StepsTemplateSample())
+            elementView: .element(title: "STEPS TEMPLATE", StepsTemplateSample())
         )
     ]
 
@@ -159,36 +153,15 @@ struct ZenithSampleElementsList: View, @preconcurrency BaseThemeDependencies {
     @ViewBuilder
     private func renderElement(_ element: ElementType) -> some View {
         switch element.elementView {
-        case .inline(let view):
-            // Exibe o conteúdo diretamente na lista
-            view
-                .listRowBackground(colors.backgroundB)
-                
-        case .navigation(let title, let destinationView):
-            // Usa NavigationLink com destination para iOS 17
-            HStack {
-                Text(element.name.uppercased())
-                    .textStyle(.mediumBold(.highlightA))
-                    .padding(.top, 2)
-                Spacer()
-                Image(systemSymbol: .chevronRight)
-                    .foregroundColor(colors.contentA)
-                    .font(.system(size: 14))
+        case .element(let title, let type, let view):
+            // Usa a nova BaseSampleView
+            let sampleViewType: SampleViewType = type == .section ? .section : .pushed
+            BaseSampleView(
+                title: title,
+                viewType: sampleViewType
+            ) {
+                view
             }
-            .background {
-                NavigationLink {
-                    PushedListView(title) {
-                        destinationView
-                    }
-                } label: {
-                    EmptyView()
-                }
-            }
-            .listRowBackground(colors.backgroundB)
-            
-        case .section(let view):
-            section(view)
-                .listRowBackground(colors.backgroundB)
         }
     }
     

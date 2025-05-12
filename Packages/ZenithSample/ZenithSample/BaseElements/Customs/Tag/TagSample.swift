@@ -2,14 +2,13 @@ import SwiftUI
 import Zenith
 
 struct TagSample: View {
-    @State var isExpanded = false
-    
     var body: some View {
-        SectionView(title: "TAGS", isExpanded: $isExpanded) {
+        VStack(spacing: 16) {
             ForEach(TagStyleCase.allCases) { style in
                 Tag("checkmark")
                     .tagStyle(style.style())
             }
         }
+        .padding(.vertical, 8)
     }
 }
