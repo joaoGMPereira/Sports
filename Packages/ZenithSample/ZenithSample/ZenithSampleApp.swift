@@ -6,14 +6,27 @@
 //
 
 import SwiftUI
+import Zenith
 import ZenithCore
 
 @main
 struct ZenithSampleApp: App {
+    // Estado compartilhado para o componente flutuante
+    @StateObject private var floatingViewState = FloatingViewState()
+    
     var body: some Scene {
         WindowGroup {
-            ZenithSampleView()
-                .environment(\.colorScheme, .dark)
+            ZStack {
+                // Conteúdo principal do aplicativo
+                ZenithSampleView()
+                    .environment(\.colorScheme, .dark)
+                
+                // Container de visualização flutuante em nível de aplicativo
+                FloatingViewContainer(floatingViewState: floatingViewState)
+            }
+            // Disponibiliza o estado floatingViewState para toda a hierarquia de views
+            .environmentObject(floatingViewState)
+            .environment(\.floatingViewState, floatingViewState)
         }
     }
 }

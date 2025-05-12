@@ -4,12 +4,13 @@ import ZenithCoreInterface
 
 struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) var themeConfigurator
+    
+    // Estado local
     @State var isExpanded = false
     @State private var progressValue: Double = 0.75
     @State private var showText: Bool = true
     @State private var animated: Bool = true
     @State private var size: Double = 30
-    @State private var isFloating: Bool = false // Inicialmente não está flutuando
     
     // Valores para configuração avançada do blur
     @State private var blur1Width: Double = 42
@@ -50,11 +51,12 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
     @State private var customText: String = "Feito hoje"
     @State private var descriptionText: String = "Frequência: 5 vezes na semana"
     @State private var showDescription: Bool = true
-    @State private var showFloatingOption: Bool = true // Opção para mostrar a configuração flutuante
+    
+    // Referência ao estado do componente flutuante
+    @ObservedObject private var floatingState = FloatingComponentState.shared
     
     var body: some View {
         ZStack {
-            // Conteúdo principal com ScrollView
             ScrollView {
                 VStack(alignment: .leading, spacing: spacings.medium) {
                     // Título da amostra
@@ -71,17 +73,11 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                             .foregroundColor(colors.contentA)
                             .padding(.horizontal, spacings.small)
                         
-                        // Preview do componente com interação de clique
-                        currentDetailedListItem
-                            .makeWindowFloating(
-                                isFloating: $isFloating,
-                                backgroundColor: colors.backgroundB
-                            )
-                                
+                        // Mostra o componente real ou um placeholder
+                        displayedContent
                     }
                     .padding(.vertical, spacings.small)
                     .background(colors.backgroundB)
-                    .animation(.easeInOut(duration: 0.2), value: isFloating)
                     
                     // Configurações
                     VStack(alignment: .leading) {
@@ -93,6 +89,7 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                         // Color selector for the style
                         ColorSelector(selectedColor: $selectedColor)
                             .padding(.bottom, spacings.small)
+                            .onChange(of: selectedColor) { _ in updateFloatingView() }
                         
                         // Display mode selector using GridSelector
                         GridSelector(
@@ -102,6 +99,7 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                             height: 140
                         )
                         .padding(.bottom, spacings.small)
+                        .onChange(of: selectedMode) { _ in updateFloatingView() }
                         
                         // Description settings
                         VStack(alignment: .leading, spacing: spacings.small) {
@@ -112,10 +110,12 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                             Toggle("Show Description", isOn: $showDescription)
                                 .toggleStyle(.default(.highlightA))
                                 .foregroundColor(colors.contentA)
+                                .onChange(of: showDescription) { _ in updateFloatingView() }
                             
                             if showDescription {
                                 TextField("Description text", text: $descriptionText)
                                     .textFieldStyle(.roundedBorder)
+                                    .onChange(of: descriptionText) { _ in updateFloatingView() }
                             }
                         }
                         .padding(.bottom, spacings.medium)
@@ -130,6 +130,7 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                             TextField("Progress text", text: $customText)
                                 .textFieldStyle(.roundedBorder)
                                 .padding(.bottom, spacings.small)
+                                .onChange(of: customText) { _ in updateFloatingView() }
                         }
                         
                         if selectedMode == .simpleProgress ||
@@ -146,6 +147,7 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                                 
                                 Slider(value: $progressValue, in: 0...1, step: 0.01)
                                     .accentColor(colors.highlightA)
+                                    .onChange(of: progressValue) { _ in updateFloatingView() }
                                 
                                 if selectedMode == .detailedProgress || selectedMode == .customProgress {
                                     HStack {
@@ -157,14 +159,17 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                                     
                                     Slider(value: $size, in: 20...60, step: 1)
                                         .accentColor(colors.highlightA)
+                                        .onChange(of: size) { _ in updateFloatingView() }
                                     
                                     Toggle("Show text", isOn: $showText)
                                         .toggleStyle(.default(.highlightA))
                                         .foregroundColor(colors.contentA)
+                                        .onChange(of: showText) { _ in updateFloatingView() }
                                     
                                     Toggle("Animated", isOn: $animated)
                                         .toggleStyle(.default(.highlightA))
                                         .foregroundColor(colors.contentA)
+                                        .onChange(of: animated) { _ in updateFloatingView() }
                                 }
                             }
                             .padding(.bottom, spacings.small)
@@ -194,6 +199,24 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                             blur3Opacity: $blur3Opacity
                         )
                         .padding(.bottom, spacings.small)
+                        .onChange(of: blur1Width) { _ in updateFloatingView() }
+                        .onChange(of: blur1Height) { _ in updateFloatingView() }
+                        .onChange(of: blur1Radius) { _ in updateFloatingView() }
+                        .onChange(of: blur1OffsetX) { _ in updateFloatingView() }
+                        .onChange(of: blur1OffsetY) { _ in updateFloatingView() }
+                        .onChange(of: blur1Opacity) { _ in updateFloatingView() }
+                        .onChange(of: blur2Width) { _ in updateFloatingView() }
+                        .onChange(of: blur2Height) { _ in updateFloatingView() }
+                        .onChange(of: blur2Radius) { _ in updateFloatingView() }
+                        .onChange(of: blur2OffsetX) { _ in updateFloatingView() }
+                        .onChange(of: blur2OffsetY) { _ in updateFloatingView() }
+                        .onChange(of: blur2Opacity) { _ in updateFloatingView() }
+                        .onChange(of: blur3Width) { _ in updateFloatingView() }
+                        .onChange(of: blur3Height) { _ in updateFloatingView() }
+                        .onChange(of: blur3Radius) { _ in updateFloatingView() }
+                        .onChange(of: blur3OffsetX) { _ in updateFloatingView() }
+                        .onChange(of: blur3OffsetY) { _ in updateFloatingView() }
+                        .onChange(of: blur3Opacity) { _ in updateFloatingView() }
                     }
                     .padding(.horizontal, spacings.small)
                     
@@ -201,10 +224,21 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                     CodePreviewSection(generateCode: generateCode)
                         .padding(.top, spacings.medium)
                 }
-                .onTapGesture {
-                    isFloating = false
-                }
             }
+            
+            // Adiciona o componente flutuante como overlay
+            FloatingComponent()
+        }
+    }
+    
+    // Função para atualizar o componente flutuante quando as propriedades mudam
+    private func updateFloatingView() {
+        if floatingState.isVisible {
+            // Força uma atualização imediata
+            floatingState.show(
+                content: { currentDetailedListItem },
+                backgroundColor: colors.backgroundB
+            )
         }
     }
     
@@ -224,12 +258,7 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                         title: "Exercícios",
                         description: "5x"
                     ),
-                    action: {
-                        // Ativar floating ao clicar no botão de ação
-                        withAnimation {
-                            isFloating.toggle()
-                        }
-                    },
+                    action: cardAction,
                     progressText: customText,
                     blurConfig: createCurrentBlurConfig()
                 )
@@ -247,12 +276,7 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                         title: "Exercícios",
                         description: "8x"
                     ),
-                    action: {
-                        // Ativar floating ao clicar no botão de ação
-                        withAnimation {
-                            isFloating = true
-                        }
-                    },
+                    action: cardAction,
                     progress: progressValue,
                     blurConfig: createCurrentBlurConfig()
                 )
@@ -270,15 +294,7 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                         title: "Exercícios",
                         description: "12x"
                     ),
-                    action: {
-                        if showFloatingOption {
-                            withAnimation {
-                                isFloating = true
-                            }
-                        } else {
-                            print("Action with detailed parameters")
-                        }
-                    },
+                    action: cardAction,
                     progress: progressValue,
                     size: size,
                     showText: showText,
@@ -299,15 +315,7 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                         title: "Exercícios",
                         description: "10x"
                     ),
-                    action: {
-                        if showFloatingOption {
-                            withAnimation {
-                                isFloating = true
-                            }
-                        } else {
-                            print("Action with custom configuration")
-                        }
-                    },
+                    action: cardAction,
                     progressConfig: CircularProgressStyleConfiguration(
                         text: "\(Int(progressValue * 100))%",
                         progress: progressValue,
@@ -332,15 +340,7 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                         title: "Exercícios",
                         description: "6x"
                     ),
-                    action: {
-                        if showFloatingOption {
-                            withAnimation {
-                                isFloating = true
-                            }
-                        } else {
-                            print("Action with custom content")
-                        }
-                    },
+                    action: cardAction,
                     blurConfig: createCurrentBlurConfig()
                 ) {
                     VStack(alignment: .trailing) {
@@ -355,6 +355,57 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, spacings.small)
+    }
+    
+    // Propriedade que indica se o componente está em modo flutuante
+    private var isFloatingMode: Bool {
+        floatingState.isVisible
+    }
+    
+    // View que retorna o componente original ou um placeholder, dependendo do modo
+    private var displayedContent: some View {
+        Group {
+            if isFloatingMode {
+                // Placeholder quando em modo flutuante
+                VStack(spacing: spacings.medium) {
+                    Image(systemName: "arrow.up.forward.app.fill")
+                        .font(.system(size: 30))
+                        .foregroundColor(colors.highlightA)
+                    
+                    Text("Componente em modo flutuante")
+                        .font(fonts.mediumBold)
+                        .foregroundColor(colors.contentA)
+                    
+                    Text("Edite as configurações para ver as alterações em tempo real")
+                        .font(fonts.small)
+                        .foregroundColor(colors.contentA)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                }
+                .padding()
+                .background {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(colors.backgroundA.opacity(0.8))
+                }
+                .onTapGesture {
+                    // Ação opcional ao clicar no placeholder
+                }
+            } else {
+                // Botão para mostrar o componente flutuante
+                Button(action: cardAction) {
+                    currentDetailedListItem
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+        }
+    }
+    
+    // Ação do card para mostrar o componente flutuante
+    func cardAction() {
+        floatingState.show(
+            content: { currentDetailedListItem },
+            backgroundColor: colors.backgroundB
+        )
     }
     
     // Cria um BlurConfig com os valores atuais definidos nos sliders
