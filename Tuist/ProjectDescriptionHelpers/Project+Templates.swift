@@ -15,7 +15,7 @@ public extension Project {
         [
             "SWIFT_VERSION": "6.0",
             "MARKETING_VERSION": "1.0.0",
-            "CURRENT_PROJECT_VERSION": "001",
+            "CURRENT_PROJECT_VERSION": "007",
             "VALIDATE_WORKSPACE": "YES"
         ]
     }

@@ -30,6 +30,7 @@ let project = Project(
             deploymentTargets: Project.deploymentTarget,
             infoPlist: .file(path: "ZenithCoreSample/Info.plist"),
             sources: ["ZenithCoreSample/**"],
+            resources: ["ZenithCoreSample/Assets.xcassets"],
             scripts: [
                 .pre(script: "$SRCROOT/../../Scripts/SwiftGen.sh", name: "SwiftGen")
             ],

@@ -37,4 +37,127 @@ platform :ios do
       username: "gah.mp1@gmail.com"
     )
   end
+
+  # Lane para publicar KettleGym no TestFlight (com incremento automático pelo Fastlane)
+  lane :publish_kettlegym_testflight do
+    # Incrementar o build number
+    increment_build_number(
+      xcodeproj: "KettleGym/KettleGym.xcodeproj"
+    )
+    
+    # Construir e publicar para o TestFlight
+    build_app(
+      scheme: "KettleGym",
+      workspace: "KettleGym.xcworkspace",
+      export_method: "app-store",
+      output_directory: "./builds",
+      clean: true
+    )
+    
+    # Fazer upload para o TestFlight
+    upload_to_testflight(
+      app_identifier: "br.com.joao.gabriel.kettleGym",
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  # Lane para publicar KettleGym no TestFlight (sem incremento de versão)
+  lane :publish_kettlegym_testflight_no_increment do
+    # Construir e publicar para o TestFlight
+    build_app(
+      scheme: "KettleGym",
+      workspace: "KettleGym.xcworkspace",
+      export_method: "app-store",
+      output_directory: "./builds",
+      clean: true
+    )
+    
+    # Fazer upload para o TestFlight
+    upload_to_testflight(
+      app_identifier: "br.com.joao.gabriel.kettleGym",
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  # Lane para publicar ZenithSample no TestFlight (com incremento automático pelo Fastlane)
+  lane :publish_zenithsample_testflight do
+    # Incrementar o build number
+    increment_build_number(
+      xcodeproj: "Packages/ZenithSample/ZenithSample.xcodeproj"
+    )
+    
+    # Construir e publicar para o TestFlight
+    build_app(
+      scheme: "ZenithSample",
+      project: "Packages/ZenithSample/ZenithSample.xcodeproj",
+      export_method: "app-store",
+      output_directory: "./builds",
+      clean: true
+    )
+    
+    # Fazer upload para o TestFlight
+    upload_to_testflight(
+      app_identifier: "br.com.joao.gabriel.zenithSample",
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  # Lane para publicar ZenithSample no TestFlight (sem incremento de versão)
+  lane :publish_zenithsample_testflight_no_increment do
+    # Construir e publicar para o TestFlight
+    build_app(
+      scheme: "ZenithSample",
+      project: "Packages/ZenithSample/ZenithSample.xcodeproj",
+      export_method: "app-store",
+      output_directory: "./builds",
+      clean: true
+    )
+    
+    # Fazer upload para o TestFlight
+    upload_to_testflight(
+      app_identifier: "br.com.joao.gabriel.zenithSample",
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  # Lane para publicar ZenithCoreSample no TestFlight (com incremento automático pelo Fastlane)
+  lane :publish_zenithcoresample_testflight do
+    # Incrementar o build number
+    increment_build_number(
+      xcodeproj: "Packages/ZenithCoreSample/ZenithCoreSample.xcodeproj"
+    )
+    
+    # Construir e publicar para o TestFlight
+    build_app(
+      scheme: "ZenithCoreSample",
+      project: "Packages/ZenithCoreSample/ZenithCoreSample.xcodeproj",
+      export_method: "app-store",
+      output_directory: "./builds",
+      clean: true
+    )
+    
+    # Fazer upload para o TestFlight
+    upload_to_testflight(
+      app_identifier: "br.com.joao.gabriel.zenithCoreSample",
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  # Lane para publicar ZenithCoreSample no TestFlight (sem incremento de versão)
+  lane :publish_zenithcoresample_testflight_no_increment do
+    # Construir e publicar para o TestFlight
+    build_app(
+      scheme: "ZenithCoreSample",
+      project: "Packages/ZenithCoreSample/ZenithCoreSample.xcodeproj",
+      export_method: "app-store",
+      output_directory: "./builds",
+      clean: true
+    )
+    
+    # Fazer upload para o TestFlight
+    upload_to_testflight(
+      app_identifier: "br.com.joao.gabriel.zenithCoreSample",
+      skip_waiting_for_build_processing: true
+    )
+  end
 end

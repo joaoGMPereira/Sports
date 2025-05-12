@@ -36,10 +36,22 @@ enum ElementCategory: String, CaseIterable, Identifiable {
     var id: String { self.rawValue }
 }
 
-enum ElementDisplayType {
-    case inline // Mostra o conteúdo diretamente na lista
-    case navigation(AnyView) // Navega para outra tela ao clicar
-    case section // Funciona como uma seção que pode conter outros elementos
+enum ElementView {
+    case inline(AnyView)
+    case navigation(title: String, AnyView)
+    case section(AnyView)
+    
+    static func inline<V: View>(_ view: V) -> ElementView {
+        ElementView.inline(AnyView(view))
+    }
+    
+    static func navigation<V: View>(_ title: String, _ view: V) -> ElementView {
+        ElementView.navigation(title: title, AnyView(view))
+    }
+    
+    static func section<V: View>(_ view: V) -> ElementView {
+        ElementView.section(AnyView(view))
+    }
 }
 
 struct ElementType: Identifiable {
@@ -47,14 +59,12 @@ struct ElementType: Identifiable {
     var name: String
     var category: ElementCategory
     var tabType: TabType
-    var view: AnyView
-    var displayType: ElementDisplayType
+    var elementView: ElementView
     
-    init<V: View>(name: String, category: ElementCategory, tabType: TabType, view: V, displayType: ElementDisplayType = .section) {
+    init(name: String, category: ElementCategory, tabType: TabType, elementView: ElementView) {
         self.name = name
         self.category = category
         self.tabType = tabType
-        self.view = AnyView(view)
-        self.displayType = displayType
+        self.elementView = elementView
     }
 }

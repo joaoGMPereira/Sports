@@ -23,114 +23,111 @@ struct ZenithSampleElementsList: View, @preconcurrency BaseThemeDependencies {
             name: "Button",
             category: .native,
             tabType: .baseElements,
-            view: ButtonSample()
+            elementView: .section(ButtonSample())
         ),
         ElementType(
             name: "Text",
             category: .native,
             tabType: .baseElements,
-            view: TextSample()
+            elementView: .section(TextSample())
         ),
         ElementType(
             name: "Divider",
             category: .native,
             tabType: .baseElements,
-            view: DividerSample()
+            elementView: .section(DividerSample())
         ),
         ElementType(
             name: "Toggle",
             category: .native,
             tabType: .baseElements,
-            view: ToggleSample()
+            elementView: .section(ToggleSample())
         ),
         ElementType(
             name: "TextField",
             category: .native,
             tabType: .baseElements,
-            view: TextFieldSample()
+            elementView: .section(TextFieldSample())
         ),
         // Base Elements - Customs
         ElementType(
             name: "Dynamic Image",
             category: .custom,
             tabType: .baseElements,
-            view: DynamicImageSample()
+            elementView: .section(DynamicImageSample())
         ),
         ElementType(
             name: "Tag",
             category: .custom,
             tabType: .baseElements,
-            view: TagSample()
+            elementView: .section(TagSample())
         ),
         ElementType(
             name: "RadioButton",
             category: .custom,
             tabType: .baseElements,
-            view: RadioButtonSample()
+            elementView: .section(RadioButtonSample())
         ),
         ElementType(
             name: "CheckBox",
             category: .custom,
             tabType: .baseElements,
-            view: CheckBoxSample()
-                
+            elementView: .section(CheckBoxSample())
         ),
         ElementType(
             name: "IndicatorSelector",
             category: .custom,
             tabType: .components,
-            view: IndicatorSelectorSample()
+            elementView: .section(IndicatorSelectorSample())
         ),
         ElementType(
             name: "Card",
             category: .custom,
             tabType: .components,
-            view: CardSample()
+            elementView: .section(CardSample())
         ),
         ElementType(
             name: "DetailedListItem",
             category: .custom,
             tabType: .components,
-            view: DetailedListItemSample()
+            elementView: .navigation(
+                "DetailedListItem",
+                DetailedListItemSample()
+            )
         ),
         ElementType(
             name: "HeaderTitle",
             category: .custom,
             tabType: .components,
-            view: HeaderTitleSample()
+            elementView: .section(HeaderTitleSample())
         ),
         ElementType(
             name: "Blur",
             category: .custom,
             tabType: .baseElements,
-            view: EmptyView(),
-            displayType: .navigation(
-                AnyView(
-                    PushedListView("Blur") {
-                        BlurSample()
-                    }
-                )
+            elementView: .navigation(
+                "Blur",
+                BlurSample()
             )
-            
         ),
         ElementType(
             name: "CircularProgress",
             category: .custom,
             tabType: .components,
-            view: CircularProgressSample()
+            elementView: .section(CircularProgressSample())
         ),
         ElementType(
             name: "ListItem",
             category: .custom,
             tabType: .components,
-            view: ListItemSample()
+            elementView: .section(ListItemSample())
         ),
         // Templates
         ElementType(
             name: "StepsTemplate",
             category: .template,
             tabType: .templates,
-            view: StepsTemplateSample()
+            elementView: .section(StepsTemplateSample())
         )
     ]
 
@@ -161,35 +158,43 @@ struct ZenithSampleElementsList: View, @preconcurrency BaseThemeDependencies {
     
     @ViewBuilder
     private func renderElement(_ element: ElementType) -> some View {
-        section(element)
-        switch element.displayType {
-        case .inline:
+        switch element.elementView {
+        case .inline(let view):
             // Exibe o conteúdo diretamente na lista
-            element.view
+            view
                 .listRowBackground(colors.backgroundB)
                 
-        case .navigation(let destinationView):
-            // Cria uma navegação para outra tela
-            NavigationLink {
-                destinationView
-            } label: {
+        case .navigation(let title, let destinationView):
+            // Usa NavigationLink com destination para iOS 17
+            HStack {
                 Text(element.name.uppercased())
                     .textStyle(.mediumBold(.highlightA))
-                    .padding(.vertical, 2)
+                    .padding(.top, 2)
+                Spacer()
+                Image(systemSymbol: .chevronRight)
+                    .foregroundColor(colors.contentA)
+                    .font(.system(size: 14))
+            }
+            .background {
+                NavigationLink {
+                    PushedListView(title) {
+                        destinationView
+                    }
+                } label: {
+                    EmptyView()
+                }
             }
             .listRowBackground(colors.backgroundB)
             
-        case .section:
-            section(element)
+        case .section(let view):
+            section(view)
+                .listRowBackground(colors.backgroundB)
         }
     }
     
-    
-    
-    func section(_ element: ElementType) -> some View {
+    func section(_ view: AnyView) -> some View {
         Section {
-            element.view
-                .listRowBackground(Color.clear)
+            view
         }
     }
 }

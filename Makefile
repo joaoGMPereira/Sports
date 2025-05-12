@@ -54,3 +54,20 @@ generate: ## Generate projects using Tuist instead of XcodeGen
 	
 install_tuist: ## Install Tuist
 	@curl -Ls https://install.tuist.io | bash
+
+# Test Flight Publishing targets
+publish_kettlegym: ## Publish KettleGym to TestFlight
+	@./Scripts/publishToTestFlight.sh KettleGym
+
+publish_zenithsample: ## Publish ZenithSample to TestFlight
+	@./Scripts/publishToTestFlight.sh ZenithSample
+
+publish_zenithcoresample: ## Publish ZenithCoreSample to TestFlight
+	@./Scripts/publishToTestFlight.sh ZenithCoreSample
+
+publish_all: ## Publish all apps to TestFlight
+	@echo "Publicando todos os aplicativos no TestFlight..."
+	@$(MAKE) publish_kettlegym
+	@$(MAKE) publish_zenithsample
+	@$(MAKE) publish_zenithcoresample
+	@echo "Todos os aplicativos foram publicados com sucesso!"
