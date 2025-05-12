@@ -101,11 +101,6 @@ struct ZenithSampleElementsList: View, @preconcurrency BaseThemeDependencies {
             tabType: .components,
             elementView: .element(title: "LISTITEM", ListItemSample())
         ),
-        ElementType(
-            category: .custom,
-            tabType: .components,
-            elementView: .element(title: "FLOATING CARD", type: .pushed, FloatingCardExample())
-        ),
         // Templates
         ElementType(
             category: .template,

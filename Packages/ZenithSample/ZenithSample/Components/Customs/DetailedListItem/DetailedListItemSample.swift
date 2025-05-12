@@ -75,10 +75,6 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                         currentDetailedListItem
                             .makeWindowFloating(
                                 isFloating: $isFloating,
-                                scale: 1.0,
-                                backgroundOpacity: 0.7,
-                                backgroundBlur: 10,
-                                isDraggable: true,
                                 backgroundColor: colors.backgroundB
                             )
                                 

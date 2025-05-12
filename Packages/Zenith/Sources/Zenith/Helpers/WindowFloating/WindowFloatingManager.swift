@@ -25,7 +25,6 @@ public class WindowFloatingManager {
         @ViewBuilder content: @escaping () -> Content,
         position: CGPoint? = nil,
         size: CGSize? = nil,
-        isDraggable: Bool = true,
         backgroundColor: Color
     ) -> UUID {
         let id = UUID()
@@ -38,7 +37,6 @@ public class WindowFloatingManager {
             id: id,
             content: content(),
             onDismiss: { [weak self] in self?.dismiss() },
-            isDraggable: isDraggable,
             backgroundColor: backgroundColor
         )
         
@@ -91,7 +89,6 @@ struct FloatingWindowWrapper<Content: View>: View {
     let id: UUID
     let content: Content
     let onDismiss: () -> Void
-    let isDraggable: Bool
     let backgroundColor: Color
     
     @State private var offset: CGSize = .zero
@@ -111,7 +108,7 @@ struct FloatingWindowWrapper<Content: View>: View {
                 .allowsHitTesting(false) // Desativa interações do card durante arrasto
         }
         .offset(x: offset.width, y: offset.height)
-        .gesture(isDraggable ? dragGesture : nil)
+        .gesture(dragGesture)
     }
     
     private var dragGesture: some Gesture {
@@ -147,7 +144,6 @@ struct FloatingWindowWrapper<Content: View>: View {
 public struct WindowFloatingViewModifier<FloatingContent: View>: ViewModifier {
     @Binding var isPresented: Bool
     let content: () -> FloatingContent
-    let isDraggable: Bool
     let position: CGPoint?
     let size: CGSize?
     let backgroundColor: Color
@@ -161,7 +157,6 @@ public struct WindowFloatingViewModifier<FloatingContent: View>: ViewModifier {
                             content: self.content,
                             position: position,
                             size: size,
-                            isDraggable: isDraggable,
                             backgroundColor: backgroundColor
                         )
                     }
@@ -195,7 +190,6 @@ public extension View {
     ///   - content: View SwiftUI a ser exibida como flutuante
     func windowFloatingView<FloatingContent: View>(
         isPresented: Binding<Bool>,
-        isDraggable: Bool = true,
         position: CGPoint? = nil,
         size: CGSize? = nil,
         backgroundColor: Color,
@@ -205,7 +199,6 @@ public extension View {
             WindowFloatingViewModifier(
                 isPresented: isPresented,
                 content: content,
-                isDraggable: isDraggable,
                 position: position,
                 size: size,
                 backgroundColor: backgroundColor

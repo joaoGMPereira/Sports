@@ -4,37 +4,23 @@ import ZenithCoreInterface
 /// View modifier para adicionar funcionalidade de flutuação na Window para qualquer View
 public struct WindowFloatingButtonModifier<ButtonContent: View>: ViewModifier {
     @Binding var isFloating: Bool
-    let scale: CGFloat
-    let backgroundOpacity: Double
-    let backgroundBlur: Double
-    let isDraggable: Bool
     let backgroundColor: Color
     let buttonContent: ButtonContent
     
     public init(
         isFloating: Binding<Bool>,
-        scale: CGFloat = 1.05,
-        backgroundOpacity: Double = 0.6,
-        backgroundBlur: Double = 5,
-        isDraggable: Bool = true,
         backgroundColor: Color,
         @ViewBuilder buttonContent: () -> ButtonContent
     ) {
         self._isFloating = isFloating
-        self.scale = scale
-        self.backgroundOpacity = backgroundOpacity
-        self.backgroundBlur = backgroundBlur
-        self.isDraggable = isDraggable
         self.backgroundColor = backgroundColor
         self.buttonContent = buttonContent()
     }
     
     public func body(content: Content) -> some View {
         content
-            // Efeito de escala quando pressionado
-            .scaleEffect(isFloating ? scale : 1.0)
             // Adicionamos o view modifier de janela flutuante
-            .windowFloatingView(isPresented: $isFloating, isDraggable: isDraggable, backgroundColor: backgroundColor) {
+            .windowFloatingView(isPresented: $isFloating, backgroundColor: backgroundColor) {
                 ZStack {
                     // Conteúdo flutuante - o botão X agora é gerenciado pelo FloatingWindowWrapper
                     buttonContent
@@ -57,20 +43,12 @@ public extension View {
     ///   - buttonContent: Conteúdo personalizado para exibir no botão flutuante
     func makeWindowFloating<ButtonContent: View>(
         isFloating: Binding<Bool>,
-        scale: CGFloat = 1.05,
-        backgroundOpacity: Double = 0.6,
-        backgroundBlur: Double = 5,
-        isDraggable: Bool = true,
         backgroundColor: Color,
         @ViewBuilder buttonContent: @escaping () -> ButtonContent
     ) -> some View {
         modifier(
             WindowFloatingButtonModifier(
                 isFloating: isFloating,
-                scale: scale,
-                backgroundOpacity: backgroundOpacity,
-                backgroundBlur: backgroundBlur,
-                isDraggable: isDraggable,
                 backgroundColor: backgroundColor,
                 buttonContent: buttonContent
             )
@@ -87,18 +65,10 @@ public extension View {
     ///   - backgroundColor: Cor de fundo do card flutuante
     func makeWindowFloating(
         isFloating: Binding<Bool>,
-        scale: CGFloat = 1.05,
-        backgroundOpacity: Double = 0.6,
-        backgroundBlur: Double = 5,
-        isDraggable: Bool = true,
         backgroundColor: Color
     ) -> some View {
         makeWindowFloating(
             isFloating: isFloating,
-            scale: scale,
-            backgroundOpacity: backgroundOpacity,
-            backgroundBlur: backgroundBlur,
-            isDraggable: isDraggable,
             backgroundColor: backgroundColor
         ) {
             self
