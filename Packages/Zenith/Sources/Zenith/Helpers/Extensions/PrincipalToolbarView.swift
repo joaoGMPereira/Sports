@@ -2,6 +2,26 @@ import SwiftUI
 import ZenithCoreInterface
 import SFSafeSymbols
 
+// Environment key para o headerHeight
+private struct HeaderHeightKey: EnvironmentKey {
+    static let defaultValue: CGFloat = 0
+}
+
+// Extension para acessar o headerHeight
+extension EnvironmentValues {
+    public var headerHeight: CGFloat {
+        get { self[HeaderHeightKey.self] }
+        set { self[HeaderHeightKey.self] = newValue }
+    }
+}
+
+// Extension para view modifier para definir o headerHeight
+extension View {
+    public func headerHeight(_ height: CGFloat) -> some View {
+        environment(\.headerHeight, height)
+    }
+}
+
 enum PresentationType: String, Decodable, CaseIterable {
     case start, push
 }
@@ -16,7 +36,7 @@ public struct PrincipalToolbarView<Content: View>: View, @preconcurrency BaseThe
     let trailingImage: SFSymbol?
     let trailingAction: (() -> Void)?
     let type: PresentationType
-    @State private var headerHeight: CGFloat = 0
+    @State private var localHeaderHeight: CGFloat = 0
     
     init(
         _ title: String,
@@ -71,19 +91,20 @@ public struct PrincipalToolbarView<Content: View>: View, @preconcurrency BaseThe
             colors.backgroundA.ignoresSafeArea()
             
             content
-                .contentMargins(.top, headerHeight + spacings.small)
+                .contentMargins(.top, localHeaderHeight)
             
             VStack {
                 HeaderTitle(title, image: trailingImage?.rawValue ?? "", action: trailingAction)
                     .background(colors.backgroundA.opacity(0.9))
                     .zIndex(1) // Garante que o título fique por cima
-                    .onPreferenceChange(HeaderTitleHeightKey.self) { height in
-                        self.headerHeight = height
+                    .onPreferenceChange(HeightKey.self) { height in
+                        self.localHeaderHeight = height
                     }
                 
                 Spacer()
             }
         }
+        .headerHeight(localHeaderHeight) // Definindo o valor do environment
         .navigationBarBackButtonHidden(showBackButton)
         .toolbarTitleDisplayMode(.inline)
         .scrollContentBackground(.hidden)

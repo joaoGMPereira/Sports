@@ -22,90 +22,144 @@ struct ZenithSampleElementsList: View, @preconcurrency BaseThemeDependencies {
         ElementType(
             category: .native,
             tabType: .baseElements,
-            elementView: .element(title: "BUTTON", ButtonSample())
+            elementView: .element(
+                title: "BUTTON",
+                ButtonSample()
+            )
         ),
         ElementType(
             category: .native,
             tabType: .baseElements,
-            elementView: .element(title: "TEXT", TextSample())
+            elementView: .element(
+                title: "TEXT",
+                TextSample()
+            )
         ),
         ElementType(
             category: .native,
             tabType: .baseElements,
-            elementView: .element(title: "DIVIDER", DividerSample())
+            elementView: .element(
+                title: "DIVIDER",
+                DividerSample()
+            )
         ),
         ElementType(
             category: .native,
             tabType: .baseElements,
-            elementView: .element(title: "TOGGLE", ToggleSample())
+            elementView: .element(
+                title: "TOGGLE",
+                ToggleSample()
+            )
         ),
         ElementType(
             category: .native,
             tabType: .baseElements,
-            elementView: .element(title: "TEXTFIELD", TextFieldSample())
+            elementView: .element(
+                title: "TEXTFIELD",
+                TextFieldSample()
+            )
         ),
         // Base Elements - Customs
         ElementType(
             category: .custom,
             tabType: .baseElements,
-            elementView: .element(title: "DYNAMIC IMAGE", DynamicImageSample())
+            elementView: .element(
+                title: "DYNAMIC IMAGE",
+                DynamicImageSample()
+            )
         ),
         ElementType(
             category: .custom,
             tabType: .baseElements,
-            elementView: .element(title: "TAG", TagSample())
+            elementView: .element(
+                title: "TAG",
+                TagSample()
+            )
         ),
         ElementType(
             category: .custom,
             tabType: .baseElements,
-            elementView: .element(title: "RADIOBUTTON", RadioButtonSample())
+            elementView: .element(
+                title: "RADIOBUTTON",
+                RadioButtonSample()
+            )
         ),
         ElementType(
             category: .custom,
             tabType: .baseElements,
-            elementView: .element(title: "CHECKBOX", CheckBoxSample())
+            elementView: .element(
+                title: "CHECKBOX",
+                CheckBoxSample()
+            )
         ),
         ElementType(
             category: .custom,
             tabType: .baseElements,
-            elementView: .element(title: "BLUR", type: .pushed, BlurSample())
+            elementView: .element(
+                title: "BLUR",
+                type: .pushed,
+                BlurSample()
+            )
         ),
         // Components - Customs
         ElementType(
             category: .custom,
             tabType: .components,
-            elementView: .element(title: "SELECTOR", IndicatorSelectorSample())
+            elementView: .element(
+                title: "SELECTOR",
+                IndicatorSelectorSample()
+            )
         ),
         ElementType(
             category: .custom,
             tabType: .components,
-            elementView: .element(title: "CARD", CardSample())
+            elementView: .element(
+                title: "CARD",
+                CardSample()
+            )
         ),
         ElementType(
             category: .custom,
             tabType: .components,
-            elementView: .element(title: "DETAILEDLISTITEM", type: .pushed, DetailedListItemSample())
+            elementView: .element(
+                title: "DETAILEDLISTITEM",
+                type: .pushed,
+                overrideList: true,
+                DetailedListItemSample()
+            )
         ),
         ElementType(
             category: .custom,
             tabType: .components,
-            elementView: .element(title: "HEADERTITLE", HeaderTitleSample())
+            elementView: .element(
+                title: "HEADERTITLE",
+                HeaderTitleSample()
+            )
         ),
         ElementType(
             category: .custom,
             tabType: .components,
-            elementView: .element(title: "CIRCULARPROGRESS", CircularProgressSample())
+            elementView: .element(
+                title: "CIRCULARPROGRESS",
+                CircularProgressSample()
+            )
         ),
         ElementType(
             category: .custom,
             tabType: .components,
-            elementView: .element(title: "LISTITEM", ListItemSample())
+            elementView: .element(
+                title: "LISTITEM",
+                ListItemSample()
+            )
         ),
         // Templates
         ElementType(
             category: .template,
             tabType: .templates,
-            elementView: .element(title: "STEPS TEMPLATE", StepsTemplateSample())
+            elementView: .element(
+                title: "STEPS TEMPLATE",
+                StepsTemplateSample()
+            )
         )
     ]
 
@@ -137,12 +191,13 @@ struct ZenithSampleElementsList: View, @preconcurrency BaseThemeDependencies {
     @ViewBuilder
     private func renderElement(_ element: ElementType) -> some View {
         switch element.elementView {
-        case .element(let title, let type, let view):
+        case .element(let title, let type, let overrideList, let view):
             // Usa a nova BaseSampleView
             let sampleViewType: SampleViewType = type == .section ? .section : .pushed
             BaseSampleView(
                 title: title,
-                viewType: sampleViewType
+                viewType: sampleViewType,
+                overrideList: overrideList
             ) {
                 view
             }

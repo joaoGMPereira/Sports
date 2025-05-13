@@ -93,7 +93,7 @@ private struct BaseHeaderTitle: View, @preconcurrency BaseThemeDependencies {
         .padding(.vertical, spacings.medium)
         .overlay(GeometryReader { geometry in
             Color.clear
-                .preference(key: HeaderTitleHeightKey.self, value: geometry.size.height)
+                .preference(key: HeightKey.self, value: geometry.size.height)
         })
     }
 }

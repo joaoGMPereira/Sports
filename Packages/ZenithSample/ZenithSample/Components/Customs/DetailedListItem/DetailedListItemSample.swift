@@ -34,6 +34,7 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
     @State private var blur3OffsetX: Double = -20
     @State private var blur3OffsetY: Double = 20
     @State private var blur3Opacity: Double = 1.0
+    @State private var showFixedHeader = false
     
     // Options to control the display
     enum ProgressDisplayMode: String, CaseIterable, Identifiable {
@@ -53,214 +54,139 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
     @State private var descriptionText: String = "Frequência: 5 vezes na semana"
     @State private var showDescription: Bool = true
     
-    // Referência ao estado do componente flutuante
-    @ObservedObject private var floatingState = FloatingComponentState.shared
-    
     // Um publisher para atualizar o componente flutuante sempre que qualquer estado relevante mudar
     @State private var updatePublisher = PassthroughSubject<Void, Never>()
     @State private var cancellables = Set<AnyCancellable>()
     
     var body: some View {
-        ZStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: spacings.medium) {
-                    // Título da amostra
-                    Text("DetailedListItem")
-                        .font(fonts.largeBold)
+        SampleWithFixedHeader(
+            showFixedHeader: $showFixedHeader,
+            content: {
+                currentDetailedListItem
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, spacings.small)
+            },
+            config: {
+                VStack(alignment: .leading) {
+                    Text("Configurações do Componente")
+                        .font(fonts.mediumBold)
                         .foregroundColor(colors.contentA)
-                        .padding(.top, spacings.small)
-                        .padding(.horizontal, spacings.small)
+                        .padding(spacings.small)
                     
-                    // Componente DetailedListItem no topo da tela
-                    VStack(alignment: .leading) {
-                        Text("Preview - Clique no card para abrir floating")
-                            .font(fonts.mediumBold)
-                            .foregroundColor(colors.contentA)
-                            .padding(.horizontal, spacings.small)
-                        
-                        // Mostra o componente real ou um placeholder
-                        displayedContent
-                    }
-                    .padding(.vertical, spacings.small)
-                    .background(colors.backgroundB)
-                    
-                    // Configurações
-                    VStack(alignment: .leading) {
-                        Text("Configurações do Componente")
-                            .font(fonts.mediumBold)
-                            .foregroundColor(colors.contentA)
-                            .padding(.bottom, spacings.small)
-                        
-                        // Color selector for the style
-                        ColorSelector(selectedColor: $selectedColor)
-                            .padding(.bottom, spacings.small)
-                        
-                        // Display mode selector using GridSelector
-                        GridSelector(
-                            title: "Display Mode",
-                            selection: $selectedMode,
-                            columnsCount: 2,
-                            height: 140
-                        )
+                    // Color selector for the style
+                    ColorSelector(selectedColor: $selectedColor)
                         .padding(.bottom, spacings.small)
+                    
+                    // Display mode selector using GridSelector
+                    GridSelector(
+                        title: "Display Mode",
+                        selection: $selectedMode,
+                        columnsCount: 2,
+                        height: 140
+                    )
+                    .padding(.bottom, spacings.small)
+                    
+                    // Description settings
+                    VStack(alignment: .leading, spacing: spacings.small) {
+                        Text("Description")
+                            .font(fonts.smallBold)
+                            .foregroundColor(colors.contentA)
                         
-                        // Description settings
-                        VStack(alignment: .leading, spacing: spacings.small) {
-                            Text("Description")
-                                .font(fonts.smallBold)
-                                .foregroundColor(colors.contentA)
-                            
-                            Toggle("Show Description", isOn: $showDescription)
-                                .toggleStyle(.default(.highlightA))
-                                .foregroundColor(colors.contentA)
-                            
-                            if showDescription {
-                                TextField("Description text", text: $descriptionText)
-                                    .textFieldStyle(.roundedBorder)
-                            }
-                        }
-                        .padding(.bottom, spacings.medium)
+                        Toggle("Show Description", isOn: $showDescription)
+                            .toggleStyle(.default(.highlightA))
+                            .foregroundColor(colors.contentA)
                         
-                        // Settings based on the selected mode
-                        if selectedMode == .text {
-                            Text("Progress Text")
-                                .font(fonts.smallBold)
-                                .foregroundColor(colors.contentA)
-                                .padding(.bottom, 4)
-                            
-                            TextField("Progress text", text: $customText)
+                        if showDescription {
+                            TextField("Description text", text: $descriptionText)
                                 .textFieldStyle(.roundedBorder)
-                                .padding(.bottom, spacings.small)
                         }
+                    }
+                    .padding(.bottom, spacings.medium)
+                    
+                    // Settings based on the selected mode
+                    if selectedMode == .text {
+                        Text("Progress Text")
+                            .font(fonts.smallBold)
+                            .foregroundColor(colors.contentA)
+                            .padding(.bottom, 4)
                         
-                        if selectedMode == .simpleProgress ||
-                            selectedMode == .detailedProgress ||
-                            selectedMode == .customProgress {
+                        TextField("Progress text", text: $customText)
+                            .textFieldStyle(.roundedBorder)
+                            .padding(.bottom, spacings.small)
+                    }
+                    
+                    if selectedMode == .simpleProgress ||
+                        selectedMode == .detailedProgress ||
+                        selectedMode == .customProgress {
+                        
+                        VStack(spacing: spacings.small) {
+                            HStack {
+                                Text("Progress: \(Int(progressValue * 100))%")
+                                    .font(fonts.small)
+                                    .foregroundColor(colors.contentA)
+                                Spacer()
+                            }
                             
-                            VStack(spacing: spacings.small) {
+                            Slider(value: $progressValue, in: 0...1, step: 0.01)
+                                .accentColor(colors.highlightA)
+                            
+                            if selectedMode == .detailedProgress || selectedMode == .customProgress {
                                 HStack {
-                                    Text("Progress: \(Int(progressValue * 100))%")
+                                    Text("Size: \(Int(size))px")
                                         .font(fonts.small)
                                         .foregroundColor(colors.contentA)
                                     Spacer()
                                 }
                                 
-                                Slider(value: $progressValue, in: 0...1, step: 0.01)
+                                Slider(value: $size, in: 20...60, step: 1)
                                     .accentColor(colors.highlightA)
                                 
-                                if selectedMode == .detailedProgress || selectedMode == .customProgress {
-                                    HStack {
-                                        Text("Size: \(Int(size))px")
-                                            .font(fonts.small)
-                                            .foregroundColor(colors.contentA)
-                                        Spacer()
-                                    }
-                                    
-                                    Slider(value: $size, in: 20...60, step: 1)
-                                        .accentColor(colors.highlightA)
-                                    
-                                    Toggle("Show text", isOn: $showText)
-                                        .toggleStyle(.default(.highlightA))
-                                        .foregroundColor(colors.contentA)
-                                    
-                                    Toggle("Animated", isOn: $animated)
-                                        .toggleStyle(.default(.highlightA))
-                                        .foregroundColor(colors.contentA)
-                                }
+                                Toggle("Show text", isOn: $showText)
+                                    .toggleStyle(.default(.highlightA))
+                                    .foregroundColor(colors.contentA)
+                                
+                                Toggle("Animated", isOn: $animated)
+                                    .toggleStyle(.default(.highlightA))
+                                    .foregroundColor(colors.contentA)
                             }
-                            .padding(.bottom, spacings.small)
                         }
-                        
-                        // Editor avançado de blur
-                        BlurConfigEditor(
-                            blur1Width: $blur1Width,
-                            blur1Height: $blur1Height,
-                            blur1Radius: $blur1Radius,
-                            blur1OffsetX: $blur1OffsetX,
-                            blur1OffsetY: $blur1OffsetY,
-                            blur1Opacity: $blur1Opacity,
-                            
-                            blur2Width: $blur2Width,
-                            blur2Height: $blur2Height,
-                            blur2Radius: $blur2Radius,
-                            blur2OffsetX: $blur2OffsetX,
-                            blur2OffsetY: $blur2OffsetY,
-                            blur2Opacity: $blur2Opacity,
-                            
-                            blur3Width: $blur3Width,
-                            blur3Height: $blur3Height,
-                            blur3Radius: $blur3Radius,
-                            blur3OffsetX: $blur3OffsetX,
-                            blur3OffsetY: $blur3OffsetY,
-                            blur3Opacity: $blur3Opacity
-                        )
                         .padding(.bottom, spacings.small)
                     }
-                    .padding(.horizontal, spacings.small)
+                    
+                    // Editor avançado de blur
+                    BlurConfigEditor(
+                        blur1Width: $blur1Width,
+                        blur1Height: $blur1Height,
+                        blur1Radius: $blur1Radius,
+                        blur1OffsetX: $blur1OffsetX,
+                        blur1OffsetY: $blur1OffsetY,
+                        blur1Opacity: $blur1Opacity,
+                        
+                        blur2Width: $blur2Width,
+                        blur2Height: $blur2Height,
+                        blur2Radius: $blur2Radius,
+                        blur2OffsetX: $blur2OffsetX,
+                        blur2OffsetY: $blur2OffsetY,
+                        blur2Opacity: $blur2Opacity,
+                        
+                        blur3Width: $blur3Width,
+                        blur3Height: $blur3Height,
+                        blur3Radius: $blur3Radius,
+                        blur3OffsetX: $blur3OffsetX,
+                        blur3OffsetY: $blur3OffsetY,
+                        blur3Opacity: $blur3Opacity
+                    )
+                    .padding(.bottom, spacings.small)
                     
                     // Using the reusable component for code preview
                     CodePreviewSection(generateCode: generateCode)
                         .padding(.top, spacings.medium)
                 }
+                .padding(.horizontal, spacings.small)
             }
-            
-            // Adiciona o componente flutuante como overlay
-            FloatingComponent()
-        }
-        // Um único onChange que observa todas as propriedades relevantes
-        .onChange(of: selectedColor) { _ in updatePublisher.send() }
-        .onChange(of: selectedMode) { _ in updatePublisher.send() }
-        .onChange(of: showDescription) { _ in updatePublisher.send() }
-        .onChange(of: descriptionText) { _ in updatePublisher.send() }
-        .onChange(of: customText) { _ in updatePublisher.send() }
-        .onChange(of: progressValue) { _ in updatePublisher.send() }
-        .onChange(of: size) { _ in updatePublisher.send() }
-        .onChange(of: showText) { _ in updatePublisher.send() }
-        .onChange(of: animated) { _ in updatePublisher.send() }
-        .onChange(of: blur1Width) { _ in updatePublisher.send() }
-        .onChange(of: blur1Height) { _ in updatePublisher.send() }
-        .onChange(of: blur1Radius) { _ in updatePublisher.send() }
-        .onChange(of: blur1OffsetX) { _ in updatePublisher.send() }
-        .onChange(of: blur1OffsetY) { _ in updatePublisher.send() }
-        .onChange(of: blur1Opacity) { _ in updatePublisher.send() }
-        .onChange(of: blur2Width) { _ in updatePublisher.send() }
-        .onChange(of: blur2Height) { _ in updatePublisher.send() }
-        .onChange(of: blur2Radius) { _ in updatePublisher.send() }
-        .onChange(of: blur2OffsetX) { _ in updatePublisher.send() }
-        .onChange(of: blur2OffsetY) { _ in updatePublisher.send() }
-        .onChange(of: blur2Opacity) { _ in updatePublisher.send() }
-        .onChange(of: blur3Width) { _ in updatePublisher.send() }
-        .onChange(of: blur3Height) { _ in updatePublisher.send() }
-        .onChange(of: blur3Radius) { _ in updatePublisher.send() }
-        .onChange(of: blur3OffsetX) { _ in updatePublisher.send() }
-        .onChange(of: blur3OffsetY) { _ in updatePublisher.send() }
-        .onChange(of: blur3Opacity) { _ in updatePublisher.send() }
-        .onAppear {
-            // Configura o subscriber para atualizar o componente flutuante
-            updatePublisher
-                .debounce(for: .milliseconds(10), scheduler: RunLoop.main) // Pequeno debounce para evitar múltiplas atualizações simultâneas
-                .sink { _ in
-                    self.updateFloatingView()
-                }
-                .store(in: &cancellables)
-        }
+        )
     }
-    
-    // Função para atualizar o componente flutuante quando as propriedades mudam
-    private func updateFloatingView() {
-        if floatingState.isVisible {
-            // Captura o componente atual no momento da atualização
-            let latestComponent = AnyView(currentDetailedListItem)
-            let latestBackgroundColor = colors.backgroundB
-            
-            // Atualiza o componente flutuante imediatamente com os valores mais recentes
-            floatingState.show(
-                content: { latestComponent },
-                backgroundColor: latestBackgroundColor
-            )
-        }
-    }
-    
+
     // View que retorna o DetailedListItem atual com base nas configurações
     private var currentDetailedListItem: some View {
         Group {
@@ -372,60 +298,11 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                 .detailedListItemStyle(.default(selectedColor))
             }
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, spacings.small)
-    }
-    
-    // Propriedade que indica se o componente está em modo flutuante
-    private var isFloatingMode: Bool {
-        floatingState.isVisible
-    }
-    
-    // View que retorna o componente original ou um placeholder, dependendo do modo
-    private var displayedContent: some View {
-        Group {
-            if isFloatingMode {
-                // Placeholder quando em modo flutuante
-                VStack(spacing: spacings.medium) {
-                    Image(systemName: "arrow.up.forward.app.fill")
-                        .font(.system(size: 30))
-                        .foregroundColor(colors.highlightA)
-                    
-                    Text("Componente em modo flutuante")
-                        .font(fonts.mediumBold)
-                        .foregroundColor(colors.contentA)
-                    
-                    Text("Edite as configurações para ver as alterações em tempo real")
-                        .font(fonts.small)
-                        .foregroundColor(colors.contentA)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                }
-                .padding()
-                .background {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(colors.backgroundA.opacity(0.8))
-                }
-                .onTapGesture {
-                    // Ação opcional ao clicar no placeholder
-                }
-            } else {
-                // Botão para mostrar o componente flutuante
-                Button(action: cardAction) {
-                    currentDetailedListItem
-                }
-                .buttonStyle(PlainButtonStyle())
-            }
-        }
-        .frame(maxWidth: .infinity)
     }
     
     // Ação do card para mostrar o componente flutuante
     func cardAction() {
-        floatingState.show(
-            content: { currentDetailedListItem },
-            backgroundColor: colors.backgroundB
-        )
+        showFixedHeader.toggle()
     }
     
     // Cria um BlurConfig com os valores atuais definidos nos sliders
@@ -461,63 +338,39 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
         let animatedString = animated ? "true" : "false"
         let descriptionParam = showDescription ? "\"\(descriptionText)\"" : "\"\""
         
-        // Código para flutuação em window
-        let floatingCode = """
-        
-        // Estado para controlar a flutuação quando clicado
-        @State private var isFloating: Bool = false
-        
-        // Função para ativar o floating ao clicar
-        func ativarFloating() {
-            withAnimation {
-                isFloating = true
-            }
-        }
-        
-        // Envolver o componente em um Button para detectar cliques no card
-        Button(action: {
-            ativarFloating()
-        }) {
-            // Seu componente DetailedListItem aqui
-        }
-        .buttonStyle(PlainButtonStyle())
-        
-        // Aplicar o floating em window
-        .makeWindowFloating(
-            isFloating: $isFloating,
-            backgroundOpacity: 0.7,
-            backgroundBlur: 10,
-            scale: 1.0,
-            isDraggable: true
+        // Configuração de blur comum a todos os exemplos
+        let blurConfigCode = """
+        // Configuração do blur personalizado
+        let blurConfig = BlurConfig(
+            blur1Width: \(Int(blur1Width)),
+            blur1Height: \(Int(blur1Height)),
+            blur1Radius: \(Int(blur1Radius)),
+            blur1OffsetX: \(Int(blur1OffsetX)),
+            blur1OffsetY: \(Int(blur1OffsetY)),
+            blur1Opacity: \(String(format: "%.2f", blur1Opacity)),
+            
+            blur2Width: \(Int(blur2Width)),
+            blur2Height: \(Int(blur2Height)),
+            blur2Radius: \(Int(blur2Radius)),
+            blur2OffsetX: \(Int(blur2OffsetX)),
+            blur2OffsetY: \(Int(blur2OffsetY)),
+            blur2Opacity: \(String(format: "%.2f", blur2Opacity)),
+            
+            blur3Width: \(Int(blur3Width)),
+            blur3Height: \(Int(blur3Height)),
+            blur3Radius: \(Int(blur3Radius)),
+            blur3OffsetX: \(Int(blur3OffsetX)),
+            blur3OffsetY: \(Int(blur3OffsetY)),
+            blur3Opacity: \(String(format: "%.2f", blur3Opacity))
         )
         """
         
         switch selectedMode {
         case .text:
             return """
-            // Criar um BlurConfig personalizado
-            let customBlurConfig = BlurConfig(
-                blur1Width: \(Int(blur1Width)),
-                blur1Height: \(Int(blur1Height)),
-                blur1Radius: \(Int(blur1Radius)),
-                blur1OffsetX: \(Int(blur1OffsetX)),
-                blur1OffsetY: \(Int(blur1OffsetY)),
-                blur1Opacity: \(String(format: "%.2f", blur1Opacity)),
-                
-                blur2Width: \(Int(blur2Width)),
-                blur2Height: \(Int(blur2Height)),
-                blur2Radius: \(Int(blur2Radius)),
-                blur2OffsetX: \(Int(blur2OffsetX)),
-                blur2OffsetY: \(Int(blur2OffsetY)),
-                blur2Opacity: \(String(format: "%.2f", blur2Opacity)),
-                
-                blur3Width: \(Int(blur3Width)),
-                blur3Height: \(Int(blur3Height)),
-                blur3Radius: \(Int(blur3Radius)),
-                blur3OffsetX: \(Int(blur3OffsetX)),
-                blur3OffsetY: \(Int(blur3OffsetY)),
-                blur3Opacity: \(String(format: "%.2f", blur3Opacity))
-            )
+            \(blurConfigCode)
+            
+            // DetailedListItem com texto de progresso
             DetailedListItem(
                 title: "Treino de Adaptação",
                 description: \(descriptionParam),
@@ -530,42 +383,19 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                     description: "5x"
                 ),
                 action: {
-                    withAnimation {
-                        isFloating = true
-                    }
+                    // Ação ao tocar no card
                 },
                 progressText: "\(customText)",
-                blurConfig: customBlurConfig
+                blurConfig: blurConfig
             )
-            .detailedListItemStyle(.default(.\(selectedColor.rawValue)))\(floatingCode)
+            .detailedListItemStyle(.default(.\(selectedColor.rawValue)))
             """
             
         case .simpleProgress:
             return """
-            // Criar um BlurConfig personalizado
-            let customBlurConfig = BlurConfig(
-                blur1Width: \(Int(blur1Width)),
-                blur1Height: \(Int(blur1Height)),
-                blur1Radius: \(Int(blur1Radius)),
-                blur1OffsetX: \(Int(blur1OffsetX)),
-                blur1OffsetY: \(Int(blur1OffsetY)),
-                blur1Opacity: \(String(format: "%.2f", blur1Opacity)),
-                
-                blur2Width: \(Int(blur2Width)),
-                blur2Height: \(Int(blur2Height)),
-                blur2Radius: \(Int(blur2Radius)),
-                blur2OffsetX: \(Int(blur2OffsetX)),
-                blur2OffsetY: \(Int(blur2OffsetY)),
-                blur2Opacity: \(String(format: "%.2f", blur2Opacity)),
-                
-                blur3Width: \(Int(blur3Width)),
-                blur3Height: \(Int(blur3Height)),
-                blur3Radius: \(Int(blur3Radius)),
-                blur3OffsetX: \(Int(blur3OffsetX)),
-                blur3OffsetY: \(Int(blur3OffsetY)),
-                blur3Opacity: \(String(format: "%.2f", blur3Opacity))
-            )
+            \(blurConfigCode)
             
+            // DetailedListItem com progresso simples
             DetailedListItem(
                 title: "Treino de Força",
                 description: \(descriptionParam),
@@ -578,42 +408,19 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                     description: "8x"
                 ),
                 action: {
-                    withAnimation {
-                        isFloating = true
-                    }
+                    // Ação ao tocar no card
                 },
-                progress: \(progressValueString), // \(Int(progressValue * 100))% progress
-                blurConfig: customBlurConfig
+                progress: \(progressValueString), // \(Int(progressValue * 100))% de progresso
+                blurConfig: blurConfig
             )
-            .detailedListItemStyle(.default(.\(selectedColor.rawValue)))\(floatingCode)
+            .detailedListItemStyle(.default(.\(selectedColor.rawValue)))
             """
             
         case .detailedProgress:
             return """
-            // Criar um BlurConfig personalizado
-            let customBlurConfig = BlurConfig(
-                blur1Width: \(Int(blur1Width)),
-                blur1Height: \(Int(blur1Height)),
-                blur1Radius: \(Int(blur1Radius)),
-                blur1OffsetX: \(Int(blur1OffsetX)),
-                blur1OffsetY: \(Int(blur1OffsetY)),
-                blur1Opacity: \(String(format: "%.2f", blur1Opacity)),
-                
-                blur2Width: \(Int(blur2Width)),
-                blur2Height: \(Int(blur2Height)),
-                blur2Radius: \(Int(blur2Radius)),
-                blur2OffsetX: \(Int(blur2OffsetX)),
-                blur2OffsetY: \(Int(blur2OffsetY)),
-                blur2Opacity: \(String(format: "%.2f", blur2Opacity)),
-                
-                blur3Width: \(Int(blur3Width)),
-                blur3Height: \(Int(blur3Height)),
-                blur3Radius: \(Int(blur3Radius)),
-                blur3OffsetX: \(Int(blur3OffsetX)),
-                blur3OffsetY: \(Int(blur3OffsetY)),
-                blur3Opacity: \(String(format: "%.2f", blur3Opacity))
-            )
+            \(blurConfigCode)
             
+            // DetailedListItem com progresso detalhado
             DetailedListItem(
                 title: "Treino Avançado",
                 description: \(descriptionParam),
@@ -626,45 +433,22 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                     description: "12x"
                 ),
                 action: {
-                    withAnimation {
-                        isFloating = true
-                    }
+                    // Ação ao tocar no card
                 },
                 progress: \(progressValueString),
                 size: \(sizeInt),
                 showText: \(showTextString),
                 animated: \(animatedString),
-                blurConfig: customBlurConfig
+                blurConfig: blurConfig
             )
-            .detailedListItemStyle(.default(.\(selectedColor.rawValue)))\(floatingCode)
+            .detailedListItemStyle(.default(.\(selectedColor.rawValue)))
             """
             
         case .customProgress:
             return """
-            // Criar um BlurConfig personalizado
-            let customBlurConfig = BlurConfig(
-                blur1Width: \(Int(blur1Width)),
-                blur1Height: \(Int(blur1Height)),
-                blur1Radius: \(Int(blur1Radius)),
-                blur1OffsetX: \(Int(blur1OffsetX)),
-                blur1OffsetY: \(Int(blur1OffsetY)),
-                blur1Opacity: \(String(format: "%.2f", blur1Opacity)),
-                
-                blur2Width: \(Int(blur2Width)),
-                blur2Height: \(Int(blur2Height)),
-                blur2Radius: \(Int(blur2Radius)),
-                blur2OffsetX: \(Int(blur2OffsetX)),
-                blur2OffsetY: \(Int(blur2OffsetY)),
-                blur2Opacity: \(String(format: "%.2f", blur2Opacity)),
-                
-                blur3Width: \(Int(blur3Width)),
-                blur3Height: \(Int(blur3Height)),
-                blur3Radius: \(Int(blur3Radius)),
-                blur3OffsetX: \(Int(blur3OffsetX)),
-                blur3OffsetY: \(Int(blur3OffsetY)),
-                blur3Opacity: \(String(format: "%.2f", blur3Opacity))
-            )
+            \(blurConfigCode)
             
+            // DetailedListItem com progresso personalizado
             DetailedListItem(
                 title: "Treino Customizado",
                 description: \(descriptionParam),
@@ -677,9 +461,7 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                     description: "10x"
                 ),
                 action: {
-                    withAnimation {
-                        isFloating = true
-                    }
+                    // Ação ao tocar no card
                 },
                 progressConfig: CircularProgressStyleConfiguration(
                     text: "\(Int(progressValue * 100))%",
@@ -689,37 +471,16 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                     isAnimating: false,
                     animated: \(animatedString)
                 ),
-                blurConfig: customBlurConfig
+                blurConfig: blurConfig
             )
-            .detailedListItemStyle(.default(.\(selectedColor.rawValue)))\(floatingCode)
+            .detailedListItemStyle(.default(.\(selectedColor.rawValue)))
             """
             
         case .customContent:
             return """
-            // Criar um BlurConfig personalizado
-            let customBlurConfig = BlurConfig(
-                blur1Width: \(Int(blur1Width)),
-                blur1Height: \(Int(blur1Height)),
-                blur1Radius: \(Int(blur1Radius)),
-                blur1OffsetX: \(Int(blur1OffsetX)),
-                blur1OffsetY: \(Int(blur1OffsetY)),
-                blur1Opacity: \(String(format: "%.2f", blur1Opacity)),
-                
-                blur2Width: \(Int(blur2Width)),
-                blur2Height: \(Int(blur2Height)),
-                blur2Radius: \(Int(blur2Radius)),
-                blur2OffsetX: \(Int(blur2OffsetX)),
-                blur2OffsetY: \(Int(blur2OffsetY)),
-                blur2Opacity: \(String(format: "%.2f", blur2Opacity)),
-                
-                blur3Width: \(Int(blur3Width)),
-                blur3Height: \(Int(blur3Height)),
-                blur3Radius: \(Int(blur3Radius)),
-                blur3OffsetX: \(Int(blur3OffsetX)),
-                blur3OffsetY: \(Int(blur3OffsetY)),
-                blur3Opacity: \(String(format: "%.2f", blur3Opacity))
-            )
+            \(blurConfigCode)
             
+            // DetailedListItem com conteúdo personalizado
             DetailedListItem(
                 title: "Treino Cardiovascular",
                 description: \(descriptionParam),
@@ -732,11 +493,9 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                     description: "6x"
                 ),
                 action: {
-                    withAnimation {
-                        isFloating = true
-                    }
+                    // Ação ao tocar no card
                 },
-                blurConfig: customBlurConfig
+                blurConfig: blurConfig
             ) {
                 VStack(alignment: .trailing) {
                     Text("Conteúdo Personalizado")
@@ -745,7 +504,7 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                         .textStyle(.smallBold(.danger))
                 }
             }
-            .detailedListItemStyle(.default(.\(selectedColor.rawValue)))\(floatingCode)
+            .detailedListItemStyle(.default(.\(selectedColor.rawValue)))
             """
         }
     }

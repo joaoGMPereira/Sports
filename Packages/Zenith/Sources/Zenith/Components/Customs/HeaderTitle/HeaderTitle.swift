@@ -4,10 +4,10 @@ import ZenithCoreInterface
 import SFSafeSymbols
 
 // Chave de preferência para armazenar a altura do HeaderTitle
-struct HeaderTitleHeightKey: PreferenceKey {
-    static let defaultValue: CGFloat = 0
+public struct HeightKey: PreferenceKey {
+    public static let defaultValue: CGFloat = 0
     
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+    public static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value = nextValue()
     }
 }

@@ -42,10 +42,10 @@ enum ElementViewType {
 }
 
 enum ElementView {
-    case element(_ title: String, type: ElementViewType, AnyView)
+    case element(_ title: String, type: ElementViewType, overrideList: Bool, AnyView)
     
-    static func element<V: View>(title: String, type: ElementViewType = .section, _ view: V) -> ElementView {
-        ElementView.element(title, type: type, AnyView(view))
+    static func element<V: View>(title: String, type: ElementViewType = .section, overrideList: Bool = false, _ view: V) -> ElementView {
+        ElementView.element(title, type: type, overrideList: overrideList, AnyView(view))
     }
 }
 

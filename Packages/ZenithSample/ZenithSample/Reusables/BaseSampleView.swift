@@ -22,6 +22,7 @@ struct BaseSampleView<Content: View>: View, @preconcurrency BaseThemeDependencie
     let content: Content
     @State private var isExpanded: Bool = false
     let backgroundColor: Color?
+    let overrideList: Bool
     
     // MARK: - Inicializadores
     
@@ -30,12 +31,14 @@ struct BaseSampleView<Content: View>: View, @preconcurrency BaseThemeDependencie
         title: String,
         viewType: SampleViewType = .section,
         backgroundColor: Color? = nil,
+        overrideList: Bool,
         @ViewBuilder content: @escaping () -> Content
     ) {
         self.title = title
         self.viewType = viewType
         self.content = content()
         self.backgroundColor = backgroundColor
+        self.overrideList = overrideList
     }
     
     // MARK: - Body
@@ -81,7 +84,7 @@ struct BaseSampleView<Content: View>: View, @preconcurrency BaseThemeDependencie
         }
         .background {
             NavigationLink {
-                PushedListView(title) {
+                PushedListView(title, overrideList: overrideList) {
                     content
                 }
             } label: {
