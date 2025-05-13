@@ -43,7 +43,7 @@ struct ZenithSampleView: View, @preconcurrency BaseThemeDependencies {
                             .listRowBackground(Color.clear)
                             .listRowSeparator(.hidden)
                     }
-                    ZenithSampleElementsList(selectedTab: tabType, selectedCategory: $selectedCategory)
+                    ZenithSampleElements(selectedTab: tabType, selectedCategory: $selectedCategory)
                 }
                 .listRowSeparator(.hidden)
                 .listSectionSeparator(.hidden)

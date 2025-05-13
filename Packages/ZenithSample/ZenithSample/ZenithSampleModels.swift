@@ -44,7 +44,7 @@ enum ElementViewType {
 enum ElementView {
     case element(_ title: String, type: ElementViewType, overrideList: Bool, AnyView)
     
-    static func element<V: View>(title: String, type: ElementViewType = .section, overrideList: Bool = false, _ view: V) -> ElementView {
+    static func element<V: View>(title: String, type: ElementViewType = .pushed, overrideList: Bool = true, _ view: V) -> ElementView {
         ElementView.element(title, type: type, overrideList: overrideList, AnyView(view))
     }
 }

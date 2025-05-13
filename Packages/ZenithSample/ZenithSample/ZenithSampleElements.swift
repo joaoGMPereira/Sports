@@ -3,7 +3,7 @@ import Zenith
 import SFSafeSymbols
 import ZenithCoreInterface
 
-struct ZenithSampleElementsList: View, @preconcurrency BaseThemeDependencies {
+struct ZenithSampleElements: View, @preconcurrency BaseThemeDependencies {
     // MARK: - Properties
     let selectedTab: TabType
     @Binding var selectedCategory: ElementCategory
