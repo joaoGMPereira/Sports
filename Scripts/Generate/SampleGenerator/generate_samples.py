@@ -6,7 +6,7 @@ import sys
 import re
 import argparse
 import logging
-from typing import List, Dict, Optional, Tuple, Set, Any
+from typing import List, Dict, Optional, Tuple, Set, Any, Callable, Type
 
 """
 Script para gerar arquivos Sample para componentes do Zenith
@@ -249,8 +249,9 @@ struct ButtonSample: View, @preconcurrency BaseThemeDependencies {
 }'''
 
 # Configurações
-ZENITH_PATH = os.path.expanduser("~/KettleGym/Packages/Zenith")
-ZENITH_SAMPLE_PATH = os.path.expanduser("~/KettleGym/Packages/ZenithSample")
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
+ZENITH_PATH = os.path.join(REPO_ROOT, "Packages/Zenith")
+ZENITH_SAMPLE_PATH = os.path.join(REPO_ROOT, "Packages/ZenithSample")
 COMPONENTS_PATH = os.path.join(ZENITH_PATH, "Sources/Zenith")
 SAMPLES_PATH = os.path.join(ZENITH_SAMPLE_PATH, "ZenithSample")
 TESTS_PATH = os.path.join(ZENITH_PATH, "Tests/ZenithTests")
@@ -262,22 +263,23 @@ GENERATE_TESTS = False  # Por padrão, não gera testes
 # Estrutura para armazenar informações do componente
 class ComponentInfo:
     def __init__(self, name: str, type_path: str):
-        self.name = name
-        self.type_path = type_path  # BaseElements/Natives ou Components/Customs
-        self.view_path = ""
-        self.config_path = ""
-        self.styles_path = ""
-        self.properties = []
-        self.style_cases = []  # Para compatibilidade
-        self.style_functions = []  # Funções de estilo como small(), medium(), etc.
-        self.enum_properties = []  # Propriedades que são enums
-        self.text_properties = []  # Propriedades de texto
-        self.bool_properties = []  # Propriedades booleanas
-        self.number_properties = []  # Propriedades numéricas
-        self.closure_properties = []  # Propriedades que são closures (ações)
-        self.complex_properties = []  # Propriedades complexas (tipos personalizados)
-        self.public_init_params = []  # Parâmetros do inicializador público
-        self.has_action_param = False  # Se o componente tem um parâmetro de ação
+        self.name: str = name
+        self.type_path: str = type_path  # BaseElements/Natives ou Components/Customs
+        self.view_path: str = ""
+        self.config_path: str = ""
+        self.styles_path: str = ""
+        self.properties: List[Dict] = []
+        self.style_cases: List[str] = []  # Para compatibilidade
+        self.style_functions: List[Dict] = []  # Funções de estilo como small(), medium(), etc.
+        self.enum_properties: List[Dict] = []  # Propriedades que são enums
+        self.text_properties: List[Dict] = []  # Propriedades de texto
+        self.bool_properties: List[Dict] = []  # Propriedades booleanas
+        self.number_properties: List[Dict] = []  # Propriedades numéricas
+        self.closure_properties: List[Dict] = []  # Propriedades que são closures (ações)
+        self.complex_properties: List[Dict] = []  # Propriedades complexas (tipos personalizados)
+        self.public_init_params: List[Dict] = []  # Parâmetros do inicializador público
+        self.has_action_param: bool = False  # Se o componente tem um parâmetro de ação
+        self.component_type: Optional[str] = None  # Tipo do componente (Button, Text, etc.)
         
     def __str__(self):
         return f"Component: {self.name} (Type: {self.type_path})"
@@ -288,6 +290,96 @@ class ComponentInfo:
             if prop['name'] == name:
                 return prop
         return None
+
+# Registro de tipos de componentes
+class ComponentTypeRegistry:
+    """Registro para configurações específicas de diferentes tipos de componentes."""
+    
+    def __init__(self):
+        self.component_types = {}
+        # Registro de tipos padrão será feito após a definição de todas as funções
+        
+    def _register_default_types(self):
+        """Registra os tipos de componentes padrão."""
+        self.register_component_type(
+            "Button",
+            has_content_param=False,
+            is_button_type=True,
+            style_modifier="buttonStyle",
+            style_type="ButtonStyle",
+            style_case_type="ButtonStyleCase",
+            preview_generator=generate_button_preview,
+            code_generator=generate_button_code,
+            default_style_cases=["contentA", "highlightA", "backgroundD"]
+        )
+        
+        self.register_component_type(
+            "Text",
+            has_content_param=True,
+            is_button_type=False,
+            style_modifier="textStyle",
+            style_type="TextStyle",
+            style_case_type="TextStyleCase",
+            preview_generator=None,  # Usa o gerador padrão
+            code_generator=None,     # Usa o gerador padrão
+            default_style_cases=["contentA", "contentB", "contentC"]
+        )
+        
+    def register_component_type(self, name: str, has_content_param: bool, is_button_type: bool,
+                               style_modifier: str, style_type: str, style_case_type: str,
+                               preview_generator: Optional[Callable] = None,
+                               code_generator: Optional[Callable] = None,
+                               default_style_cases: Optional[List[str]] = None):
+        """Registra um novo tipo de componente."""
+        self.component_types[name] = {
+            "has_content_param": has_content_param,
+            "is_button_type": is_button_type,
+            "style_modifier": style_modifier,
+            "style_type": style_type,
+            "style_case_type": style_case_type,
+            "preview_generator": preview_generator,
+            "code_generator": code_generator,
+            "default_style_cases": default_style_cases or []
+        }
+        
+    def get_component_type(self, name: str) -> Dict:
+        """Retorna as configurações para um tipo de componente."""
+        if name not in self.component_types:
+            logger.info(f"Componente {name} não registrado, usando configuração genérica")
+            return self._create_generic_config(name)
+        return self.component_types[name]
+        
+    def _create_generic_config(self, name: str) -> Dict:
+        """Cria uma configuração genérica para um componente não registrado."""
+        return {
+            "has_content_param": False,  # Será atualizado durante a análise
+            "is_button_type": False,     # Será atualizado durante a análise
+            "style_modifier": f"{name.lower()}Style",
+            "style_type": f"{name}Style",
+            "style_case_type": f"{name}StyleCase",
+            "preview_generator": None,
+            "code_generator": None,
+            "default_style_cases": []
+        }
+        
+    def update_component_config(self, component_info: ComponentInfo) -> Dict:
+        """Atualiza a configuração do componente com base na análise."""
+        config = self.get_component_type(component_info.name).copy()
+        
+        # Atualizar configuração com base na análise do componente
+        if component_info.has_action_param:
+            config["is_button_type"] = True
+            
+        # Verificar se o componente tem parâmetro de conteúdo
+        for param in component_info.public_init_params:
+            if param.get('name') == 'content' or param.get('name') == 'text':
+                config["has_content_param"] = True
+                break
+                
+        return config
+
+# Instância global do registro de componentes
+component_registry = ComponentTypeRegistry()
 
 def parse_swift_file(file_path: str) -> str:
     """Lê e retorna o conteúdo de um arquivo Swift."""
@@ -481,11 +573,16 @@ def detect_button_component(component_name: str, init_params: List[Dict]) -> boo
 
 def analyze_component(component_info: ComponentInfo) -> ComponentInfo:
     """Analisa um componente em detalhes para detectar seus tipos de parâmetros e necessidades específicas."""
-    # Ler o conteúdo do arquivo View
-    view_content = parse_swift_file(component_info.view_path)
+    # Ler o conteúdo do arquivo View se existir
+    view_content = ""
+    if component_info.view_path and os.path.exists(component_info.view_path):
+        view_content = parse_swift_file(component_info.view_path)
+    else:
+        logger.info(f"Arquivo View não encontrado para {component_info.name}, usando configuração padrão")
     
-    # Extrair parâmetros do inicializador
-    component_info.public_init_params = extract_init_params(view_content, component_info.name)
+    # Extrair parâmetros do inicializador se tiver conteúdo
+    if view_content:
+        component_info.public_init_params = extract_init_params(view_content, component_info.name)
     
     # Verificar se é um componente do tipo Button
     is_button = detect_button_component(component_info.name, component_info.public_init_params)
@@ -509,7 +606,7 @@ def analyze_component(component_info: ComponentInfo) -> ComponentInfo:
     
     return component_info
 
-def find_component_files(component_name: str) -> ComponentInfo:
+def find_component_files(component_name: str) -> Optional[ComponentInfo]:
     """Localiza os arquivos View, Configuration e Styles de um componente."""
     component_info = None
     
@@ -537,25 +634,30 @@ def find_component_files(component_name: str) -> ComponentInfo:
     
     # Localizar arquivos View, Configuration e Styles
     try:
-        files = os.listdir(found_path)
-        logger.info(f"Arquivos encontrados no diretório do componente: {files}")
+        if found_path:  # Verificar se found_path não é None
+            files = os.listdir(found_path)
+            logger.info(f"Arquivos encontrados no diretório do componente: {files}")
+        else:
+            logger.error(f"Caminho não encontrado para o componente {component_name}")
+            return component_info
     except Exception as e:
         logger.error(f"Erro ao listar arquivos do componente: {e}")
         return component_info
     
     for file in files:
-        file_path = os.path.join(found_path, file)
-        logger.info(f"Verificando arquivo: {file_path}")
-        
-        if f"{component_name}View" in file:
-            component_info.view_path = file_path
-            logger.info(f"View encontrada: {file_path}")
-        elif f"{component_name}Configuration" in file:
-            component_info.config_path = file_path
-            logger.info(f"Configuration encontrada: {file_path}")
-        elif f"{component_name}Styles" in file:
-            component_info.styles_path = file_path
-            logger.info(f"Styles encontrada: {file_path}")
+        if found_path:  # Verificar se found_path não é None
+            file_path = os.path.join(found_path, file)
+            logger.info(f"Verificando arquivo: {file_path}")
+            
+            if f"{component_name}View" in file:
+                component_info.view_path = file_path
+                logger.info(f"View encontrada: {file_path}")
+            elif f"{component_name}Configuration" in file:
+                component_info.config_path = file_path
+                logger.info(f"Configuration encontrada: {file_path}")
+            elif f"{component_name}Styles" in file:
+                component_info.styles_path = file_path
+                logger.info(f"Styles encontrada: {file_path}")
     
     # Verificar se encontrou os arquivos necessários
     if not component_info.view_path:
@@ -568,9 +670,9 @@ def find_component_files(component_name: str) -> ComponentInfo:
         component_info.properties = extract_properties(content)
         
         # Categorizar propriedades
-        (component_info.enum_properties, 
-         component_info.text_properties, 
-         component_info.bool_properties, 
+        (component_info.enum_properties,
+         component_info.text_properties,
+         component_info.bool_properties,
          component_info.number_properties) = categorize_properties(component_info.properties)
     
     if component_info.styles_path:
@@ -584,30 +686,32 @@ def find_component_files(component_name: str) -> ComponentInfo:
             component_info.style_cases = extract_style_cases(content)
             logger.info(f"Casos de estilo encontrados: {component_info.style_cases}")
     
-    # Se for o componente Button, definir valores padrão específicos
-    if component_name == "Button":
-        logger.info("Configurando valores específicos para Button")
-        if not component_info.style_cases:
-            component_info.style_cases = ["contentA", "highlightA", "backgroundD"]
-            logger.info(f"Definindo casos de estilo padrão para Button: {component_info.style_cases}")
+    # Obter configurações específicas do tipo de componente
+    component_type_config = component_registry.get_component_type(component_name)
+    
+    # Se não tiver casos de estilo, usar os padrões do tipo de componente
+    if not component_info.style_cases and component_type_config["default_style_cases"]:
+        component_info.style_cases = component_type_config["default_style_cases"]
+        logger.info(f"Definindo casos de estilo padrão para {component_name}: {component_info.style_cases}")
+    
+    # Definir o tipo do componente
+    component_info.component_type = component_name
     
     return component_info
 
-def generate_sample_file(component_info: ComponentInfo) -> str:
+def generate_sample_file(component_info: ComponentInfo, component_config: Optional[Dict] = None) -> str:
     """Gera o conteúdo do arquivo Sample com base nas informações do componente."""
     # Analisa o componente em detalhes para detectar tipos específicos
     component_info = analyze_component(component_info)
     
     sample_name = f"{component_info.name}Sample"
     
-    # Determinar configurações específicas do componente que serão usadas em todo o código
-    component_config = {
-        "has_content_param": component_info.name in ["Text", "Label"],  # Se o componente precisa de texto como "sampleText"
-        "is_button_type": component_info.name == "Button" or component_info.has_action_param,  # Se é um botão ou componente com ação
-        "style_modifier": f"{component_info.name.lower()}Style",  # O nome do modificador de estilo
-        "style_type": f"{component_info.name}Style",  # Tipo do estilo
-        "style_case_type": f"{component_info.name}StyleCase"  # Tipo do case de estilo
-    }
+    if component_config is None:
+        # Obter configurações específicas do tipo de componente
+        component_config = component_registry.get_component_type(component_info.name)
+        
+        # Atualizar a configuração com base na análise do componente
+        component_config = component_registry.update_component_config(component_info)
     
     # Imports
     imports = """import SwiftUI
@@ -1203,7 +1307,7 @@ fileprivate enum StyleFunctionName: String, CaseIterable, Identifiable {{
     
     return full_content
 
-def find_button_specific_files():
+def find_button_specific_files() -> ComponentInfo:
     """Procura especificamente por arquivos do Button quando ele é um tipo nativo do SwiftUI."""
     component_name = "Button"
     logger.info("Procurando especificamente por arquivos do Button")
@@ -1229,10 +1333,18 @@ def find_button_specific_files():
     
     # Criar um ComponentInfo para o Button
     component_info = ComponentInfo("Button", "BaseElements/Natives")
-    component_info.styles_path = styles_path
+    if styles_path:
+        component_info.styles_path = styles_path
+    
+    # Obter configurações específicas do tipo de componente
+    component_type_config = component_registry.get_component_type("Button")
     
     # Definir valores padrão específicos para o Button
-    component_info.style_cases = ["contentA", "highlightA", "backgroundD"]
+    if component_type_config["default_style_cases"]:
+        component_info.style_cases = component_type_config["default_style_cases"]
+    else:
+        component_info.style_cases = ["contentA", "highlightA", "backgroundD"]
+    
     logger.info(f"Definindo casos de estilo padrão para Button: {component_info.style_cases}")
     
     # Adicionar parâmetros de inicialização padrão para Button
@@ -1255,6 +1367,9 @@ def find_button_specific_files():
     
     # Marcar o componente como tendo parâmetro de ação
     component_info.has_action_param = True
+    
+    # Definir o tipo do componente
+    component_info.component_type = "Button"
     
     return component_info
 
@@ -1325,7 +1440,7 @@ def customize_component_generation(component_info: ComponentInfo, template: str)
         template = re.sub(r'\s+@State', r'@State', template)
         
         # Substituir seções no template
-        template = re.sub(r'// Preview do componente com as configurações selecionadas.*?}$', 
+        template = re.sub(r'// Preview do componente com as configurações selecionadas.*?}$',
                          button_preview, template, flags=re.DOTALL | re.MULTILINE)
         
         # Substituir a função de geração de código
@@ -1333,7 +1448,7 @@ def customize_component_generation(component_info: ComponentInfo, template: str)
                          button_code, template, flags=re.DOTALL | re.MULTILINE)
         
         # Adicionar estado para o título do botão logo após os outros estados
-        template = template.replace('@State private var showAllStyles = false', 
+        template = template.replace('@State private var showAllStyles = false',
                                    f'{title_state}\n    @State private var showAllStyles = false')
         
         # Corrigir a seção de configuração para envolver tudo em um VStack
@@ -1367,11 +1482,11 @@ def customize_component_generation(component_info: ComponentInfo, template: str)
     }
 """
         # Substituir a seção de configuração inteira
-        template = re.sub(r'// Área de configuração.*?}$', 
+        template = re.sub(r'// Área de configuração.*?}$',
                          config_section, template, flags=re.DOTALL | re.MULTILINE)
         
         # Remover qualquer chave extra após o previewComponent
-        template = re.sub(r'}\s*\n\s*}\s*\n\s*//\s*Área de configuração', 
+        template = re.sub(r'}\s*\n\s*}\s*\n\s*//\s*Área de configuração',
                          '}\n\n    // Área de configuração', template)
         
     return template
@@ -1380,10 +1495,14 @@ def create_sample_file(component_name: str):
     """Cria um arquivo Sample para um componente especificado."""
     logger.info(f"Criando amostra para o componente: {component_name}")
     
-    # Tratamento especial para o Button, que é um componente SwiftUI nativo
-    if component_name == "Button":
-        # Para Button, em vez de gerar um arquivo complexo com o script, 
-        # vamos usar um template hard-coded específico que sabemos que funciona
+    # Obter configurações específicas do tipo de componente
+    component_type_config = component_registry.get_component_type(component_name)
+    
+    # Verificar se deve usar o template hard-coded para Button
+    use_hardcoded_template = (component_name == "Button" and not os.environ.get("FORCE_DYNAMIC_GENERATION"))
+    
+    if use_hardcoded_template:
+        # Para Button, por padrão usamos um template hard-coded que sabemos que funciona
         content = create_button_sample_file()
         
         # Determinar o caminho para salvar o arquivo Sample
@@ -1403,12 +1522,26 @@ def create_sample_file(component_name: str):
             logger.error(f"Erro ao criar o arquivo Sample para Button: {e}")
             return False
     else:
-        # Para outros componentes, usar a lógica original
-        component_info = find_component_files(component_name)
-    
+        # Para outros componentes ou se forçar geração dinâmica para Button
+        logger.info(f"Usando geração dinâmica para o componente: {component_name}")
+        
+        # Tentar encontrar os arquivos do componente
+        component_info = None
+        
+        # Verificar se é um componente especial que precisa de tratamento específico
+        if component_name == "Button" and os.environ.get("FORCE_DYNAMIC_GENERATION"):
+            component_info = find_button_specific_files()
+        else:
+            component_info = find_component_files(component_name)
+        
         if not component_info:
             logger.error(f"Não foi possível encontrar o componente: {component_name}")
             return False
+        
+        component_info = analyze_component(component_info)
+        
+        # Atualizar a configuração do componente com base na análise
+        component_config = component_registry.update_component_config(component_info)
         
         # Determinar o caminho para salvar o arquivo Sample
         sample_path = os.path.join(SAMPLES_PATH, component_info.type_path, component_name)
@@ -1420,9 +1553,26 @@ def create_sample_file(component_name: str):
         sample_content = generate_sample_file(component_info)
         
         # Verificar se é um componente que precisa de customização
-        if component_info.has_action_param:
+        if component_info.has_action_param or component_type_config["is_button_type"]:
             logger.info(f"Aplicando customizações para o componente tipo button: {component_name}")
             sample_content = customize_component_generation(component_info, sample_content)
+        elif component_type_config["preview_generator"]:
+            # Usar gerador de preview específico para o tipo de componente
+            logger.info(f"Aplicando customizações específicas para o componente: {component_name}")
+            preview_generator = component_type_config["preview_generator"]
+            code_generator = component_type_config["code_generator"]
+            
+            if preview_generator:
+                preview_content = preview_generator(component_info)
+                # Substituir a seção de preview no template
+                sample_content = re.sub(r'// Preview do componente com as configurações selecionadas.*?}$',
+                                      preview_content, sample_content, flags=re.DOTALL | re.MULTILINE)
+            
+            if code_generator:
+                code_content = code_generator(component_info)
+                # Substituir a função de geração de código
+                sample_content = re.sub(r'// Gera o código Swift para o componente configurado.*?}$',
+                                      code_content, sample_content, flags=re.DOTALL | re.MULTILINE)
         
         # Salvar o arquivo
         sample_file_path = os.path.join(sample_path, f"{component_name}Sample.swift")
@@ -1434,6 +1584,10 @@ def create_sample_file(component_name: str):
         except Exception as e:
             logger.error(f"Erro ao criar o arquivo Sample: {e}")
             return False
+
+# Inicializar o registro de componentes após a definição de todas as funções
+component_registry = ComponentTypeRegistry()
+component_registry._register_default_types()
 
 def main():
     """Função principal."""
