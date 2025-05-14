@@ -71,3 +71,11 @@ publish_all: ## Publish all apps to TestFlight
 	@$(MAKE) publish_zenithsample
 	@$(MAKE) publish_zenithcoresample
 	@echo "Todos os aplicativos foram publicados com sucesso!"
+
+generate_sample: ## Gera Sample para um componente Zenith (ex: make generate_sample COMPONENT=Text)
+	@if [ -z "$(COMPONENT)" ]; then \
+		echo "É necessário especificar um componente. Exemplo: make generate_sample COMPONENT=Text"; \
+		exit 1; \
+	fi
+	@echo "Gerando Sample para o componente: $(COMPONENT)"
+	@./Scripts/Generate/SampleGenerator/generate_sample.sh $(COMPONENT)
