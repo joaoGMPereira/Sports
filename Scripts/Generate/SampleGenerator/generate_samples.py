@@ -328,9 +328,10 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
     
     # Adicionar visualização de todos os estilos, baseado no tipo de estilo disponível
     if component_info.style_functions and len(component_info.style_functions) > 0:
-        # Usando funções de estilo
+        # Usando uma organização vertical com estilos organizados por função
         body += """                                    VStack(alignment: .leading, spacing: 16) {
 """
+        # Para cada função de estilo (small, medium, etc), mostrar todas as cores possíveis
         for style_func in component_info.style_functions:
             body += f"""                                        VStack(alignment: .leading) {{
                                             Text("{style_func['name']}()")
@@ -338,18 +339,19 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
                                                 .foregroundColor(colors.contentA)
                                                 .padding(.bottom, 4)
                                             
-                                            HStack(spacing: 8) {{
+                                            // Lista de exemplos de este estilo em todas as cores
+                                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], spacing: 8) {{
                                                 ForEach(ColorName.allCases, id: \\.self) {{ color in
-                                                    Text("\\(String(describing: color))")
-                                                        .padding(.vertical, 4)
-                                                        .padding(.horizontal, 8)
+                                                    Text(String(describing: color))
+                                                        .textStyle(.{style_func['name']}(color))
+                                                        .padding(8)
+                                                        .frame(maxWidth: .infinity)
                                                         .background(
                                                             RoundedRectangle(cornerRadius: 4)
-                                                                .fill(colors.backgroundB.opacity(0.5))
+                                                                .fill(getContrastBackground(for: color))
                                                         )
                                                 }}
                                             }}
-                                            .padding(.horizontal)
                                         }}
                                         .padding(.vertical, 8)
 """
@@ -357,14 +359,17 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
 """
     elif component_info.style_cases and len(component_info.style_cases) > 0:
         # Fallback para StyleCase
-        body += f"""                                    ForEach({component_info.name}StyleCase.allCases, id: \\.self) {{ style in
-                                        Text("\\(String(describing: style))")
-                                            .padding(.vertical, 4)
-                                            .padding(.horizontal, 8)
-                                            .background(
-                                                RoundedRectangle(cornerRadius: 4)
-                                                    .fill(colors.backgroundB.opacity(0.5))
-                                            )
+        body += f"""                                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], spacing: 8) {{
+                                        ForEach({component_info.name}StyleCase.allCases, id: \\.self) {{ style in
+                                            Text(String(describing: style))
+                                                .textStyle(style.style())
+                                                .padding(8)
+                                                .frame(maxWidth: .infinity)
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 4)
+                                                        .fill(getContrastBackground(for: getColorFromStyle(style)))
+                                                )
+                                        }}
                                     }}
 """
     
@@ -398,7 +403,7 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
                 .frame(maxWidth: .infinity)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(useContrastBackground ? colors.backgroundA : colors.backgroundB.opacity(0.2))
+                        .fill(useContrastBackground ? getContrastBackground(for: selectedColorName) : colors.backgroundB.opacity(0.2))
                 )
 """
         else:
@@ -410,7 +415,7 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
                 .frame(maxWidth: .infinity)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(useContrastBackground ? colors.backgroundA : colors.backgroundB.opacity(0.2))
+                        .fill(useContrastBackground ? getContrastBackground(for: getColorFromStyle(selectedStyle)) : colors.backgroundB.opacity(0.2))
                 )
 """
     else:
@@ -526,18 +531,20 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
     
     # Adicionar seletor de estilo
     if component_info.style_functions and len(component_info.style_functions) > 0:
-        # Seletor para funções de estilo
+        # Seletor para funções de estilo usando EnumSelector
         style_func_names = [func['name'] for func in component_info.style_functions]
-        style_func_names_str = ", ".join([f'"{name}"' for name in style_func_names])
         
+        # Referência à enum que será declarada no final do arquivo
         configuration_section += f"""            // Seletor para função de estilo
-            Picker("Estilo", selection: $selectedStyleFunction) {{
-                ForEach([{style_func_names_str}], id: \\.self) {{ styleName in
-                    Text(styleName).tag(styleName)
-                }}
-            }}
-            .pickerStyle(SegmentedPickerStyle())
-            .padding(.horizontal)
+            EnumSelector<StyleFunctionName>(
+                title: "Estilo",
+                selection: Binding(
+                    get: {{ StyleFunctionName(rawValue: selectedStyleFunction) ?? .{style_func_names[0]} }},
+                    set: {{ selectedStyleFunction = $0.rawValue }}
+                ),
+                columnsCount: 3,
+                height: 120
+            )
             
             // Seletor para cor
             EnumSelector<ColorName>(
@@ -634,7 +641,7 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
     if component_info.name == "Text" and component_info.style_functions and len(component_info.style_functions) > 0:
         helper_methods = """
     // Helper para obter o TextStyle correspondente à função selecionada
-    private func getSelectedTextStyle() -> any TextStyle {
+    private func getSelectedTextStyle() -> some TextStyle {
         switch selectedStyleFunction {
 """
         for func_info in component_info.style_functions:
@@ -646,6 +653,50 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
             return .small(selectedColorName)
         }
     }
+    
+    // Gera um fundo de contraste adequado para a cor especificada
+    private func getContrastBackground(for colorName: ColorName) -> Color {
+        let color = colors.color(by: colorName) ?? colors.backgroundB
+        
+        // Extrair componentes RGB da cor
+        let uiColor = UIColor(color)
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+        
+        uiColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        
+        // Calcular luminosidade da cor (fórmula perceptual)
+        let luminance = 0.299 * red + 0.587 * green + 0.114 * blue
+        
+        // Verificar se estamos lidando com a cor backgroundC ou cores com luminosidade similar
+        if (abs(luminance - 0.27) < 0.1) { // 0.27 é aproximadamente a luminosidade de #444444
+            // Para cinzas médios como backgroundC, criar um contraste mais definido
+            if luminance < 0.3 {
+                // Para cinzas que tendem ao escuro, usar um contraste bem claro
+                return Color.white.opacity(0.25)
+            } else {
+                // Para cinzas que tendem ao claro, usar um contraste bem escuro
+                return Color.black.opacity(0.15)
+            }
+        }
+        
+        // Para as demais cores, manter a lógica anterior mas aumentar o contraste
+        if luminance < 0.5 {
+            // Para cores escuras, gerar um contraste claro
+            return Color(red: min(red + 0.4, 1.0), 
+                        green: min(green + 0.4, 1.0), 
+                        blue: min(blue + 0.4, 1.0))
+                .opacity(0.35)
+        } else {
+            // Para cores claras, gerar um contraste escuro
+            return Color(red: max(red - 0.25, 0.0), 
+                        green: max(green - 0.25, 0.0), 
+                        blue: max(blue - 0.25, 0.0))
+                .opacity(0.2)
+        }
+    }
 """
     elif component_info.name == "Text":
         helper_methods = """
@@ -654,6 +705,97 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
         // Identificamos o TextStyleCase mais próximo com base na fonte e cor selecionadas
         return String(describing: selectedStyle).lowercased()
     }
+    
+    // Obtém a cor associada a um StyleCase
+    private func getColorFromStyle(_ style: TextStyleCase) -> ColorName {
+        let styleName = String(describing: style)
+        
+        if styleName.contains("HighlightA") {
+            return .highlightA
+        } else if styleName.contains("BackgroundA") {
+            return .backgroundA
+        } else if styleName.contains("BackgroundB") {
+            return .backgroundB
+        } else if styleName.contains("BackgroundC") {
+            return .backgroundC
+        } else if styleName.contains("BackgroundD") {
+            return .backgroundD
+        } else if styleName.contains("ContentA") {
+            return .contentA
+        } else if styleName.contains("ContentB") {
+            return .contentB
+        } else if styleName.contains("ContentC") {
+            return .contentC
+        } else if styleName.contains("Critical") {
+            return .critical
+        } else if styleName.contains("Attention") {
+            return .attention
+        } else if styleName.contains("Danger") {
+            return .danger
+        } else if styleName.contains("Positive") {
+            return .positive
+        } else {
+            return .none
+        }
+    }
+    
+    // Gera um fundo de contraste adequado para a cor especificada
+    private func getContrastBackground(for colorName: ColorName) -> Color {
+        let color = colors.color(by: colorName) ?? colors.backgroundB
+        
+        // Extrair componentes RGB da cor
+        let uiColor = UIColor(color)
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+        
+        uiColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        
+        // Calcular luminosidade da cor (fórmula perceptual)
+        let luminance = 0.299 * red + 0.587 * green + 0.114 * blue
+        
+        // Verificar se estamos lidando com a cor backgroundC ou cores com luminosidade similar
+        if (abs(luminance - 0.27) < 0.1) { // 0.27 é aproximadamente a luminosidade de #444444
+            // Para cinzas médios como backgroundC, criar um contraste mais definido
+            if luminance < 0.3 {
+                // Para cinzas que tendem ao escuro, usar um contraste bem claro
+                return Color.white.opacity(0.25)
+            } else {
+                // Para cinzas que tendem ao claro, usar um contraste bem escuro
+                return Color.black.opacity(0.15)
+            }
+        }
+        
+        // Para as demais cores, manter a lógica anterior mas aumentar o contraste
+        if luminance < 0.5 {
+            // Para cores escuras, gerar um contraste claro
+            return Color(red: min(red + 0.4, 1.0), 
+                        green: min(green + 0.4, 1.0), 
+                        blue: min(blue + 0.4, 1.0))
+                .opacity(0.35)
+        } else {
+            // Para cores claras, gerar um contraste escuro
+            return Color(red: max(red - 0.25, 0.0), 
+                        green: max(green - 0.25, 0.0), 
+                        blue: max(blue - 0.25, 0.0))
+                .opacity(0.2)
+        }
+    }
+"""
+    
+    # Adicionar a declaração da enum StyleFunctionName no final do arquivo (fora da struct)
+    # para componentes com funções de estilo
+    enum_declaration = ""
+    if component_info.style_functions and len(component_info.style_functions) > 0:
+        style_func_names = [func['name'] for func in component_info.style_functions]
+        enum_declaration = f"""
+// Enum para seleção das funções de estilo
+fileprivate enum StyleFunctionName: String, CaseIterable, Identifiable {{
+    case {", ".join([f'{name} = "{name}"' for name in style_func_names])}
+    
+    var id: Self {{ self }}
+}}
 """
     
     # Combinar tudo
@@ -666,6 +808,9 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
     full_content += generate_code
     full_content += helper_methods
     full_content += "\n}"  # Fechar a struct
+    
+    # Adicionar a declaração do enum no final do arquivo (fora da struct)
+    full_content += enum_declaration
     
     return full_content
 
