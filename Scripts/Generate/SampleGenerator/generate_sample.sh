@@ -23,20 +23,29 @@ python3 "$PYTHON_SCRIPT" "$COMPONENT_NAME"
 if [ $? -eq 0 ]; then
     echo "Sample gerado com sucesso!"
     
-    # Abre o arquivo gerado no VS Code (opcional)
-    echo "Deseja abrir o arquivo gerado no VS Code? (s/n)"
-    read -r OPEN_FILE
+    # Localiza o arquivo gerado
+    SAMPLE_FILE=$(find "$BASE_DIR/Packages/ZenithSample/ZenithSample" -name "${COMPONENT_NAME}Sample.swift")
     
-    if [[ "$OPEN_FILE" =~ ^[Ss]$ ]]; then
-        # Localiza o arquivo gerado
-        SAMPLE_FILE=$(find "$BASE_DIR/Packages/ZenithSample/ZenithSample" -name "${COMPONENT_NAME}Sample.swift")
+    if [ -n "$SAMPLE_FILE" ]; then
+        echo "Arquivo Sample criado em: $SAMPLE_FILE"
         
-        if [ -n "$SAMPLE_FILE" ]; then
-            echo "Abrindo arquivo: $SAMPLE_FILE"
-            code "$SAMPLE_FILE"
+        # Verifica se o comando 'code' está disponível para abrir o VS Code
+        if command -v code >/dev/null 2>&1; then
+            # Abre o arquivo gerado no VS Code (opcional)
+            echo "Deseja abrir o arquivo gerado no VS Code? (s/n)"
+            read -r OPEN_FILE
+            
+            if [[ "$OPEN_FILE" =~ ^[Ss]$ ]]; then
+                echo "Abrindo arquivo no VS Code: $SAMPLE_FILE"
+                code "$SAMPLE_FILE"
+            fi
         else
-            echo "Arquivo não encontrado."
+            echo "O comando 'code' não está disponível. Para abrir no VS Code, você pode:"
+            echo "1. Adicionar o VS Code ao PATH" 
+            echo "2. Abrir manualmente o arquivo: $SAMPLE_FILE"
         fi
+    else
+        echo "Arquivo não encontrado."
     fi
 else
     echo "Erro ao gerar Sample para o componente: $COMPONENT_NAME"

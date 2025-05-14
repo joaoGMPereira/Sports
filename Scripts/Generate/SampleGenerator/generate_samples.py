@@ -328,31 +328,30 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
 """
     
     # Implementação da função generateSwiftCode
-    generate_code = """
+    generate_code = '''
     // Gera o código Swift para o componente configurado
     private func generateSwiftCode() -> String {
         // Aqui você pode personalizar a geração de código com base no componente
         var code = "// Código gerado automaticamente\\n"
         
         code += """
-"""
+'''
     
     # Adicionar exemplo de código gerado
     if component_info.name == "Text":
-        generate_code += """        Text("\\(sampleText)")
-            .textStyle(.\\(getTextStyleName()))
-        """
+        # Usando string simples para evitar problemas com a interpolação Swift
+        generate_code += "        Text(\"Exemplo de texto\")\n"
+        generate_code += "            .textStyle(.mediumContentA)\n"
     else:
-        generate_code += f"""        {component_info.name}()
-            // Adicione propriedades e configurações aqui
-        """
+        generate_code += f"        {component_info.name}()\n"
+        generate_code += "            // Adicione propriedades e configurações aqui\n"
     
-    generate_code += """
+    generate_code += '''
         """
         
         return code
     }
-"""
+'''
     
     # Helper para obter o nome do estilo (apenas para Text)
     helper_methods = ""
