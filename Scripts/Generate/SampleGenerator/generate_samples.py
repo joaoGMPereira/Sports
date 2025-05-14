@@ -5,7 +5,8 @@ import os
 import sys
 import re
 import argparse
-from typing import List, Dict, Optional, Tuple
+import logging
+from typing import List, Dict, Optional, Tuple, Set, Any
 
 """
 Script para gerar arquivos Sample para componentes do Zenith
@@ -13,11 +14,250 @@ Este script analisa arquivos View, Configuration e Styles de um componente
 e gera automaticamente um arquivo Sample para demonstrar o uso do componente.
 """
 
+# Configuração de logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+logger = logging.getLogger('generate_samples')
+
+# Definição prévia da função create_button_sample_file para evitar erros de referência
+def create_button_sample_file() -> str:
+    """Cria um conteúdo fixo para o arquivo de amostra do Button."""
+    return '''import SwiftUI
+import Zenith
+import ZenithCoreInterface
+
+struct ButtonSample: View, @preconcurrency BaseThemeDependencies {
+    @Dependency(\\.themeConfigurator) var themeConfigurator
+    @State private var selectedStyle = ButtonStyleCase.contentA
+    @State private var buttonTitle = "Botão de Exemplo"
+    @State private var showAllStyles = false
+    @State private var useContrastBackground = true
+    @State private var showFixedHeader = false
+    
+    var body: some View {
+        SampleWithFixedHeader(
+            showFixedHeader: $showFixedHeader,
+            content: {
+                Card(action: {
+                    showFixedHeader.toggle()
+                }) {
+                    VStack(spacing: 16) {
+                        // Preview do componente com configurações atuais
+                        previewComponent
+                    }
+                    .padding()
+                }
+                .padding()
+            },
+            config: {
+                VStack(spacing: 16) {
+                    // Área de configuração
+                    configurationSection
+                    
+                    // Preview do código gerado
+                    CodePreviewSection(generateCode: generateSwiftCode)
+                    
+                    // Exibição de todos os estilos (opcional)
+                    if showAllStyles {
+                        Divider().padding(.vertical, 4)
+                        
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Todos os Estilos")
+                                .font(fonts.mediumBold)
+                                .foregroundColor(colors.contentA)
+                            
+                            ScrollView {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], spacing: 8) {
+                                        ForEach(ButtonStyleCase.allCases, id: \\.self) { style in
+                                            VStack {
+                                                Text(String(describing: style))
+                                                    .font(fonts.small)
+                                                    .foregroundColor(colors.contentA)
+                                                    .padding(.bottom, 2)
+                                                
+                                                Button(buttonTitle) {
+                                                    // Ação vazia para exemplo
+                                                }
+                                                .buttonStyle(style.style())
+                                                .padding(8)
+                                                .frame(maxWidth: .infinity)
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 4)
+                                                        .fill(getContrastBackground(for: getColorFromStyle(style)))
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            .frame(maxHeight: 200)
+                        }
+                    }
+                }
+                .padding(.horizontal)
+            }
+        )
+    }
+
+    // Preview do componente com as configurações selecionadas
+    private var previewComponent: some View {
+        VStack {
+            // Preview do componente com as configurações atuais
+            Button(buttonTitle) {
+                print("Botão pressionado")
+            }
+            .buttonStyle(selectedStyle.style())
+            .padding()
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(useContrastBackground ? colors.backgroundA : colors.backgroundB.opacity(0.2))
+            )
+        }
+    }
+
+    // Área de configuração
+    private var configurationSection: some View {
+        VStack(spacing: 16) {
+            // Campo para texto do botão
+            TextField("Texto do botão", text: $buttonTitle)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .padding(.horizontal)
+            
+            // Seletor de estilo
+            EnumSelector<ButtonStyleCase>(
+                title: "Estilo",
+                selection: $selectedStyle,
+                columnsCount: 3,
+                height: 120
+            )
+            
+            // Toggles para opções
+            VStack {
+                Toggle("Usar fundo contrastante", isOn: $useContrastBackground)
+                    .toggleStyle(.default(.highlightA))
+                
+                Toggle("Mostrar Todos os Estilos", isOn: $showAllStyles)
+                    .toggleStyle(.default(.highlightA))
+            }
+            .padding(.horizontal)
+        }
+    }
+    
+    // Gera o código Swift para o componente configurado
+    private func generateSwiftCode() -> String {
+        // Aqui você pode personalizar a geração de código com base no componente
+        var code = "// Código gerado automaticamente\\n"
+        
+        code += """
+        Button("\\(buttonTitle)") {
+            // Ação do botão aqui
+        }
+        .buttonStyle(selectedStyle.style())
+        """
+        
+        return code
+    }
+    
+    // Helper para obter o estilo correspondente à função selecionada
+    private func getSelectedStyle() -> some ButtonStyle {
+        return selectedStyle.style()
+    }
+    
+    // Obtém a cor associada a um StyleCase
+    private func getColorFromStyle<T>(_ style: T) -> ColorName {
+        let styleName = String(describing: style)
+        
+        if styleName.contains("HighlightA") {
+            return .highlightA
+        } else if styleName.contains("BackgroundA") {
+            return .backgroundA
+        } else if styleName.contains("BackgroundB") {
+            return .backgroundB
+        } else if styleName.contains("BackgroundC") {
+            return .backgroundC
+        } else if styleName.contains("BackgroundD") {
+            return .backgroundD
+        } else if styleName.contains("ContentA") {
+            return .contentA
+        } else if styleName.contains("ContentB") {
+            return .contentB
+        } else if styleName.contains("ContentC") {
+            return .contentC
+        } else if styleName.contains("Critical") {
+            return .critical
+        } else if styleName.contains("Attention") {
+            return .attention
+        } else if styleName.contains("Danger") {
+            return .danger
+        } else if styleName.contains("Positive") {
+            return .positive
+        } else {
+            return .none
+        }
+    }
+    
+    // Gera um fundo de contraste adequado para a cor especificada
+    private func getContrastBackground(for colorName: ColorName) -> Color {
+        let color = colors.color(by: colorName) ?? colors.backgroundB
+        
+        // Extrair componentes RGB da cor
+        let uiColor = UIColor(color)
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+        
+        uiColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        
+        // Calcular luminosidade da cor (fórmula perceptual)
+        let luminance = 0.299 * red + 0.587 * green + 0.114 * blue
+        
+        // Verificar se estamos lidando com a cor backgroundC ou cores com luminosidade similar
+        if (abs(luminance - 0.27) < 0.1) { // 0.27 é aproximadamente a luminosidade de #444444
+            // Para cinzas médios como backgroundC, criar um contraste mais definido
+            if luminance < 0.3 {
+                // Para cinzas que tendem ao escuro, usar um contraste bem claro
+                return Color.white.opacity(0.25)
+            } else {
+                // Para cinzas que tendem ao claro, usar um contraste bem escuro
+                return Color.black.opacity(0.15)
+            }
+        }
+        
+        // Para as demais cores, manter a lógica anterior mas aumentar o contraste
+        if luminance < 0.5 {
+            // Para cores escuras, gerar um contraste claro
+            return Color(red: min(red + 0.4, 1.0), 
+                        green: min(green + 0.4, 1.0), 
+                        blue: min(blue + 0.4, 1.0))
+                .opacity(0.35)
+        } else {
+            // Para cores claras, gerar um contraste escuro
+            return Color(red: max(red - 0.25, 0.0), 
+                        green: max(green - 0.25, 0.0), 
+                        blue: max(blue - 0.25, 0.0))
+                .opacity(0.2)
+        }
+    }
+}'''
+
 # Configurações
 ZENITH_PATH = os.path.expanduser("~/KettleGym/Packages/Zenith")
 ZENITH_SAMPLE_PATH = os.path.expanduser("~/KettleGym/Packages/ZenithSample")
 COMPONENTS_PATH = os.path.join(ZENITH_PATH, "Sources/Zenith")
 SAMPLES_PATH = os.path.join(ZENITH_SAMPLE_PATH, "ZenithSample")
+TESTS_PATH = os.path.join(ZENITH_PATH, "Tests/ZenithTests")
+
+# Configurações adicionais
+INDENT_SIZE = 4
+GENERATE_TESTS = False  # Por padrão, não gera testes
 
 # Estrutura para armazenar informações do componente
 class ComponentInfo:
@@ -34,9 +274,20 @@ class ComponentInfo:
         self.text_properties = []  # Propriedades de texto
         self.bool_properties = []  # Propriedades booleanas
         self.number_properties = []  # Propriedades numéricas
+        self.closure_properties = []  # Propriedades que são closures (ações)
+        self.complex_properties = []  # Propriedades complexas (tipos personalizados)
+        self.public_init_params = []  # Parâmetros do inicializador público
+        self.has_action_param = False  # Se o componente tem um parâmetro de ação
         
     def __str__(self):
         return f"Component: {self.name} (Type: {self.type_path})"
+        
+    def get_property_by_name(self, name: str) -> Optional[Dict]:
+        """Retorna uma propriedade pelo nome"""
+        for prop in self.properties:
+            if prop['name'] == name:
+                return prop
+        return None
 
 def parse_swift_file(file_path: str) -> str:
     """Lê e retorna o conteúdo de um arquivo Swift."""
@@ -156,6 +407,108 @@ def categorize_properties(properties: List[Dict]) -> Tuple[List[Dict], List[Dict
     
     return enum_props, text_props, bool_props, number_props
 
+def extract_init_params(content: str, component_name: str) -> List[Dict]:
+    """Extrai os parâmetros dos inicializadores públicos de um componente."""
+    # Padrão para localizar inicializadores públicos
+    init_pattern = rf'public\s+init\s*\((.*?)\)'
+    
+    init_params = []
+    public_inits = re.finditer(init_pattern, content, re.DOTALL)
+    
+    for match in public_inits:
+        params_str = match.group(1).strip()
+        if not params_str:
+            continue
+            
+        # Dividir pelos parâmetros individuais (isso é complexo devido a possíveis closures aninhadas)
+        param_level = 0
+        param_start = 0
+        params = []
+        
+        for i, char in enumerate(params_str):
+            if char == '(' or char == '<':
+                param_level += 1
+            elif char == ')' or char == '>':
+                param_level -= 1
+            # Se estamos no nível superior e encontramos uma vírgula, temos um parâmetro completo
+            elif char == ',' and param_level == 0:
+                params.append(params_str[param_start:i].strip())
+                param_start = i + 1
+                
+        # Adicionar o último parâmetro
+        if param_start < len(params_str):
+            params.append(params_str[param_start:].strip())
+            
+        # Processar cada parâmetro para extrair nome, tipo e valor padrão
+        for param in params:
+            # Padrão para extrair detalhes do parâmetro
+            param_parts = re.match(r'(?:(\w+)\s+)?(\w+)\s*:\s*([^=]+)(?:\s*=\s*(.+))?', param)
+            
+            if param_parts:
+                # Extrair nome, tipo e valor padrão
+                label = param_parts.group(1)  # Label externo (opcional)
+                name = param_parts.group(2)  # Nome do parâmetro
+                param_type = param_parts.group(3).strip()  # Tipo
+                default_value = param_parts.group(4)  # Valor padrão (opcional)
+                
+                # Determinar se é um parâmetro de closure/ação
+                is_action = False
+                if '->' in param_type:
+                    is_action = True
+                
+                init_params.append({
+                    'label': label,
+                    'name': name,
+                    'type': param_type,
+                    'default_value': default_value.strip() if default_value else None,
+                    'is_action': is_action
+                })
+            
+    return init_params
+
+def detect_button_component(component_name: str, init_params: List[Dict]) -> bool:
+    """Detecta se um componente é um botão ou similar que precisa de tratamento especial."""
+    # Verifica se é um Button pelo nome
+    if component_name == "Button":
+        return True
+    
+    # Verifica se tem um parâmetro de ação típico de botões
+    for param in init_params:
+        if param.get('is_action') and 'Void' in param.get('type', ''):
+            return True
+            
+    return False
+
+def analyze_component(component_info: ComponentInfo) -> ComponentInfo:
+    """Analisa um componente em detalhes para detectar seus tipos de parâmetros e necessidades específicas."""
+    # Ler o conteúdo do arquivo View
+    view_content = parse_swift_file(component_info.view_path)
+    
+    # Extrair parâmetros do inicializador
+    component_info.public_init_params = extract_init_params(view_content, component_info.name)
+    
+    # Verificar se é um componente do tipo Button
+    is_button = detect_button_component(component_info.name, component_info.public_init_params)
+    
+    # Para componentes do tipo Button, armazenar informações adicionais
+    if is_button:
+        logger.info(f"Componente {component_info.name} identificado como tipo Button")
+        for param in component_info.public_init_params:
+            if param.get('is_action'):
+                component_info.has_action_param = True
+                component_info.closure_properties.append(param)
+                logger.info(f"Parâmetro de ação encontrado: {param['name']}")
+    
+    # Categorizar propriedades complexas (que não são tipos simples)
+    for prop in component_info.properties:
+        if prop['data_type'] not in ['String', 'Bool', 'Int', 'Double', 'CGFloat', 'Float'] and not any(t in prop['data_type'] for t in ['Case', 'FontName', 'ColorName']):
+            if '->' in prop['data_type']:  # É uma closure
+                component_info.closure_properties.append(prop)
+            else:
+                component_info.complex_properties.append(prop)
+    
+    return component_info
+
 def find_component_files(component_name: str) -> ComponentInfo:
     """Localiza os arquivos View, Configuration e Styles de um componente."""
     component_info = None
@@ -163,34 +516,54 @@ def find_component_files(component_name: str) -> ComponentInfo:
     # Determinar o tipo de componente (BaseElements/Natives ou Components/Customs)
     possible_paths = [
         os.path.join(COMPONENTS_PATH, "BaseElements/Natives", component_name),
-        os.path.join(COMPONENTS_PATH, "Components/Customs", component_name)
+        os.path.join(COMPONENTS_PATH, "Components/Customs", component_name),
+        os.path.join(COMPONENTS_PATH, "BaseElements", "Natives", component_name),
+        os.path.join(COMPONENTS_PATH, "Components", "Customs", component_name)
     ]
     
+    # Verificar se algum dos caminhos possíveis existe
+    found_path = None
     for base_path in possible_paths:
         if os.path.exists(base_path):
+            logger.info(f"Componente encontrado em: {base_path}")
+            found_path = base_path
             type_path = "BaseElements/Natives" if "BaseElements" in base_path else "Components/Customs"
             component_info = ComponentInfo(component_name, type_path)
             break
     
     if not component_info:
-        print(f"Componente '{component_name}' não encontrado.")
+        logger.error(f"Componente '{component_name}' não encontrado. Caminhos verificados: {possible_paths}")
         return None
     
     # Localizar arquivos View, Configuration e Styles
-    files = os.listdir(os.path.join(COMPONENTS_PATH, component_info.type_path, component_name))
+    try:
+        files = os.listdir(found_path)
+        logger.info(f"Arquivos encontrados no diretório do componente: {files}")
+    except Exception as e:
+        logger.error(f"Erro ao listar arquivos do componente: {e}")
+        return component_info
     
     for file in files:
-        file_path = os.path.join(COMPONENTS_PATH, component_info.type_path, component_name, file)
+        file_path = os.path.join(found_path, file)
+        logger.info(f"Verificando arquivo: {file_path}")
         
         if f"{component_name}View" in file:
             component_info.view_path = file_path
+            logger.info(f"View encontrada: {file_path}")
         elif f"{component_name}Configuration" in file:
             component_info.config_path = file_path
+            logger.info(f"Configuration encontrada: {file_path}")
         elif f"{component_name}Styles" in file:
             component_info.styles_path = file_path
+            logger.info(f"Styles encontrada: {file_path}")
+    
+    # Verificar se encontrou os arquivos necessários
+    if not component_info.view_path:
+        logger.warning(f"View não encontrada para o componente {component_name}")
     
     # Extrair propriedades, funções de estilo e casos de estilo
     if component_info.view_path:
+        logger.info(f"Analisando view: {component_info.view_path}")
         content = parse_swift_file(component_info.view_path)
         component_info.properties = extract_properties(content)
         
@@ -201,22 +574,36 @@ def find_component_files(component_name: str) -> ComponentInfo:
          component_info.number_properties) = categorize_properties(component_info.properties)
     
     if component_info.styles_path:
+        logger.info(f"Analisando arquivo de estilos: {component_info.styles_path}")
         content = parse_swift_file(component_info.styles_path)
         component_info.style_functions = extract_style_functions(content, component_name)
         
         # Se não encontrou funções de estilo, tenta extrair do StyleCase (para compatibilidade)
         if not component_info.style_functions:
+            logger.info("Tentando extrair casos de estilo (StyleCase)")
             component_info.style_cases = extract_style_cases(content)
+            logger.info(f"Casos de estilo encontrados: {component_info.style_cases}")
+    
+    # Se for o componente Button, definir valores padrão específicos
+    if component_name == "Button":
+        logger.info("Configurando valores específicos para Button")
+        if not component_info.style_cases:
+            component_info.style_cases = ["contentA", "highlightA", "backgroundD"]
+            logger.info(f"Definindo casos de estilo padrão para Button: {component_info.style_cases}")
     
     return component_info
 
 def generate_sample_file(component_info: ComponentInfo) -> str:
     """Gera o conteúdo do arquivo Sample com base nas informações do componente."""
+    # Analisa o componente em detalhes para detectar tipos específicos
+    component_info = analyze_component(component_info)
+    
     sample_name = f"{component_info.name}Sample"
     
     # Determinar configurações específicas do componente que serão usadas em todo o código
     component_config = {
-        "has_content_param": component_info.name == "Text",  # Se o componente precisa de texto como "sampleText"
+        "has_content_param": component_info.name in ["Text", "Label"],  # Se o componente precisa de texto como "sampleText"
+        "is_button_type": component_info.name == "Button" or component_info.has_action_param,  # Se é um botão ou componente com ação
         "style_modifier": f"{component_info.name.lower()}Style",  # O nome do modificador de estilo
         "style_type": f"{component_info.name}Style",  # Tipo do estilo
         "style_case_type": f"{component_info.name}StyleCase"  # Tipo do case de estilo
@@ -378,8 +765,10 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
         body += """                                    }
 """
     elif component_info.style_cases and len(component_info.style_cases) > 0:
-        # Fallback para StyleCase
-        body += f"""                                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], spacing: 8) {{
+        # Fallback para StyleCase - versão corrigida para diferenciar entre Button e outros componentes
+        if component_config["is_button_type"]:
+            # Para Button ou componentes que aceitam closure de ação
+            body += f"""                                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], spacing: 8) {{
                                         ForEach({component_config["style_case_type"]}.allCases, id: \\.self) {{ style in
                                             VStack {{
                                                 Text(String(describing: style))
@@ -387,12 +776,31 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
                                                     .foregroundColor(colors.contentA)
                                                     .padding(.bottom, 2)
                                                 
-                                                {component_info.name}"""
-        
-        # Adicionar parâmetro se o componente tiver conteúdo
-        body += "(" + ("sampleText" if component_config["has_content_param"] else "") + ")"
-            
-        body += f"""
+                                                Button(buttonTitle) {{
+                                                    // Ação vazia para exemplo
+                                                }}
+                                                .buttonStyle(style.style())
+                                                .padding(8)
+                                                .frame(maxWidth: .infinity)
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 4)
+                                                        .fill(getContrastBackground(for: getColorFromStyle(style)))
+                                                )
+                                            }}
+                                        }}
+                                    }}
+"""
+        else:
+            # Para componentes sem parâmetros de closure, como Divider
+            body += f"""                                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], spacing: 8) {{
+                                        ForEach({component_config["style_case_type"]}.allCases, id: \\.self) {{ style in
+                                            VStack {{
+                                                Text(String(describing: style))
+                                                    .font(fonts.small)
+                                                    .foregroundColor(colors.contentA)
+                                                    .padding(.bottom, 2)
+                                                
+                                                {component_info.name}()
                                                     .{component_config["style_modifier"]}(style.style())
                                                     .padding(8)
                                                     .frame(maxWidth: .infinity)
@@ -483,7 +891,7 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
     private var configurationSection: some View {
         VStack(spacing: 16) {
 """
-    
+
     # Se componente tem conteúdo, adicionar campo para texto de exemplo
     if component_config["has_content_param"]:
         configuration_section += """            // Campo para texto de exemplo
@@ -492,7 +900,7 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
                 .padding(.horizontal)
                 
 """
-    
+
     # Adicionar controles para cada propriedade de texto
     for prop in component_info.text_properties:
         configuration_section += f"""            // Campo para editar {prop['name']}
@@ -501,7 +909,7 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
                 .padding(.horizontal)
                 
 """
-    
+
     # Adicionar controles para propriedades booleanas
     for prop in component_info.bool_properties:
         configuration_section += f"""            // Toggle para {prop['name']}
@@ -510,7 +918,7 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
                 .padding(.horizontal)
                 
 """
-    
+
     # Adicionar controles para propriedades numéricas
     for prop in component_info.number_properties:
         if 'Int' in prop['data_type']:
@@ -534,7 +942,7 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
             .padding(.horizontal)
             
 """
-    
+
     # Adicionar seletores para propriedades enum
     for prop in component_info.enum_properties:
         enum_type = prop['data_type'].strip()
@@ -547,7 +955,7 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
             )
             
 """
-    
+
     # Adicionar seletor de estilo
     if component_info.style_functions and len(component_info.style_functions) > 0:
         # Seletor para funções de estilo usando EnumSelector
@@ -585,7 +993,7 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
             )
             
 """
-    
+
     # Adicionar toggles para opções de visualização
     configuration_section += """            // Toggles para opções
             VStack {
@@ -795,32 +1203,237 @@ fileprivate enum StyleFunctionName: String, CaseIterable, Identifiable {{
     
     return full_content
 
+def find_button_specific_files():
+    """Procura especificamente por arquivos do Button quando ele é um tipo nativo do SwiftUI."""
+    component_name = "Button"
+    logger.info("Procurando especificamente por arquivos do Button")
+    
+    # Como o Button é um tipo do SwiftUI, precisamos procurar seus arquivos de estilo em locais específicos
+    styles_path = None
+    button_paths = [
+        os.path.join(COMPONENTS_PATH, "BaseElements/Natives", component_name),
+        os.path.join(COMPONENTS_PATH, "BaseElements", "Natives", component_name)
+    ]
+    
+    # Procurar pelo arquivo de estilos do Button
+    for path in button_paths:
+        if os.path.exists(path):
+            files = os.listdir(path)
+            for file in files:
+                if "ButtonStyles.swift" in file:
+                    styles_path = os.path.join(path, file)
+                    logger.info(f"Arquivo de estilos do Button encontrado: {styles_path}")
+                    break
+        if styles_path:
+            break
+    
+    # Criar um ComponentInfo para o Button
+    component_info = ComponentInfo("Button", "BaseElements/Natives")
+    component_info.styles_path = styles_path
+    
+    # Definir valores padrão específicos para o Button
+    component_info.style_cases = ["contentA", "highlightA", "backgroundD"]
+    logger.info(f"Definindo casos de estilo padrão para Button: {component_info.style_cases}")
+    
+    # Adicionar parâmetros de inicialização padrão para Button
+    component_info.public_init_params = [
+        {
+            'label': None,
+            'name': 'title',
+            'type': 'String',
+            'default_value': None,
+            'is_action': False
+        },
+        {
+            'label': None,
+            'name': 'action',
+            'type': '() -> Void',
+            'default_value': None,
+            'is_action': True
+        }
+    ]
+    
+    # Marcar o componente como tendo parâmetro de ação
+    component_info.has_action_param = True
+    
+    return component_info
+
+def generate_button_preview(component_info: ComponentInfo) -> str:
+    """Gera o código de preview específico para componentes do tipo Button."""
+    component_name = component_info.name
+    
+    # Obtendo a inicialização específica para Button
+    preview = f"""
+    // Preview do componente com as configurações selecionadas
+    private var previewComponent: some View {{
+        VStack {{
+            // Preview do componente com as configurações atuais
+            {component_name}(buttonTitle) {{
+                print("Botão pressionado")
+            }}
+            .buttonStyle(selectedStyle.style())
+            .padding()
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(useContrastBackground ? colors.backgroundA : colors.backgroundB.opacity(0.2))
+            )
+        }}
+    }}
+    """
+    
+    return preview
+
+def generate_button_code(component_info: ComponentInfo) -> str:
+    """Gera o código Swift para inicialização específica de componentes do tipo Button."""
+    # Gerar código específico para Button
+    code = '''
+    // Gera o código Swift para o componente configurado
+    private func generateSwiftCode() -> String {
+        // Aqui você pode personalizar a geração de código com base no componente
+        var code = "// Código gerado automaticamente\\n"
+        
+        code += """
+        Button("\\(buttonTitle)") {
+            // Ação do botão aqui
+        }
+        .buttonStyle(selectedStyle.style())
+        """
+        
+        return code
+    }
+    '''
+    
+    return code
+
+def customize_component_generation(component_info: ComponentInfo, template: str) -> str:
+    """Customiza a geração de componente baseado no tipo específico."""
+    # Verifica se o componente é do tipo Button
+    is_button = component_info.name == "Button" or component_info.has_action_param
+    
+    if is_button:
+        logger.info(f"Customizando template para o componente de botão: {component_info.name}")
+        
+        # Substituir a seção do preview component pelo específico para Button
+        button_preview = generate_button_preview(component_info)
+        button_code = generate_button_code(component_info)
+        
+        # Adicionar estado para o título do botão
+        title_state = '@State private var buttonTitle = "Botão de Exemplo"'
+        
+        # Corrigir espaçamento no @State (remover espaço antes do @State)
+        template = re.sub(r'\s+@State', r'@State', template)
+        
+        # Substituir seções no template
+        template = re.sub(r'// Preview do componente com as configurações selecionadas.*?}$', 
+                         button_preview, template, flags=re.DOTALL | re.MULTILINE)
+        
+        # Substituir a função de geração de código
+        template = re.sub(r'// Gera o código Swift para o componente configurado.*?}$',
+                         button_code, template, flags=re.DOTALL | re.MULTILINE)
+        
+        # Adicionar estado para o título do botão logo após os outros estados
+        template = template.replace('@State private var showAllStyles = false', 
+                                   f'{title_state}\n    @State private var showAllStyles = false')
+        
+        # Corrigir a seção de configuração para envolver tudo em um VStack
+        config_section = """
+    // Área de configuração
+    private var configurationSection: some View {
+        VStack(spacing: 16) {
+            // Campo para texto do botão
+            TextField("Texto do botão", text: $buttonTitle)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .padding(.horizontal)
+            
+            // Seletor de estilo
+            EnumSelector<ButtonStyleCase>(
+                title: "Estilo",
+                selection: $selectedStyle,
+                columnsCount: 3,
+                height: 120
+            )
+            
+            // Toggles para opções
+            VStack {
+                Toggle("Usar fundo contrastante", isOn: $useContrastBackground)
+                    .toggleStyle(.default(.highlightA))
+                
+                Toggle("Mostrar Todos os Estilos", isOn: $showAllStyles)
+                    .toggleStyle(.default(.highlightA))
+            }
+            .padding(.horizontal)
+        }
+    }
+"""
+        # Substituir a seção de configuração inteira
+        template = re.sub(r'// Área de configuração.*?}$', 
+                         config_section, template, flags=re.DOTALL | re.MULTILINE)
+        
+        # Remover qualquer chave extra após o previewComponent
+        template = re.sub(r'}\s*\n\s*}\s*\n\s*//\s*Área de configuração', 
+                         '}\n\n    // Área de configuração', template)
+        
+    return template
+
 def create_sample_file(component_name: str):
     """Cria um arquivo Sample para um componente especificado."""
-    component_info = find_component_files(component_name)
+    logger.info(f"Criando amostra para o componente: {component_name}")
     
-    if not component_info:
-        return False
+    # Tratamento especial para o Button, que é um componente SwiftUI nativo
+    if component_name == "Button":
+        # Para Button, em vez de gerar um arquivo complexo com o script, 
+        # vamos usar um template hard-coded específico que sabemos que funciona
+        content = create_button_sample_file()
+        
+        # Determinar o caminho para salvar o arquivo Sample
+        sample_path = os.path.join(SAMPLES_PATH, "BaseElements/Natives", component_name)
+        
+        # Criar os diretórios, se necessário
+        os.makedirs(sample_path, exist_ok=True)
+        
+        # Salvar o arquivo
+        sample_file_path = os.path.join(sample_path, f"{component_name}Sample.swift")
+        try:
+            with open(sample_file_path, 'w') as file:
+                file.write(content)
+            logger.info(f"Arquivo Sample para Button criado com sucesso: {sample_file_path}")
+            return True
+        except Exception as e:
+            logger.error(f"Erro ao criar o arquivo Sample para Button: {e}")
+            return False
+    else:
+        # Para outros componentes, usar a lógica original
+        component_info = find_component_files(component_name)
     
-    # Determinar o caminho para salvar o arquivo Sample
-    sample_path = os.path.join(SAMPLES_PATH, component_info.type_path, component_name)
-    
-    # Criar os diretórios, se necessário
-    os.makedirs(sample_path, exist_ok=True)
-    
-    # Gerar o conteúdo do arquivo Sample
-    sample_content = generate_sample_file(component_info)
-    
-    # Salvar o arquivo
-    sample_file_path = os.path.join(sample_path, f"{component_name}Sample.swift")
-    try:
-        with open(sample_file_path, 'w') as file:
-            file.write(sample_content)
-        print(f"Arquivo Sample criado com sucesso: {sample_file_path}")
-        return True
-    except Exception as e:
-        print(f"Erro ao criar o arquivo Sample: {e}")
-        return False
+        if not component_info:
+            logger.error(f"Não foi possível encontrar o componente: {component_name}")
+            return False
+        
+        # Determinar o caminho para salvar o arquivo Sample
+        sample_path = os.path.join(SAMPLES_PATH, component_info.type_path, component_name)
+        
+        # Criar os diretórios, se necessário
+        os.makedirs(sample_path, exist_ok=True)
+        
+        # Gerar o conteúdo do arquivo Sample
+        sample_content = generate_sample_file(component_info)
+        
+        # Verificar se é um componente que precisa de customização
+        if component_info.has_action_param:
+            logger.info(f"Aplicando customizações para o componente tipo button: {component_name}")
+            sample_content = customize_component_generation(component_info, sample_content)
+        
+        # Salvar o arquivo
+        sample_file_path = os.path.join(sample_path, f"{component_name}Sample.swift")
+        try:
+            with open(sample_file_path, 'w') as file:
+                file.write(sample_content)
+            logger.info(f"Arquivo Sample criado com sucesso: {sample_file_path}")
+            return True
+        except Exception as e:
+            logger.error(f"Erro ao criar o arquivo Sample: {e}")
+            return False
 
 def main():
     """Função principal."""
