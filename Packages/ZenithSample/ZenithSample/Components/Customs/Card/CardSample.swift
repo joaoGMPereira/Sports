@@ -9,6 +9,7 @@ struct CardSample: View, @preconcurrency BaseThemeDependencies {
     @State private var title = "Sample Card"
     @State private var selectedSymbol = "figure.run"
     @State private var symbolSearch = ""
+    @State private var showFixedHeader = false
 
     @State private var selectedStyle = BasicCardStyleCase.allCases.first!
     @State private var selectedArrangement = StackArrangementCase.allCases.first!
@@ -22,77 +23,76 @@ struct CardSample: View, @preconcurrency BaseThemeDependencies {
     }
 
     var body: some View {
-        VStack(spacing: 16) {
-            BasicCard(
-                image: SFSymbol(rawValue: selectedSymbol),
-                title: title,
-                arrangement: selectedArrangement,
-                contentLayout: selectedContentLayout
-            ) {
-                // ação de toque
-            }
-            .cardStyle(selectedStyle.style())
-            .listRowSeparator(.hidden)
+        SampleWithFixedHeader(
+            showFixedHeader: $showFixedHeader,
+            content: {
+                    BasicCard(
+                        image: SFSymbol(rawValue: selectedSymbol),
+                        title: title,
+                        arrangement: selectedArrangement,
+                        contentLayout: selectedContentLayout
+                    ) {
+                        showFixedHeader.toggle()
+                    }
+                    .cardStyle(selectedStyle.style())
+                    .listRowSeparator(.hidden)
+                    .frame(maxHeight: 80)
+                    .padding()
+            },
+            config: {
+                VStack(alignment: .leading, spacing: 12) {
+                    TextField("Título", text: $title)
+                        .textFieldStyle(.roundedBorder)
 
-            Divider().padding(.top)
+                    Text("Estilo")
+                    Picker("Estilo", selection: $selectedStyle) {
+                        ForEach(BasicCardStyleCase.allCases, id: \.self) { style in
+                            Text(style.rawValue)
+                        }
+                    }.pickerStyle(.segmented)
 
-            configurationSection
-        }
-        .padding(.horizontal)
-    }
+                    Text("Arranjo")
+                    Picker("Arranjo", selection: $selectedArrangement) {
+                        ForEach(StackArrangementCase.allCases, id: \.self) { arrangement in
+                            Text(arrangement.rawValue)
+                        }
+                    }.pickerStyle(.segmented)
 
-    var configurationSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            TextField("Título", text: $title)
-                .textFieldStyle(.roundedBorder)
+                    Text("Layout de Conteúdo")
+                    Picker("Layout", selection: $selectedContentLayout) {
+                        ForEach(CardLayoutCase.allCases, id: \.self) { layout in
+                            Text(layout.rawValue)
+                        }
+                    }.pickerStyle(.segmented)
 
-            Text("Estilo")
-            Picker("Estilo", selection: $selectedStyle) {
-                ForEach(BasicCardStyleCase.allCases, id: \.self) { style in
-                    Text(style.rawValue)
-                }
-            }.pickerStyle(.segmented)
+                    Text("Ícone (SFSymbol)")
+                    TextField("Buscar símbolo", text: $symbolSearch)
+                        .textFieldStyle(.roundedBorder)
 
-            Text("Arranjo")
-            Picker("Arranjo", selection: $selectedArrangement) {
-                ForEach(StackArrangementCase.allCases, id: \.self) { arrangement in
-                    Text(arrangement.rawValue)
-                }
-            }.pickerStyle(.segmented)
-
-            Text("Layout de Conteúdo")
-            Picker("Layout", selection: $selectedContentLayout) {
-                ForEach(CardLayoutCase.allCases, id: \.self) { layout in
-                    Text(layout.rawValue)
-                }
-            }.pickerStyle(.segmented)
-
-            Text("Ícone (SFSymbol)")
-            TextField("Buscar símbolo", text: $symbolSearch)
-                .textFieldStyle(.roundedBorder)
-
-            ScrollView {
-                LazyVStack(alignment: .leading) {
-                    ForEach(Array(filteredSymbols), id: \.self) { symbol in
-                        HStack {
-                            Image.init(systemSymbol: symbol)
-                            Text(symbol.rawValue)
-                            Spacer()
-                            if symbol.rawValue == selectedSymbol {
-                                Image(systemName: "checkmark")
+                    ScrollView {
+                        LazyVStack(alignment: .leading) {
+                            ForEach(Array(filteredSymbols), id: \.self) { symbol in
+                                HStack {
+                                    Image.init(systemSymbol: symbol)
+                                    Text(symbol.rawValue)
+                                    Spacer()
+                                    if symbol.rawValue == selectedSymbol {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    selectedSymbol = symbol.rawValue
+                                    symbolSearch = symbol.rawValue
+                                }
+                                .padding(.vertical, 4)
                             }
                         }
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            selectedSymbol = symbol.rawValue
-                            symbolSearch = symbol.rawValue
-                        }
-                        .padding(.vertical, 4)
                     }
+                    .frame(height: 200)
                 }
+                .padding()
             }
-            .frame(height: 200)
-        }
-        .padding(.top, 8)
+        )
     }
 }

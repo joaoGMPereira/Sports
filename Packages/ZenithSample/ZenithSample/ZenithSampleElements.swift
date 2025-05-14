@@ -152,6 +152,11 @@ struct ZenithSampleElements: View, @preconcurrency BaseThemeDependencies {
                 ListItemSample()
             )
         ),
+        ElementType(
+            category: .custom,
+            tabType: .components,
+            elementView: .element(title: "DECOMPONENT", DeComponentSample())
+        ),
         // Templates
         ElementType(
             category: .template,

@@ -5,28 +5,60 @@ import ZenithCoreInterface
 struct StepsTemplateSample: View, @preconcurrency BaseThemeDependencies {
     @State private var selectedStyle: StepsTemplateStyleCase = .default
     @State private var currentStep = 0
+    @State private var showFixedHeader = false
     @Dependency(\.themeConfigurator) var themeConfigurator: any ThemeConfiguratorProtocol
     
     var body: some View {
-        VStack {
-            // Header
-            headerView
-            
-            // Content
-            StepsTemplate(
-                totalSteps: 3,
-                currentStep: $currentStep,
-                canMoveToPreviousStep: .constant(true),
-                canMoveToNextStep: .constant(true)
-            ) { step in
-                stepContent(step)
+        SampleWithFixedHeader(
+            showFixedHeader: $showFixedHeader,
+            content: {
+                Card(action: {
+                    showFixedHeader.toggle()
+                }) {
+                    VStack {
+                        // Content
+                        StepsTemplate(
+                            totalSteps: 3,
+                            currentStep: $currentStep,
+                            canMoveToPreviousStep: .constant(true),
+                            canMoveToNextStep: .constant(true)
+                        ) { step in
+                            stepContent(step)
+                        }
+                        .stepsTemplateStyle(selectedStyle.style())
+                        .transition(.opacity)
+                        .id("steps-template-\(selectedStyle.rawValue)")
+                        .animation(.easeInOut, value: selectedStyle)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
+                    .padding()
+                }
+                .padding()
+            },
+            config: {
+                VStack(spacing: 16) {
+                    Text("Configurações")
+                        .font(fonts.largeBold)
+                        .foregroundColor(colors.contentA)
+                    
+                    styleSelectorView
+                        .padding(.bottom, 12)
+                    
+                    Button("Próximo passo") {
+                        if currentStep < 2 {
+                            currentStep += 1
+                        } else {
+                            currentStep = 0
+                        }
+                    }
+                    .buttonStyle(.highlightA())
+                    .padding(.bottom, 12)
+                    
+                    CodePreviewSection(generateCode: generateCode)
+                }
+                .padding()
             }
-            .stepsTemplateStyle(selectedStyle.style())
-            .transition(.opacity)
-            .id("steps-template-\(selectedStyle.rawValue)")
-            .animation(.easeInOut, value: selectedStyle)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }
+        )
     }
     
     private var headerView: some View {
@@ -169,6 +201,21 @@ struct StepsTemplateSample: View, @preconcurrency BaseThemeDependencies {
             Text("Passo não encontrado")
                 .foregroundColor(.red)
         }
+    }
+    
+    private func generateCode() -> String {
+        """
+        StepsTemplate(
+            totalSteps: 3,
+            currentStep: $currentStep,
+            canMoveToPreviousStep: .constant(true),
+            canMoveToNextStep: .constant(true)
+        ) { step in
+            // Conteúdo do passo
+            stepContentView(...)
+        }
+        .stepsTemplateStyle(.\(selectedStyle.rawValue)())
+        """
     }
 }
 

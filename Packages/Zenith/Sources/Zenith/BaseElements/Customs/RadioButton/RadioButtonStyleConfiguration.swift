@@ -41,7 +41,7 @@ public struct RadioButtonStyleKey: EnvironmentKey {
 }
 
 public extension EnvironmentValues {
-    var radiobuttonStyle : any RadioButtonStyle {
+    var radioButtonStyle : any RadioButtonStyle {
         get { self[RadioButtonStyleKey.self] }
         set { self[RadioButtonStyleKey.self] = newValue }
     }

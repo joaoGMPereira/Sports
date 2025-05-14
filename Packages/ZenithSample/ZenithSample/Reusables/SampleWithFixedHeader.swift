@@ -85,6 +85,7 @@ struct SampleWithFixedHeader<Content: View, Config: View>: View, @preconcurrency
             // Header fixo que aparece na parte superior quando ativado
             if showFixedHeader {
                 content()
+                    .frame(maxWidth: .infinity)
                     .padding(.top, headerHeight)
                     .padding(.bottom, spacings.small)
                     .background(colors.backgroundA.opacity(0.9).cornerRadius(10, corners: .allCorners))
@@ -102,6 +103,7 @@ struct SampleWithFixedHeader<Content: View, Config: View>: View, @preconcurrency
                     VStack(alignment: .leading, spacing: spacings.medium) {
                         if showFixedHeader == false {
                             content()
+                                .frame(maxWidth: .infinity)
                                 .captureHeight($contentHeight)
                                 .id(topContentId)
                         }

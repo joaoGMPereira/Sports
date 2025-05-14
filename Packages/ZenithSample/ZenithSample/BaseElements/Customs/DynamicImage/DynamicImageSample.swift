@@ -17,6 +17,7 @@ struct DynamicImageSample: View, @preconcurrency BaseThemeDependencies {
     @State private var maintainAspectRatio = true
     @State private var resizableEnabled = true
     @State private var isShowingSymbolPicker = false
+    @State private var showFixedHeader = false
 
     enum ImageSource: String, CaseIterable, Identifiable {
         case systemImage = "Sistema"
@@ -27,24 +28,33 @@ struct DynamicImageSample: View, @preconcurrency BaseThemeDependencies {
     }
     
     var body: some View {
-        VStack(spacing: 16) {
-            // Preview da imagem com estilo selecionado
-            VStack {
-                previewImage
-                    .frame(width: imageWidth, height: imageHeight)
-                    .scaledToFit()
+        SampleWithFixedHeader(
+            showFixedHeader: $showFixedHeader,
+            content: {
+                Card(action: {
+                    showFixedHeader.toggle()
+                }) {
+                    // Preview da imagem com estilo selecionado
+                    VStack {
+                        previewImage
+                            .frame(width: imageWidth, height: imageHeight)
+                            .scaledToFit()
+                            .frame(maxWidth: .infinity, alignment: .center)
+                    }
                     .frame(maxWidth: .infinity, alignment: .center)
+                    .padding()
+                }
+                .padding()
+            },
+            config: {
+                VStack(alignment: .leading, spacing: 12) {
+                    configurationSection
+                    
+                    CodePreviewSection(generateCode: generateCode)
+                }
+                .padding()
             }
-            .frame(maxWidth: .infinity, alignment: .center)
-            .padding()
-            .background(colors.backgroundC)
-            .cornerRadius(16)
-            
-            Divider().padding(.top)
-            
-            configurationSection
-        }
-        .padding(.horizontal)
+        )
     }
     
     var previewImage: some View {
@@ -190,5 +200,29 @@ struct DynamicImageSample: View, @preconcurrency BaseThemeDependencies {
         return DynamicImageStyleCase.allCases.filter {
             String(describing: $0).lowercased().contains(searchText.lowercased())
         }
+    }
+    
+    private func generateCode() -> String {
+        var codeSource = ""
+        
+        switch imageSource {
+        case .systemImage:
+            codeSource = """
+            DynamicImage("\(systemImageName)", resizable: \(resizableEnabled))
+                .dynamicImageStyle(.\(String(describing: selectedStyle).lowercased())())
+            """
+        case .customURL:
+            codeSource = """
+            DynamicImage("\(customURL)", resizable: \(resizableEnabled))
+                .dynamicImageStyle(.\(String(describing: selectedStyle).lowercased())())
+            """
+        case .imageName:
+            codeSource = """
+            DynamicImage(.\(selectedImageName.rawValue), resizable: \(resizableEnabled))
+                .dynamicImageStyle(.\(String(describing: selectedStyle).lowercased())())
+            """
+        }
+        
+        return codeSource
     }
 }

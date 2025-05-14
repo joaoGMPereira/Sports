@@ -41,7 +41,7 @@ public struct CheckBoxStyleKey: EnvironmentKey {
 }
 
 public extension EnvironmentValues {
-    var checkboxStyle : any CheckBoxStyle {
+    var checkBoxStyle : any CheckBoxStyle {
         get { self[CheckBoxStyleKey.self] }
         set { self[CheckBoxStyleKey.self] = newValue }
     }

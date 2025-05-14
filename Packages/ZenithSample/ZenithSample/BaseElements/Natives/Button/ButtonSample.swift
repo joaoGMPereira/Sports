@@ -8,35 +8,48 @@ struct ButtonSample: View, @preconcurrency BaseThemeDependencies {
     @State private var buttonText = "Button Text"
     @State private var selectedStyle = ButtonStyleCase.contentA
     @State private var searchText = ""
+    @State private var showFixedHeader = false
     
     var body: some View {
-        VStack(spacing: 16) {
-            // Preview do botão com estilo selecionado
-            VStack {
-                Button(action: {
-                    print("Button tapped")
+        SampleWithFixedHeader(
+            showFixedHeader: $showFixedHeader,
+            content: {
+                Card(action: {
+                    showFixedHeader.toggle()
                 }) {
-                    Text(selectedStyle.rawValue.lowercased().contains("circle") ? String(buttonText.prefix(1)) : buttonText)
-                        .padding(spacings.extraSmall)
+                    VStack(spacing: 16) {
+                        // Preview do botão com estilo selecionado
+                        VStack {
+                            Button(action: {
+                                print("Button tapped")
+                            }) {
+                                Text(selectedStyle.rawValue.lowercased().contains("circle") ? String(buttonText.prefix(1)) : buttonText)
+                                    .padding(spacings.extraSmall)
+                            }
+                            .buttonStyle(selectedStyle.style())
+                            .frame(maxWidth: .infinity)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding()
+                        .background(
+                            // Aplica o backgroundC se for tipo card
+                            selectedStyle == .cardAppearanceFill || selectedStyle == .cardAppearanceBordered || 
+                            selectedStyle == .cardAppearanceFillDisabled || selectedStyle == .cardAppearanceBorderedDisabled ? 
+                                colors.backgroundC : Color.clear
+                        )
+                        .cornerRadius(16)
+                    }
+                    .padding()
                 }
-                .buttonStyle(selectedStyle.style())
-                .frame(maxWidth: .infinity)
+                .padding()
+            },
+            config: {
+                VStack(spacing: 16) {
+                    configurationSection
+                }
+                .padding(.horizontal)
             }
-            .frame(maxWidth: .infinity, alignment: .center)
-            .padding()
-            .background(
-                // Aplica o backgroundC se for tipo card
-                selectedStyle == .cardAppearanceFill || selectedStyle == .cardAppearanceBordered || 
-                selectedStyle == .cardAppearanceFillDisabled || selectedStyle == .cardAppearanceBorderedDisabled ? 
-                    colors.backgroundC : Color.clear
-            )
-            .cornerRadius(16)
-            
-            Divider().padding(.top)
-            
-            configurationSection
-        }
-        .padding(.horizontal)
+        )
     }
     
     var configurationSection: some View {

@@ -3,8 +3,8 @@ import ZenithCoreInterface
 
 
 public extension View {
-    func checkboxStyle(_ style: some CheckBoxStyle) -> some View {
-        environment(\.checkboxStyle, style)
+    func checkBoxStyle(_ style: some CheckBoxStyle) -> some View {
+        environment(\.checkBoxStyle, style)
     }
 }
 
@@ -33,7 +33,7 @@ public enum CheckBoxStyleCase: CaseIterable, Identifiable {
     public func style() -> AnyCheckBoxStyle {
         switch self {
         case .default:
-                .init(.default())
+            .init(.default())
         }
     }
 }

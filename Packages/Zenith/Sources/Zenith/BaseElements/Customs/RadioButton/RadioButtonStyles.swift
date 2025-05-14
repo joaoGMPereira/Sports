@@ -3,8 +3,8 @@ import ZenithCoreInterface
 
 
 public extension View {
-    func radiobuttonStyle(_ style: some RadioButtonStyle) -> some View {
-        environment(\.radiobuttonStyle, style)
+    func radioButtonStyle(_ style: some RadioButtonStyle) -> some View {
+        environment(\.radioButtonStyle, style)
     }
 }
 

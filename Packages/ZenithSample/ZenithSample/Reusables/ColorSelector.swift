@@ -7,7 +7,7 @@ struct ColorSelector: View, @preconcurrency BaseThemeDependencies {
     @Binding var selectedColor: ColorName
     
     var body: some View {
-        GridSelector(
+        EnumSelector(
             title: "Estilo de Cor",
             selection: $selectedColor,
             columnsCount: 3,

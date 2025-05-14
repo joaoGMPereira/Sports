@@ -11,48 +11,61 @@ struct TextSample: View, @preconcurrency BaseThemeDependencies {
     @State private var selectedStyle = TextStyleCase.mediumContentA
     @State private var showAllStyles = false
     @State private var useContrastBackground = true
+    @State private var showFixedHeader = false
     
     var body: some View {
-        VStack(spacing: 16) {
-            // Preview do texto com configurações atuais
-            previewText
-            
-            Divider().padding(.vertical, 4)
-            
-            // Área de configuração
-            configurationSection
-            
-            // Preview do código gerado usando componente reutilizável
-            CodePreviewSection(generateCode: generateSwiftCode)
-            
-            // Exibição de todos os estilos (opcional)
-            if showAllStyles {
-                Divider().padding(.vertical, 4)
-                
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Todos os Estilos de Texto")
-                        .font(fonts.mediumBold)
-                        .foregroundColor(colors.contentA)
+        SampleWithFixedHeader(
+            showFixedHeader: $showFixedHeader,
+            content: {
+                Card(action: {
+                    showFixedHeader.toggle()
+                }) {
+                    VStack(spacing: 16) {
+                        // Preview do texto com configurações atuais
+                        previewText
+                    }
+                    .padding()
+                }
+                .padding()
+            },
+            config: {
+                VStack(spacing: 16) {
+                    // Área de configuração
+                    configurationSection
                     
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 8) {
-                            ForEach(TextStyleCase.allCases, id: \.self) { style in
-                                Text("\(String(describing: style))")
-                                    .textStyle(style.style())
-                                    .padding(.vertical, 4)
-                                    .padding(.horizontal, 8)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 4)
-                                            .fill(colors.backgroundB.opacity(0.5))
-                                    )
+                    // Preview do código gerado usando componente reutilizável
+                    CodePreviewSection(generateCode: generateSwiftCode)
+                    
+                    // Exibição de todos os estilos (opcional)
+                    if showAllStyles {
+                        Divider().padding(.vertical, 4)
+                        
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Todos os Estilos de Texto")
+                                .font(fonts.mediumBold)
+                                .foregroundColor(colors.contentA)
+                            
+                            ScrollView {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    ForEach(TextStyleCase.allCases, id: \.self) { style in
+                                        Text("\(String(describing: style))")
+                                            .textStyle(style.style())
+                                            .padding(.vertical, 4)
+                                            .padding(.horizontal, 8)
+                                            .background(
+                                                RoundedRectangle(cornerRadius: 4)
+                                                    .fill(colors.backgroundB.opacity(0.5))
+                                            )
+                                    }
+                                }
                             }
+                            .frame(maxHeight: 200)
                         }
                     }
-                    .frame(maxHeight: 200)
                 }
+                .padding(.horizontal)
             }
-        }
-        .padding(.horizontal)
+        )
     }
     
     // Preview do texto com as configurações selecionadas

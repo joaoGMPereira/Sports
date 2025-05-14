@@ -63,7 +63,6 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
             showFixedHeader: $showFixedHeader,
             content: {
                 currentDetailedListItem
-                    .frame(maxWidth: .infinity)
                     .padding(.horizontal, spacings.small)
             },
             config: {

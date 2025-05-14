@@ -52,7 +52,7 @@ public struct CheckBoxBundle: View, @preconcurrency BaseThemeDependencies {
 }
 
 public struct CheckBox: View {
-    @Environment(\.checkboxStyle) private var style
+    @Environment(\.checkBoxStyle) private var style
     let text: String
     @Binding var isSelected: Bool
     @Binding var isDisabled: Bool

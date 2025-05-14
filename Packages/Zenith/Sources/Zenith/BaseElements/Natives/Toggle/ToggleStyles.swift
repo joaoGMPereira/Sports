@@ -19,9 +19,9 @@ public struct AnyToggleStyle: ToggleStyle {
 
 public struct SmallToggleStyle: ToggleStyle, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) public var themeConfigurator
-    let color: ToggleColor
+    let color: ColorName
     
-    public init(color: ToggleColor) {
+    public init(color: ColorName) {
         self.color = color
     }
     
@@ -30,7 +30,7 @@ public struct SmallToggleStyle: ToggleStyle, @preconcurrency BaseThemeDependenci
             configuration.label
             Spacer()
             BaseToggle(
-                onColor: colors.color(by: color.onColor) ?? .primary,
+                onColor: colors.color(by: color) ?? .primary,
                 offColor: colors.backgroundC,
                 width: 40,
                 height: 20,
@@ -41,14 +41,14 @@ public struct SmallToggleStyle: ToggleStyle, @preconcurrency BaseThemeDependenci
 }
 
 public extension ToggleStyle where Self == SmallToggleStyle {
-    static func small(_ color: ToggleColor) -> Self { .init(color: color) }
+    static func small(_ color: ColorName) -> Self { .init(color: color) }
 }
 
 public struct DefaultToggleStyle: ToggleStyle, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) public var themeConfigurator
-    let color: ToggleColor
+    let color: ColorName
     
-    public init(color: ToggleColor) {
+    public init(color: ColorName) {
         self.color = color
     }
     
@@ -57,7 +57,7 @@ public struct DefaultToggleStyle: ToggleStyle, @preconcurrency BaseThemeDependen
             configuration.label
             Spacer()
             BaseToggle(
-                onColor: colors.color(by: color.onColor) ?? .primary,
+                onColor: colors.color(by: color) ?? .primary,
                 offColor: colors.backgroundC,
                 width: 50,
                 height: 30,
@@ -68,7 +68,7 @@ public struct DefaultToggleStyle: ToggleStyle, @preconcurrency BaseThemeDependen
 }
 
 public extension ToggleStyle where Self == DefaultToggleStyle {
-    static func `default`(_ color: ToggleColor) -> Self { .init(color: color) }
+    static func `default`(_ color: ColorName) -> Self { .init(color: color) }
 }
 
 private struct BaseToggle: View, @preconcurrency BaseThemeDependencies {
@@ -116,22 +116,6 @@ private struct BaseToggle: View, @preconcurrency BaseThemeDependencies {
             withAnimation(.spring()) {
                 isOn.toggle()
             }
-        }
-    }
-}
-
-public enum ToggleColor: CaseIterable, Identifiable, Sendable {
-    case highlightA
-    case contentA
-    
-    public var id: Self { self }
-
-    var onColor: ColorName {
-        switch self {
-        case .highlightA:
-            .highlightA
-        case .contentA:
-            .contentA
         }
     }
 }

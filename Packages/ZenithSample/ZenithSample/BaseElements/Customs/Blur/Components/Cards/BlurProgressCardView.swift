@@ -7,8 +7,10 @@ struct BlurProgressCardView: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) var themeConfigurator
     @ObservedObject var viewModel: BlurSampleViewModel
     
+    let action: () -> Void
+    
     var body: some View {
-        Card(alignment: .leading, type: .fill, action: {}) {
+        Card(alignment: .leading, type: .fill, action: action) {
             Blur(
                 blurConfig: viewModel.createBlurConfig()
             ) {

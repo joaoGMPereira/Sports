@@ -9,6 +9,7 @@ struct CircularProgressSample: View, @preconcurrency BaseThemeDependencies {
     @State private var size: Double = 54
     @State private var showText: Bool = true
     @State private var animated: Bool = true
+    @State private var showFixedHeader = false
     
     // Estados para exemplos de transição
     @State private var progress1: Double = 0.0
@@ -16,55 +17,77 @@ struct CircularProgressSample: View, @preconcurrency BaseThemeDependencies {
     @State private var progress3: Double = 0.20
     
     var body: some View {
-        VStack(spacing: 20) {
-            // Configurações interativas
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Configurações")
-                    .font(fonts.mediumBold)
-                    .foregroundColor(colors.contentA)
-                
-                HStack {
-                    Text("Progresso: \(Int(progress * 100))%")
-                        .font(fonts.small)
-                        .foregroundColor(colors.contentA)
-                    Spacer()
+        SampleWithFixedHeader(
+            showFixedHeader: $showFixedHeader,
+            content: {
+                Card(action: {
+                    showFixedHeader.toggle()
+                }) {
+                    VStack(spacing: 20) {
+                        CircularProgress(
+                            progress: progress,
+                            size: size,
+                            showText: showText,
+                            animated: animated
+                        )
+                        .circularProgressStyle(.contentA())
+                    }
+                    .padding()
                 }
-                
-                Slider(value: $progress, in: 0...1, step: 0.01)
-                    .accentColor(colors.highlightA)
-                
-                HStack {
-                    Text("Tamanho: \(Int(size))px")
-                        .font(fonts.small)
-                        .foregroundColor(colors.contentA)
-                    Spacer()
+                .padding()
+            },
+            config: {
+                VStack(spacing: 20) {
+                    // Configurações interativas
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Configurações")
+                            .font(fonts.mediumBold)
+                            .foregroundColor(colors.contentA)
+                        
+                        HStack {
+                            Text("Progresso: \(Int(progress * 100))%")
+                                .font(fonts.small)
+                                .foregroundColor(colors.contentA)
+                            Spacer()
+                        }
+                        
+                        Slider(value: $progress, in: 0...1, step: 0.01)
+                            .accentColor(colors.highlightA)
+                        
+                        HStack {
+                            Text("Tamanho: \(Int(size))px")
+                                .font(fonts.small)
+                                .foregroundColor(colors.contentA)
+                            Spacer()
+                        }
+                        
+                        Slider(value: $size, in: 30...150, step: 1)
+                            .accentColor(colors.highlightA)
+                        
+                        Toggle("Mostrar texto", isOn: $showText)
+                            .toggleStyle(.default(.highlightA))
+                            .foregroundColor(colors.contentA)
+                        
+                        Toggle("Animado", isOn: $animated)
+                            .toggleStyle(.default(.highlightA))
+                            .foregroundColor(colors.contentA)
+                    }
+                    .padding()
+                    .background(colors.backgroundB.opacity(0.5))
+                    .cornerRadius(10)
+                    
+                    // Usando o componente reutilizável para visualização e cópia de código
+                    CodePreviewSection(generateCode: generateCode)
                 }
-                
-                Slider(value: $size, in: 30...150, step: 1)
-                    .accentColor(colors.highlightA)
-                
-                Toggle("Mostrar texto", isOn: $showText)
-                    .toggleStyle(.default(.highlightA))
-                    .foregroundColor(colors.contentA)
-                
-                Toggle("Animado", isOn: $animated)
-                    .toggleStyle(.default(.highlightA))
-                    .foregroundColor(colors.contentA)
+                .padding()
+                .onAppear {
+                    // Reset para valores iniciais, caso tenha sido alterado
+                    progress1 = 0.0
+                    progress2 = 0.75
+                    progress3 = 0.20
+                }
             }
-            .padding()
-            .background(colors.backgroundB.opacity(0.5))
-            .cornerRadius(10)
-            
-            // Usando o componente reutilizável para visualização e cópia de código
-            CodePreviewSection(generateCode: generateCode)
-        }
-        .padding(.horizontal)
-        .onAppear {
-            // Reset para valores iniciais, caso tenha sido alterado
-            progress1 = 0.0
-            progress2 = 0.75
-            progress3 = 0.20
-        }
+        )
     }
     
     private func generateCode() -> String {

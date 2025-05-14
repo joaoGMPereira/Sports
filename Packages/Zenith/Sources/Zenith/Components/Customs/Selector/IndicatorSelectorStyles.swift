@@ -50,7 +50,7 @@ public extension IndicatorSelectorStyle where Self == HighlightAIndicatorSelecto
     static func highlightA() -> Self { .init() }
 }
 
-public enum IndicatorSelectorStyleCase: CaseIterable, Identifiable {
+public enum IndicatorSelectorStyleCase: String, Decodable, CaseIterable, Identifiable {
     case `default`
     case highlightA
     

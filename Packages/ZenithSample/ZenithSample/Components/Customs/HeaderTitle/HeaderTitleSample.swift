@@ -6,6 +6,7 @@ import SFSafeSymbols
 struct HeaderTitleSample: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) var themeConfigurator
     @State var isExpanded = false
+    @State private var showFixedHeader = false
     
     // Estados para interatividade
     @State private var headerText = "Sample HeaderTitle"
@@ -26,16 +27,30 @@ struct HeaderTitleSample: View, @preconcurrency BaseThemeDependencies {
     }
     
     var body: some View {
-        VStack(spacing: 16) {
-            // Preview do HeaderTitle com os valores selecionados
-            HeaderTitle(headerText, image: SFSymbol(rawValue: selectedSymbol))
-                .headerTitleStyle(selectedStyle.style())
-                .listRowSeparator(.hidden)
-            
-            Divider().padding(.top)
-            
-            configurationSection
-        }
+        SampleWithFixedHeader(
+            showFixedHeader: $showFixedHeader,
+            content: {
+                Card(action: {
+                    showFixedHeader.toggle()
+                }) {
+                    // Preview do HeaderTitle com os valores selecionados
+                    HeaderTitle(headerText, image: SFSymbol(rawValue: selectedSymbol))
+                        .headerTitleStyle(selectedStyle.style())
+                        .listRowSeparator(.hidden)
+                        .padding()
+                }
+                .padding()
+            },
+            config: {
+                VStack(spacing: 16) {
+                    configurationSection
+                    
+                    // Componente para exibição do código
+                    CodePreviewSection(generateCode: generateCode)
+                }
+                .padding()
+            }
+        )
     }
     
     var configurationSection: some View {
@@ -106,6 +121,13 @@ struct HeaderTitleSample: View, @preconcurrency BaseThemeDependencies {
             }
         }
         .padding(.top, 8)
+    }
+    
+    private func generateCode() -> String {
+        """
+        HeaderTitle("\(headerText)", image: SFSymbol(rawValue: "\(selectedSymbol)"))
+            .headerTitleStyle(.\(String(describing: selectedStyle).lowercased())())
+        """
     }
 }
 

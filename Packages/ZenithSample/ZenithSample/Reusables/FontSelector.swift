@@ -7,7 +7,7 @@ struct FontSelector: View, @preconcurrency BaseThemeDependencies {
     @Binding var selectedFont: FontName
     
     var body: some View {
-        GridSelector(
+        EnumSelector(
             title: "Estilo da Fonte",
             selection: $selectedFont,
             columnsCount: 2,

@@ -384,11 +384,11 @@ struct {component_name}Sample: View, @preconcurrency BaseThemeDependencies {{
 """
 
 def update_elements_list(zenith_sample_path, component_name, is_native=False, folder_type="Components"):
-    """Atualiza o arquivo ZenithSampleElementsList.swift para incluir o novo sample"""
-    list_file_path = os.path.join(zenith_sample_path, "ZenithSampleElementsList.swift")
+    """Atualiza o arquivo ZenithSampleElements.swift para incluir o novo sample"""
+    list_file_path = os.path.join(zenith_sample_path, "ZenithSampleElements.swift")
     
     if not os.path.exists(list_file_path):
-        print_warning(f"Arquivo ZenithSampleElementsList.swift não encontrado em {zenith_sample_path}")
+        print_warning(f"Arquivo ZenithSampleElements.swift não encontrado em {zenith_sample_path}")
         return False
     
     try:
@@ -402,7 +402,7 @@ def update_elements_list(zenith_sample_path, component_name, is_native=False, fo
         # Localizar o array elementTypes no conteúdo
         element_types_start = content.find("private var elementTypes: [ElementType] = [")
         if element_types_start == -1:
-            print_warning("Não foi possível localizar a lista de elementTypes no arquivo ZenithSampleElementsList.swift")
+            print_warning("Não foi possível localizar a lista de elementTypes no arquivo ZenithSampleElements.swift")
             return False
         
         # Encontrar onde inserir o novo elemento
@@ -480,11 +480,11 @@ def update_elements_list(zenith_sample_path, component_name, is_native=False, fo
                     
                     return True
         
-        print_warning("Não foi possível atualizar o arquivo ZenithSampleElementsList.swift")
+        print_warning("Não foi possível atualizar o arquivo ZenithSampleElements.swift")
         return False
     
     except Exception as e:
-        print_error(f"Erro ao atualizar ZenithSampleElementsList.swift: {str(e)}")
+        print_error(f"Erro ao atualizar ZenithSampleElements.swift: {str(e)}")
         return False
 
 def find_zenith_path():

@@ -3,7 +3,7 @@ import SwiftUI
 import ZenithCoreInterface
 
 public struct RadioButton: View {
-    @Environment(\.radiobuttonStyle) private var style
+    @Environment(\.radioButtonStyle) private var style
     let text: String
     @Binding var isSelected: Bool
     @Binding var isDisabled: Bool
