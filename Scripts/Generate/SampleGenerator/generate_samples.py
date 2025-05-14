@@ -297,6 +297,7 @@ class ComponentTypeRegistry:
     
     def __init__(self):
         self.component_types = {}
+        self.native_component_examples = {}
         # Registro de tipos padrão será feito após a definição de todas as funções
         
     def _register_default_types(self):
@@ -322,8 +323,11 @@ class ComponentTypeRegistry:
             style_case_type="TextStyleCase",
             preview_generator=None,  # Usa o gerador padrão
             code_generator=None,     # Usa o gerador padrão
-            default_style_cases=["contentA", "contentB", "contentC"]
+            default_style_cases=["smallContentA", "mediumContentA", "largeContentA"]
         )
+        
+        self.register_native_example("Text", "Exemplo de texto")
+        self.register_native_example("Button", "Botão de Exemplo")
         
     def register_component_type(self, name: str, has_content_param: bool, is_button_type: bool,
                                style_modifier: str, style_type: str, style_case_type: str,
@@ -341,6 +345,14 @@ class ComponentTypeRegistry:
             "code_generator": code_generator,
             "default_style_cases": default_style_cases or []
         }
+        
+    def register_native_example(self, component_name: str, example_content: str):
+        """Registra um exemplo para um componente nativo."""
+        self.native_component_examples[component_name] = example_content
+        
+    def get_native_example(self, component_name: str) -> str:
+        """Retorna o exemplo para um componente nativo."""
+        return self.native_component_examples.get(component_name, "Exemplo")
         
     def get_component_type(self, name: str) -> Dict:
         """Retorna as configurações para um tipo de componente."""
@@ -374,6 +386,13 @@ class ComponentTypeRegistry:
         for param in component_info.public_init_params:
             if param.get('name') == 'content' or param.get('name') == 'text':
                 config["has_content_param"] = True
+                break
+                
+        # Para componentes nativos, verificar se tem funções de estilo com is_native=True
+        for style_func in component_info.style_functions:
+            if style_func.get('is_native'):
+                # Atualizar o modificador de estilo para o nome da função
+                config["style_modifier"] = style_func['name']
                 break
                 
         return config
@@ -416,11 +435,20 @@ def extract_properties(content: str) -> List[Dict]:
 
 def extract_style_functions(content: str, component_name: str) -> List[Dict]:
     """Extrai funções de estilo de um arquivo de estilos."""
-    # Procura por extensões como: public extension TextStyle where Self == BaseTextStyle
-    extension_pattern = rf'public\s+extension\s+{component_name}Style\s+where\s+Self\s+==\s+Base{component_name}Style'
     style_functions = []
     
+    # Procura por extensões como: public extension TextStyle where Self == BaseTextStyle
+    extension_pattern = rf'public\s+extension\s+{component_name}Style\s+where\s+Self\s+==\s+Base{component_name}Style'
     extension_match = re.search(extension_pattern, content)
+    
+    direct_extension_pattern = rf'public\s+extension\s+{component_name}'
+    direct_extension_match = re.search(direct_extension_pattern, content)
+    
+    # Procura também por extensões estáticas para componentes nativos
+    static_extension_pattern = rf'public\s+extension\s+{component_name}Style'
+    static_extension_match = re.search(static_extension_pattern, content)
+    
+    # Processa a extensão principal se encontrada
     if extension_match:
         # Encontrar abertura de chave após a extensão
         opening_brace_pos = content.find('{', extension_match.end())
@@ -439,6 +467,70 @@ def extract_style_functions(content: str, component_name: str) -> List[Dict]:
                 extension_content = content[opening_brace_pos:i]
                 
                 # Extrair funções de estilo
+                function_pattern = r'static\s+func\s+(\w+)\s*\(\s*(?:_\s+)?(\w+)\s*:\s*(\w+)(?:\s*(?:,|\)|\s))?'
+                for match in re.finditer(function_pattern, extension_content):
+                    func_name = match.group(1)  # Nome da função
+                    param_name = match.group(2)  # Nome do parâmetro
+                    param_type = match.group(3)  # Tipo do parâmetro
+                    
+                    style_functions.append({
+                        'name': func_name,
+                        'param_name': param_name,
+                        'param_type': param_type
+                    })
+    
+    # Para componentes nativos, procurar funções de estilo na extensão direta
+    elif direct_extension_match:
+        # Encontrar abertura de chave após a extensão
+        opening_brace_pos = content.find('{', direct_extension_match.end())
+        if opening_brace_pos > 0:
+            # Encontrar chave de fechamento correspondente
+            brace_count = 1
+            i = opening_brace_pos + 1
+            while i < len(content) and brace_count > 0:
+                if content[i] == '{':
+                    brace_count += 1
+                elif content[i] == '}':
+                    brace_count -= 1
+                i += 1
+                
+            if brace_count == 0:
+                extension_content = content[opening_brace_pos:i]
+                
+                # Extrair funções de estilo para componentes nativos
+                # Padrão para funções como: func textStyle(_ style: some TextStyle) -> some View
+                function_pattern = r'func\s+(\w+Style)\s*\(\s*(?:_\s+)?(\w+)\s*:\s*(?:some\s+)?(\w+)(?:\s*(?:,|\)|\s))?'
+                for match in re.finditer(function_pattern, extension_content):
+                    func_name = match.group(1)  # Nome da função (ex: textStyle)
+                    param_name = match.group(2)  # Nome do parâmetro (ex: style)
+                    param_type = match.group(3)  # Tipo do parâmetro (ex: TextStyle)
+                    
+                    style_functions.append({
+                        'name': func_name,
+                        'param_name': param_name,
+                        'param_type': param_type,
+                        'is_native': True
+                    })
+    
+    # Procurar também por extensões estáticas para componentes nativos
+    if static_extension_match and not extension_match:
+        # Encontrar abertura de chave após a extensão
+        opening_brace_pos = content.find('{', static_extension_match.end())
+        if opening_brace_pos > 0:
+            # Encontrar chave de fechamento correspondente
+            brace_count = 1
+            i = opening_brace_pos + 1
+            while i < len(content) and brace_count > 0:
+                if content[i] == '{':
+                    brace_count += 1
+                elif content[i] == '}':
+                    brace_count -= 1
+                i += 1
+                
+            if brace_count == 0:
+                extension_content = content[opening_brace_pos:i]
+                
+                # Extrair funções de estilo estáticas
                 function_pattern = r'static\s+func\s+(\w+)\s*\(\s*(?:_\s+)?(\w+)\s*:\s*(\w+)(?:\s*(?:,|\)|\s))?'
                 for match in re.finditer(function_pattern, extension_content):
                     func_name = match.group(1)  # Nome da função
@@ -584,6 +676,50 @@ def analyze_component(component_info: ComponentInfo) -> ComponentInfo:
     if view_content:
         component_info.public_init_params = extract_init_params(view_content, component_info.name)
     
+    # Se não tiver arquivo View mas tiver arquivo Styles, extrair informações do arquivo Styles
+    if not view_content and component_info.styles_path and os.path.exists(component_info.styles_path):
+        styles_content = parse_swift_file(component_info.styles_path)
+        
+        # Para componentes nativos, extrair parâmetros da estrutura BaseStyle
+        base_style_pattern = rf'public\s+struct\s+Base{component_info.name}Style'
+        base_style_match = re.search(base_style_pattern, styles_content)
+        
+        if base_style_match:
+            # Encontrar abertura de chave após a estrutura
+            opening_brace_pos = styles_content.find('{', base_style_match.end())
+            if opening_brace_pos > 0:
+                # Encontrar chave de fechamento correspondente
+                brace_count = 1
+                i = opening_brace_pos + 1
+                while i < len(styles_content) and brace_count > 0:
+                    if styles_content[i] == '{':
+                        brace_count += 1
+                    elif styles_content[i] == '}':
+                        brace_count -= 1
+                    i += 1
+                    
+                if brace_count == 0:
+                    base_style_content = styles_content[opening_brace_pos:i]
+                    
+                    # Extrair propriedades da estrutura BaseStyle
+                    properties = extract_properties(base_style_content)
+                    
+                    # Adicionar propriedades encontradas
+                    component_info.properties.extend(properties)
+                    
+                    # Extrair parâmetros do inicializador
+                    init_params = extract_init_params(base_style_content, f"Base{component_info.name}Style")
+                    
+                    # Adicionar como parâmetros públicos
+                    if init_params:
+                        component_info.public_init_params.extend(init_params)
+                        
+                        # Verificar se tem parâmetro de conteúdo
+                        for param in init_params:
+                            if param.get('name') in ['content', 'text']:
+                                # Marcar como componente com parâmetro de conteúdo
+                                component_registry.update_component_config(component_info)
+    
     # Verificar se é um componente do tipo Button
     is_button = detect_button_component(component_info.name, component_info.public_init_params)
     
@@ -595,6 +731,14 @@ def analyze_component(component_info: ComponentInfo) -> ComponentInfo:
                 component_info.has_action_param = True
                 component_info.closure_properties.append(param)
                 logger.info(f"Parâmetro de ação encontrado: {param['name']}")
+    
+    # Categorizar propriedades
+    if component_info.properties:
+        # Categorizar propriedades
+        (component_info.enum_properties,
+         component_info.text_properties,
+         component_info.bool_properties,
+         component_info.number_properties) = categorize_properties(component_info.properties)
     
     # Categorizar propriedades complexas (que não são tipos simples)
     for prop in component_info.properties:
@@ -610,11 +754,13 @@ def find_component_files(component_name: str) -> Optional[ComponentInfo]:
     """Localiza os arquivos View, Configuration e Styles de um componente."""
     component_info = None
     
-    # Determinar o tipo de componente (BaseElements/Natives ou Components/Customs)
+    # Determinar o tipo de componente (BaseElements/Natives, BaseElements/Customs ou Components/Customs)
     possible_paths = [
         os.path.join(COMPONENTS_PATH, "BaseElements/Natives", component_name),
+        os.path.join(COMPONENTS_PATH, "BaseElements/Customs", component_name),
         os.path.join(COMPONENTS_PATH, "Components/Customs", component_name),
         os.path.join(COMPONENTS_PATH, "BaseElements", "Natives", component_name),
+        os.path.join(COMPONENTS_PATH, "BaseElements", "Customs", component_name),
         os.path.join(COMPONENTS_PATH, "Components", "Customs", component_name)
     ]
     
@@ -662,9 +808,29 @@ def find_component_files(component_name: str) -> Optional[ComponentInfo]:
     # Verificar se encontrou os arquivos necessários
     if not component_info.view_path:
         logger.warning(f"View não encontrada para o componente {component_name}")
+        
+        # Para componentes nativos, verificar se é um componente que só tem arquivo Styles
+        if component_info.styles_path and "BaseElements/Natives" in found_path:
+            logger.info(f"Componente {component_name} identificado como nativo com apenas arquivo Styles")
+            
+            # Verificar se o componente está registrado
+            component_type_config = component_registry.get_component_type(component_name)
+            if component_name not in component_registry.component_types:
+                logger.info(f"Registrando {component_name} como componente nativo")
+                component_registry.register_component_type(
+                    component_name,
+                    has_content_param=True,  # Assumir que componentes nativos têm parâmetro de conteúdo
+                    is_button_type=False,
+                    style_modifier=f"{component_name.lower()}Style",
+                    style_type=f"{component_name}Style",
+                    style_case_type=f"{component_name}StyleCase",
+                    preview_generator=None,
+                    code_generator=None,
+                    default_style_cases=[]
+                )
     
     # Extrair propriedades, funções de estilo e casos de estilo
-    if component_info.view_path:
+    if component_info.view_path and os.path.exists(component_info.view_path):
         logger.info(f"Analisando view: {component_info.view_path}")
         content = parse_swift_file(component_info.view_path)
         component_info.properties = extract_properties(content)
@@ -675,7 +841,7 @@ def find_component_files(component_name: str) -> Optional[ComponentInfo]:
          component_info.bool_properties,
          component_info.number_properties) = categorize_properties(component_info.properties)
     
-    if component_info.styles_path:
+    if component_info.styles_path and os.path.exists(component_info.styles_path):
         logger.info(f"Analisando arquivo de estilos: {component_info.styles_path}")
         content = parse_swift_file(component_info.styles_path)
         component_info.style_functions = extract_style_functions(content, component_name)
@@ -685,6 +851,43 @@ def find_component_files(component_name: str) -> Optional[ComponentInfo]:
             logger.info("Tentando extrair casos de estilo (StyleCase)")
             component_info.style_cases = extract_style_cases(content)
             logger.info(f"Casos de estilo encontrados: {component_info.style_cases}")
+            
+        # Para componentes nativos sem arquivo View, extrair propriedades do arquivo Styles
+        if not component_info.view_path or not os.path.exists(component_info.view_path):
+            # Extrair propriedades da estrutura BaseStyle
+            base_style_pattern = rf'public\s+struct\s+Base{component_name}Style'
+            base_style_match = re.search(base_style_pattern, content)
+            
+            if base_style_match:
+                logger.info(f"Extraindo propriedades da estrutura Base{component_name}Style")
+                
+                # Encontrar abertura de chave após a estrutura
+                opening_brace_pos = content.find('{', base_style_match.end())
+                if opening_brace_pos > 0:
+                    # Encontrar chave de fechamento correspondente
+                    brace_count = 1
+                    i = opening_brace_pos + 1
+                    while i < len(content) and brace_count > 0:
+                        if content[i] == '{':
+                            brace_count += 1
+                        elif content[i] == '}':
+                            brace_count -= 1
+                        i += 1
+                        
+                    if brace_count == 0:
+                        base_style_content = content[opening_brace_pos:i]
+                        
+                        # Extrair propriedades da estrutura BaseStyle
+                        style_properties = extract_properties(base_style_content)
+                        
+                        # Adicionar propriedades encontradas
+                        component_info.properties.extend(style_properties)
+                        
+                        # Categorizar propriedades
+                        (component_info.enum_properties,
+                         component_info.text_properties,
+                         component_info.bool_properties,
+                         component_info.number_properties) = categorize_properties(component_info.properties)
     
     # Obter configurações específicas do tipo de componente
     component_type_config = component_registry.get_component_type(component_name)
@@ -730,7 +933,9 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
     
     # Estado para texto de exemplo se o componente precisar de conteúdo
     if component_config["has_content_param"]:
-        states.append('    @State private var sampleText = "Exemplo de texto"')
+        # Usar exemplo registrado para componentes nativos
+        example_content = component_registry.get_native_example(component_info.name)
+        states.append(f'    @State private var sampleText = "{example_content}"')
     
     # Estados para propriedades de texto
     for prop in component_info.text_properties:
@@ -1585,6 +1790,103 @@ def create_sample_file(component_name: str):
             logger.error(f"Erro ao criar o arquivo Sample: {e}")
             return False
 
+def auto_register_components():
+    """Detecta e registra automaticamente todos os componentes nativos e customizados."""
+    logger.info("Detectando e registrando componentes automaticamente...")
+    
+    zenith_base_path = os.path.join(REPO_ROOT, "Packages", "Zenith", "Sources", "Zenith")
+    
+    # Detectar componentes nativos
+    natives_path = os.path.join(zenith_base_path, "BaseElements", "Natives")
+    if os.path.exists(natives_path):
+        for component_dir in os.listdir(natives_path):
+            component_path = os.path.join(natives_path, component_dir)
+            if os.path.isdir(component_path):
+                component_name = component_dir
+                logger.info(f"Detectado componente nativo: {component_name}")
+                
+                # Verificar se já está registrado
+                if component_name not in component_registry.component_types:
+                    # Verificar arquivos de estilo
+                    styles_file = os.path.join(component_path, f"{component_name}Styles.swift")
+                    style_config_file = os.path.join(component_path, f"{component_name}StyleConfiguration.swift")
+                    
+                    if os.path.exists(styles_file):
+                        styles_content = parse_swift_file(styles_file)
+                        style_functions = extract_style_functions(styles_content, component_name)
+                        style_cases = extract_style_cases(styles_content)
+                        
+                        # Determinar o modificador de estilo
+                        style_modifier = f"{component_name.lower()}Style"
+                        for style_func in style_functions:
+                            if style_func.get('is_native'):
+                                style_modifier = style_func['name']
+                                break
+                        
+                        # Registrar o componente
+                        component_registry.register_component_type(
+                            component_name,
+                            has_content_param=component_name in ["Text", "TextField"],
+                            is_button_type=component_name in ["Button", "Toggle"],
+                            style_modifier=style_modifier,
+                            style_type=f"{component_name}Style",
+                            style_case_type=f"{component_name}StyleCase",
+                            preview_generator=None,
+                            code_generator=None,
+                            default_style_cases=style_cases[:3] if style_cases else []
+                        )
+                        
+                        default_examples = {
+                            "Text": "Exemplo de texto",
+                            "Button": "Botão de Exemplo",
+                            "TextField": "Campo de texto",
+                            "Toggle": "Alternador",
+                            "Divider": "Divisor"
+                        }
+                        example_content = default_examples.get(component_name, f"Exemplo de {component_name}")
+                        component_registry.register_native_example(component_name, example_content)
+    
+    # Detectar componentes customizados (opcional)
+    customs_base_paths = [
+        os.path.join(zenith_base_path, "BaseElements", "Customs"),
+        os.path.join(zenith_base_path, "Components", "Customs")
+    ]
+    
+    for customs_path in customs_base_paths:
+        if os.path.exists(customs_path):
+            for component_dir in os.listdir(customs_path):
+                component_path = os.path.join(customs_path, component_dir)
+                if os.path.isdir(component_path):
+                    component_name = component_dir
+                    logger.info(f"Detectado componente customizado: {component_name}")
+                    
+                    # Verificar se já está registrado
+                    if component_name not in component_registry.component_types:
+                        # Verificar arquivos do componente
+                        view_file = os.path.join(component_path, f"{component_name}.swift")
+                        styles_file = os.path.join(component_path, f"{component_name}Styles.swift")
+                        
+                        if os.path.exists(view_file) or os.path.exists(styles_file):
+                            styles_content = ""
+                            if os.path.exists(styles_file):
+                                styles_content = parse_swift_file(styles_file)
+                            
+                            style_cases = extract_style_cases(styles_content)
+                            
+                            component_registry.register_component_type(
+                                component_name,
+                                has_content_param=False,  # Será atualizado durante a análise
+                                is_button_type=False,     # Será atualizado durante a análise
+                                style_modifier=f"{component_name.lower()}Style",
+                                style_type=f"{component_name}Style",
+                                style_case_type=f"{component_name}StyleCase",
+                                preview_generator=None,
+                                code_generator=None,
+                                default_style_cases=style_cases[:3] if style_cases else []
+                            )
+    
+    logger.info(f"Registro automático concluído. {len(component_registry.component_types)} componentes registrados.")
+
 # Inicializar o registro de componentes após a definição de todas as funções
 component_registry = ComponentTypeRegistry()
 component_registry._register_default_types()
@@ -1593,10 +1895,15 @@ def main():
     """Função principal."""
     parser = argparse.ArgumentParser(description='Gerador de arquivos Sample para componentes Zenith')
     parser.add_argument('component', help='Nome do componente para gerar o Sample (ex: Text, Button, etc.)')
+    parser.add_argument('--auto-register', action='store_true', help='Detectar e registrar automaticamente todos os componentes')
     
     args = parser.parse_args()
+    
+    if args.auto_register:
+        auto_register_components()
     
     create_sample_file(args.component)
 
 if __name__ == "__main__":
+    auto_register_components()
     main()
