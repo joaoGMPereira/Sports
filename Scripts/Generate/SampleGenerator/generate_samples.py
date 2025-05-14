@@ -29,7 +29,10 @@ class ComponentInfo:
         self.styles_path = ""
         self.properties = []
         self.style_cases = []
-        self.configurations = []
+        self.enum_properties = []  # Propriedades que são enums
+        self.text_properties = []  # Propriedades de texto
+        self.bool_properties = []  # Propriedades booleanas
+        self.number_properties = []  # Propriedades numéricas
         
     def __str__(self):
         return f"Component: {self.name} (Type: {self.type_path})"
@@ -87,6 +90,43 @@ def extract_style_cases(content: str) -> List[str]:
     
     return cases
 
+def extract_enum_properties(properties: List[Dict]) -> List[Dict]:
+    """Identifica propriedades que são enums."""
+    enum_properties = []
+    for prop in properties:
+        # Verifica se o tipo de dados tem 'Case' ou é um enum conhecido
+        if 'Case' in prop['data_type'] or prop['data_type'] in [
+            'FontName', 'ColorName', 'ButtonSize', 'ButtonStyle'
+        ]:
+            enum_properties.append(prop)
+    return enum_properties
+
+def categorize_properties(properties: List[Dict]) -> Tuple[List[Dict], List[Dict], List[Dict], List[Dict]]:
+    """Categoriza propriedades por tipo para usar controles apropriados."""
+    enum_props = []
+    text_props = []
+    bool_props = []
+    number_props = []
+    
+    for prop in properties:
+        if prop['name'] in ['body', 'colors', 'fonts']:
+            continue
+            
+        # Detecta propriedades de enum
+        if 'Case' in prop['data_type'] or prop['data_type'] in ['FontName', 'ColorName']:
+            enum_props.append(prop)
+        # Detecta propriedades de texto
+        elif 'String' in prop['data_type']:
+            text_props.append(prop)
+        # Detecta propriedades booleanas
+        elif 'Bool' in prop['data_type']:
+            bool_props.append(prop)
+        # Detecta propriedades numéricas
+        elif any(t in prop['data_type'] for t in ['Int', 'Double', 'CGFloat', 'Float']):
+            number_props.append(prop)
+    
+    return enum_props, text_props, bool_props, number_props
+
 def find_component_files(component_name: str) -> ComponentInfo:
     """Localiza os arquivos View, Configuration e Styles de um componente."""
     component_info = None
@@ -124,6 +164,12 @@ def find_component_files(component_name: str) -> ComponentInfo:
     if component_info.view_path:
         content = parse_swift_file(component_info.view_path)
         component_info.properties = extract_properties(content)
+        
+        # Categorizar propriedades
+        (component_info.enum_properties, 
+         component_info.text_properties, 
+         component_info.bool_properties, 
+         component_info.number_properties) = categorize_properties(component_info.properties)
     
     if component_info.styles_path:
         content = parse_swift_file(component_info.styles_path)
@@ -149,23 +195,47 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
     
     # Estados para propriedades e estilo
     states = []
-    for prop in component_info.properties:
-        if prop['name'] not in ['body', 'colors', 'fonts']:
-            # Determinar um valor padrão adequado com base no tipo
-            default_value = ""
-            if "String" in prop['data_type']:
-                default_value = '"Exemplo"'
-            elif "Int" in prop['data_type']:
-                default_value = "0"
-            elif "Bool" in prop['data_type']:
-                default_value = "false"
-            elif "Double" in prop['data_type'] or "CGFloat" in prop['data_type']:
-                default_value = "0.0"
-            elif prop['default_value']:
-                default_value = prop['default_value']
-            
-            if default_value:
-                states.append(f'    @State private var {prop["name"]} = {default_value}')
+    
+    # Estado para texto de exemplo se for componente Text
+    if component_info.name == "Text":
+        states.append('    @State private var sampleText = "Exemplo de texto"')
+    
+    # Estados para propriedades de texto
+    for prop in component_info.text_properties:
+        if prop['default_value']:
+            states.append(f'    @State private var {prop["name"]} = {prop["default_value"]}')
+        else:
+            states.append(f'    @State private var {prop["name"]} = "Exemplo"')
+    
+    # Estados para propriedades booleanas
+    for prop in component_info.bool_properties:
+        if prop['default_value']:
+            states.append(f'    @State private var {prop["name"]} = {prop["default_value"]}')
+        else:
+            states.append(f'    @State private var {prop["name"]} = false')
+    
+    # Estados para propriedades numéricas
+    for prop in component_info.number_properties:
+        if prop['default_value']:
+            states.append(f'    @State private var {prop["name"]} = {prop["default_value"]}')
+        elif 'Int' in prop['data_type']:
+            states.append(f'    @State private var {prop["name"]} = 0')
+        else:
+            states.append(f'    @State private var {prop["name"]} = 0.0')
+    
+    # Estado para propriedades enum
+    for prop in component_info.enum_properties:
+        if prop['default_value']:
+            states.append(f'    @State private var {prop["name"]} = {prop["default_value"]}')
+        else:
+            # Use um valor padrão baseado no tipo
+            enum_type = prop['data_type'].strip()
+            if 'FontName' in enum_type:
+                states.append(f'    @State private var {prop["name"]}: {enum_type} = .medium')
+            elif 'ColorName' in enum_type:
+                states.append(f'    @State private var {prop["name"]}: {enum_type} = .highlightA')
+            else:
+                states.append(f'    @State private var {prop["name"]}: {enum_type} = .{enum_type.split(".")[-1].lower()}')
     
     # Estado para o estilo selecionado
     if component_info.style_cases and len(component_info.style_cases) > 0:
@@ -246,15 +316,61 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
     // Preview do componente com as configurações selecionadas
     private var previewComponent: some View {
         VStack {
-            // Aqui vai o código para exibir o componente com as configurações selecionadas
-            Text("Preview do componente")
+"""
+
+    # Baseado no componente, criar uma preview apropriada
+    if component_info.name == "Text":
+        preview_component += """            // Preview do Text com o estilo selecionado
+            Text(sampleText)
+                .textStyle(selectedStyle.style())
                 .padding()
                 .frame(maxWidth: .infinity)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
                         .fill(useContrastBackground ? colors.backgroundA : colors.backgroundB.opacity(0.2))
                 )
-        }
+"""
+    else:
+        # Gerar preview genérica para outros componentes
+        preview_component += f"""            // Preview do componente com as configurações atuais
+            {component_info.name}("""
+        
+        # Adicionar parâmetros baseados nas propriedades
+        params = []
+        
+        # Adicionar texto se for relevante
+        if component_info.text_properties:
+            for prop in component_info.text_properties:
+                params.append(f'{prop["name"]}: {prop["name"]}')
+        
+        # Adicionar booleanos
+        for prop in component_info.bool_properties:
+            params.append(f'{prop["name"]}: {prop["name"]}')
+            
+        # Adicionar numéricos
+        for prop in component_info.number_properties:
+            params.append(f'{prop["name"]}: {prop["name"]}')
+            
+        # Adicionar enums
+        for prop in component_info.enum_properties:
+            params.append(f'{prop["name"]}: {prop["name"]}')
+            
+        # Adicionar style se aplicável
+        if component_info.style_cases and len(component_info.style_cases) > 0:
+            params.append("style: selectedStyle.style()")
+            
+        preview_component += ", ".join(params)
+        
+        preview_component += """)
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(useContrastBackground ? colors.backgroundA : colors.backgroundB.opacity(0.2))
+                )
+"""
+    
+    preview_component += """        }
     }
 """
     
@@ -265,17 +381,37 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
         VStack(spacing: 16) {
 """
     
-    # Adicionar controles para cada propriedade
-    for prop in component_info.properties:
-        if prop['name'] not in ['body', 'colors', 'fonts']:
-            if "String" in prop['data_type']:
-                configuration_section += f"""            // Campo para editar {prop['name']}
+    # Se for Text, adicionar campo para texto de exemplo
+    if component_info.name == "Text":
+        configuration_section += """            // Campo para texto de exemplo
+            TextField("Texto de exemplo", text: $sampleText)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .padding(.horizontal)
+                
+"""
+    
+    # Adicionar controles para cada propriedade de texto
+    for prop in component_info.text_properties:
+        configuration_section += f"""            // Campo para editar {prop['name']}
             TextField("{prop['name'].capitalize()}", text: ${prop['name']})
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .padding(.horizontal)
+                
 """
-            elif "Int" in prop['data_type']:
-                configuration_section += f"""            // Slider para {prop['name']}
+    
+    # Adicionar controles para propriedades booleanas
+    for prop in component_info.bool_properties:
+        configuration_section += f"""            // Toggle para {prop['name']}
+            Toggle("{prop['name'].capitalize()}", isOn: ${prop['name']})
+                .toggleStyle(.default(.highlightA))
+                .padding(.horizontal)
+                
+"""
+    
+    # Adicionar controles para propriedades numéricas
+    for prop in component_info.number_properties:
+        if 'Int' in prop['data_type']:
+            configuration_section += f"""            // Slider para {prop['name']}
             VStack(alignment: .leading) {{
                 Text("{prop['name'].capitalize()}: \\({prop['name']})")
                 Slider(value: Binding(
@@ -284,37 +420,45 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
                 ), in: 0...100)
             }}
             .padding(.horizontal)
+            
 """
-            elif "Bool" in prop['data_type']:
-                configuration_section += f"""            // Toggle para {prop['name']}
-            Toggle("{prop['name'].capitalize()}", isOn: ${prop['name']})
-                .toggleStyle(.default(.highlightA))
-                .padding(.horizontal)
-"""
-            elif "Double" in prop['data_type'] or "CGFloat" in prop['data_type']:
-                configuration_section += f"""            // Slider para {prop['name']}
+        else:
+            configuration_section += f"""            // Slider para {prop['name']}
             VStack(alignment: .leading) {{
                 Text("{prop['name'].capitalize()}: \\({prop['name']}, specifier: "%.1f")")
                 Slider(value: ${prop['name']}, in: 0...1)
             }}
             .padding(.horizontal)
+            
+"""
+    
+    # Adicionar seletores para propriedades enum
+    for prop in component_info.enum_properties:
+        enum_type = prop['data_type'].strip()
+        configuration_section += f"""            // Seletor para {prop['name']}
+            EnumSelector<{enum_type}>(
+                title: "{prop['name'].capitalize()}",
+                selection: ${prop['name']},
+                columnsCount: 3,
+                height: 120
+            )
+            
 """
     
     # Adicionar seletor de estilo, se houver estilos
     if component_info.style_cases and len(component_info.style_cases) > 0:
-        configuration_section += f"""
-            // Seletor de estilo
+        configuration_section += f"""            // Seletor de estilo
             EnumSelector<{component_info.name}StyleCase>(
                 title: "Estilo",
                 selection: $selectedStyle,
                 columnsCount: 3,
                 height: 120
             )
+            
 """
     
     # Adicionar toggles para opções de visualização
-    configuration_section += """
-            // Toggles para opções
+    configuration_section += """            // Toggles para opções
             VStack {
                 Toggle("Usar fundo contrastante", isOn: $useContrastBackground)
                     .toggleStyle(.default(.highlightA))
@@ -340,11 +484,39 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
     # Adicionar exemplo de código gerado
     if component_info.name == "Text":
         # Usando string simples para evitar problemas com a interpolação Swift
-        generate_code += "        Text(\"Exemplo de texto\")\n"
-        generate_code += "            .textStyle(.mediumContentA)\n"
+        generate_code += "        Text(sampleText)\n"
+        generate_code += "            .textStyle(selectedStyle.style())\n"
     else:
-        generate_code += f"        {component_info.name}()\n"
-        generate_code += "            // Adicione propriedades e configurações aqui\n"
+        # Gerar código para outros componentes
+        generate_code += f"        {component_info.name}("
+        
+        # Adicionar parâmetros do init
+        params = []
+        
+        # Adicionar texto se for relevante
+        if component_info.text_properties:
+            for prop in component_info.text_properties:
+                params.append(f'{prop["name"]}: {prop["name"]}')
+        
+        # Adicionar booleanos
+        for prop in component_info.bool_properties:
+            params.append(f'{prop["name"]}: {prop["name"]}')
+            
+        # Adicionar numéricos
+        for prop in component_info.number_properties:
+            params.append(f'{prop["name"]}: {prop["name"]}')
+            
+        # Adicionar enums
+        for prop in component_info.enum_properties:
+            params.append(f'{prop["name"]}: {prop["name"]}')
+            
+        generate_code += ", ".join(params)
+        
+        generate_code += ")\n"
+        
+        # Adicionar style se aplicável
+        if component_info.style_cases and len(component_info.style_cases) > 0:
+            generate_code += "            .style(selectedStyle.style())\n"
     
     generate_code += '''
         """
