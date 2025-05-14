@@ -1,232 +1,59 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os
-import sys
-import re
-import argparse
-from typing import List, Dict, Optional, Tuple
-
 """
-Script para gerar arquivos Sample para componentes do Zenith
-Este script analisa arquivos View, Configuration e Styles de um componente
-e gera automaticamente um arquivo Sample para demonstrar o uso do componente.
+Funções para gerar o conteúdo do arquivo Sample
 """
 
-# Configurações
-ZENITH_PATH = os.path.expanduser("~/KettleGym/Packages/Zenith")
-ZENITH_SAMPLE_PATH = os.path.expanduser("~/KettleGym/Packages/ZenithSample")
-COMPONENTS_PATH = os.path.join(ZENITH_PATH, "Sources/Zenith")
-SAMPLES_PATH = os.path.join(ZENITH_SAMPLE_PATH, "ZenithSample")
-
-# Estrutura para armazenar informações do componente
-class ComponentInfo:
-    def __init__(self, name: str, type_path: str):
-        self.name = name
-        self.type_path = type_path  # BaseElements/Natives ou Components/Customs
-        self.view_path = ""
-        self.config_path = ""
-        self.styles_path = ""
-        self.properties = []
-        self.style_cases = []  # Para compatibilidade
-        self.style_functions = []  # Funções de estilo como small(), medium(), etc.
-        self.enum_properties = []  # Propriedades que são enums
-        self.text_properties = []  # Propriedades de texto
-        self.bool_properties = []  # Propriedades booleanas
-        self.number_properties = []  # Propriedades numéricas
-        
-    def __str__(self):
-        return f"Component: {self.name} (Type: {self.type_path})"
-
-def parse_swift_file(file_path: str) -> str:
-    """Lê e retorna o conteúdo de um arquivo Swift."""
-    try:
-        with open(file_path, 'r') as file:
-            return file.read()
-    except Exception as e:
-        print(f"Erro ao ler o arquivo {file_path}: {e}")
-        return ""
-
-def extract_properties(content: str) -> List[Dict]:
-    """Extrai propriedades de uma estrutura/classe Swift."""
-    # Padrão para localizar propriedades
-    property_pattern = r'(var|let)\s+(\w+)\s*:\s*([^{=\n]+)(?:\s*=\s*([^{\n]+))?'
-    properties = []
-    
-    for match in re.finditer(property_pattern, content):
-        prop_type = match.group(1)  # var ou let
-        prop_name = match.group(2)  # nome da propriedade
-        prop_data_type = match.group(3).strip()  # tipo de dados
-        default_value = match.group(4)  # valor padrão, se houver
-        
-        if default_value:
-            default_value = default_value.strip()
-        
-        properties.append({
-            'type': prop_type,
-            'name': prop_name,
-            'data_type': prop_data_type,
-            'default_value': default_value
-        })
-    
-    return properties
-
-def extract_style_functions(content: str, component_name: str) -> List[Dict]:
-    """Extrai funções de estilo de um arquivo de estilos."""
-    # Procura por extensões como: public extension TextStyle where Self == BaseTextStyle
-    extension_pattern = rf'public\s+extension\s+{component_name}Style\s+where\s+Self\s+==\s+Base{component_name}Style'
-    style_functions = []
-    
-    extension_match = re.search(extension_pattern, content)
-    if extension_match:
-        # Encontrar abertura de chave após a extensão
-        opening_brace_pos = content.find('{', extension_match.end())
-        if opening_brace_pos > 0:
-            # Encontrar chave de fechamento correspondente
-            brace_count = 1
-            i = opening_brace_pos + 1
-            while i < len(content) and brace_count > 0:
-                if content[i] == '{':
-                    brace_count += 1
-                elif content[i] == '}':
-                    brace_count -= 1
-                i += 1
-                
-            if brace_count == 0:
-                extension_content = content[opening_brace_pos:i]
-                
-                # Extrair funções de estilo
-                function_pattern = r'static\s+func\s+(\w+)\s*\(\s*(?:_\s+)?(\w+)\s*:\s*(\w+)(?:\s*(?:,|\)|\s))?'
-                for match in re.finditer(function_pattern, extension_content):
-                    func_name = match.group(1)  # Nome da função
-                    param_name = match.group(2)  # Nome do parâmetro
-                    param_type = match.group(3)  # Tipo do parâmetro
-                    
-                    style_functions.append({
-                        'name': func_name,
-                        'param_name': param_name,
-                        'param_type': param_type
-                    })
-    
-    return style_functions
-
-def extract_style_cases(content: str) -> List[str]:
-    """Extrai casos de estilo de um arquivo StyleCase."""
-    # Padrão para localizar enum cases em SwiftUI
-    case_pattern = r'case\s+(\w+)'
-    cases = []
-    
-    # Verifica se há um enum de StyleCase
-    enum_match = re.search(r'enum\s+(\w+StyleCase)', content)
-    if enum_match:
-        # Extrair todos os casos dentro deste enum
-        enum_name = enum_match.group(1)
-        enum_content = re.search(rf'{enum_name}[^{{]*{{(.*?)}}', content, re.DOTALL)
-        
-        if enum_content:
-            cases_content = enum_content.group(1)
-            for match in re.finditer(case_pattern, cases_content):
-                cases.append(match.group(1))
-    
-    return cases
-
-def categorize_properties(properties: List[Dict]) -> Tuple[List[Dict], List[Dict], List[Dict], List[Dict]]:
-    """Categoriza propriedades por tipo para usar controles apropriados."""
-    enum_props = []
-    text_props = []
-    bool_props = []
-    number_props = []
-    
-    for prop in properties:
-        if prop['name'] in ['body', 'colors', 'fonts']:
-            continue
-            
-        # Detecta propriedades de enum
-        if 'Case' in prop['data_type'] or prop['data_type'] in ['FontName', 'ColorName']:
-            enum_props.append(prop)
-        # Detecta propriedades de texto
-        elif 'String' in prop['data_type']:
-            text_props.append(prop)
-        # Detecta propriedades booleanas
-        elif 'Bool' in prop['data_type']:
-            bool_props.append(prop)
-        # Detecta propriedades numéricas
-        elif any(t in prop['data_type'] for t in ['Int', 'Double', 'CGFloat', 'Float']):
-            number_props.append(prop)
-    
-    return enum_props, text_props, bool_props, number_props
-
-def find_component_files(component_name: str) -> ComponentInfo:
-    """Localiza os arquivos View, Configuration e Styles de um componente."""
-    component_info = None
-    
-    # Determinar o tipo de componente (BaseElements/Natives ou Components/Customs)
-    possible_paths = [
-        os.path.join(COMPONENTS_PATH, "BaseElements/Natives", component_name),
-        os.path.join(COMPONENTS_PATH, "Components/Customs", component_name)
-    ]
-    
-    for base_path in possible_paths:
-        if os.path.exists(base_path):
-            type_path = "BaseElements/Natives" if "BaseElements" in base_path else "Components/Customs"
-            component_info = ComponentInfo(component_name, type_path)
-            break
-    
-    if not component_info:
-        print(f"Componente '{component_name}' não encontrado.")
-        return None
-    
-    # Localizar arquivos View, Configuration e Styles
-    files = os.listdir(os.path.join(COMPONENTS_PATH, component_info.type_path, component_name))
-    
-    for file in files:
-        file_path = os.path.join(COMPONENTS_PATH, component_info.type_path, component_name, file)
-        
-        if f"{component_name}View" in file:
-            component_info.view_path = file_path
-        elif f"{component_name}Configuration" in file:
-            component_info.config_path = file_path
-        elif f"{component_name}Styles" in file:
-            component_info.styles_path = file_path
-    
-    # Extrair propriedades, funções de estilo e casos de estilo
-    if component_info.view_path:
-        content = parse_swift_file(component_info.view_path)
-        component_info.properties = extract_properties(content)
-        
-        # Categorizar propriedades
-        (component_info.enum_properties, 
-         component_info.text_properties, 
-         component_info.bool_properties, 
-         component_info.number_properties) = categorize_properties(component_info.properties)
-    
-    if component_info.styles_path:
-        content = parse_swift_file(component_info.styles_path)
-        component_info.style_functions = extract_style_functions(content, component_name)
-        
-        # Se não encontrou funções de estilo, tenta extrair do StyleCase (para compatibilidade)
-        if not component_info.style_functions:
-            component_info.style_cases = extract_style_cases(content)
-    
-    return component_info
+from src.component_info import ComponentInfo
 
 def generate_sample_file(component_info: ComponentInfo) -> str:
     """Gera o conteúdo do arquivo Sample com base nas informações do componente."""
-    sample_name = f"{component_info.name}Sample"
+    # Gera cada parte do arquivo
+    imports = generate_imports()
+    struct_start = generate_struct_start(component_info)
+    states = generate_states(component_info)
+    view_options = generate_view_options()
+    body = generate_body(component_info)
+    preview_component = generate_preview_component(component_info)
+    configuration_section = generate_configuration_section(component_info)
+    generate_code = generate_swift_code_section(component_info)
+    helper_methods = generate_helper_methods(component_info)
+    enum_declaration = generate_enum_declaration(component_info)
     
-    # Imports
-    imports = """import SwiftUI
+    # Combina todas as partes para formar o conteúdo completo do arquivo
+    full_content = imports + struct_start
+    full_content += "\n".join(states)
+    full_content += "\n" + view_options
+    full_content += body
+    full_content += preview_component
+    full_content += configuration_section
+    full_content += generate_code
+    full_content += helper_methods
+    full_content += "\n}"  # Fechar a struct
+    
+    # Adicionar a declaração do enum no final do arquivo (fora da struct)
+    full_content += enum_declaration
+    
+    return full_content
+
+def generate_imports() -> str:
+    """Gera a seção de imports."""
+    return """import SwiftUI
 import Zenith
 import ZenithCoreInterface
 """
-    
-    # Início da estrutura
-    struct_start = f"""
+
+def generate_struct_start(component_info: ComponentInfo) -> str:
+    """Gera o início da estrutura."""
+    sample_name = f"{component_info.name}Sample"
+    return f"""
 struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
     @Dependency(\\.themeConfigurator) var themeConfigurator
     """
-    
-    # Estados para propriedades e estilo
+
+def generate_states(component_info: ComponentInfo) -> list:
+    """Gera os estados (properties) para o componente."""
     states = []
     
     # Estado para texto de exemplo se for componente Text
@@ -277,18 +104,23 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
         if default_style['param_type'] == 'ColorName':
             states.append(f'    @State private var selectedColorName: ColorName = .contentA')
             states.append(f'    @State private var selectedStyleFunction = "{default_style["name"]}"')
+            states.append(f'    @State private var selectedBackgroundColor: ColorName = .backgroundA')
     elif component_info.style_cases and len(component_info.style_cases) > 0:
         # Fallback para StyleCase se não houver funções de estilo
         default_style = component_info.style_cases[0]
         states.append(f'    @State private var selectedStyle = {component_info.name}StyleCase.{default_style}')
     
-    # Toggles para opções de visualização
-    view_options = """    @State private var showAllStyles = false
+    return states
+
+def generate_view_options() -> str:
+    """Gera as opções de visualização."""
+    return """    @State private var showAllStyles = false
     @State private var useContrastBackground = true
     @State private var showFixedHeader = false
     """
-    
-    # Implementação do body
+
+def generate_body(component_info: ComponentInfo) -> str:
+    """Gera o corpo da view."""
     body = """
     var body: some View {
         SampleWithFixedHeader(
@@ -342,21 +174,14 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
                                             // Lista de exemplos de este estilo em todas as cores
                                             LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], spacing: 8) {{
                                                 ForEach(ColorName.allCases, id: \\.self) {{ color in
-                                                    VStack {{
-                                                        Text(String(describing: color))
-                                                            .font(fonts.small)
-                                                            .foregroundColor(colors.contentA)
-                                                            .padding(.bottom, 2)
-                                                        
-                                                        {component_info.name}()
-                                                            .{component_info.name.lower()}Style(.{style_func['name']}(color))
-                                                            .padding(8)
-                                                            .frame(maxWidth: .infinity)
-                                                            .background(
-                                                                RoundedRectangle(cornerRadius: 4)
-                                                                    .fill(getContrastBackground(for: color))
-                                                            )
-                                                    }}
+                                                    Text(String(describing: color))
+                                                        .textStyle(.{style_func['name']}(color))
+                                                        .padding(8)
+                                                        .frame(maxWidth: .infinity)
+                                                        .background(
+                                                            RoundedRectangle(cornerRadius: 4)
+                                                                .fill(getContrastBackground(for: color))
+                                                        )
                                                 }}
                                             }}
                                         }}
@@ -366,24 +191,16 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
 """
     elif component_info.style_cases and len(component_info.style_cases) > 0:
         # Fallback para StyleCase
-        style_modifier = f"{component_info.name.lower()}Style"
         body += f"""                                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], spacing: 8) {{
                                         ForEach({component_info.name}StyleCase.allCases, id: \\.self) {{ style in
-                                            VStack {{
-                                                Text(String(describing: style))
-                                                    .font(fonts.small)
-                                                    .foregroundColor(colors.contentA)
-                                                    .padding(.bottom, 2)
-                                                
-                                                {component_info.name}()
-                                                    .{style_modifier}(style.style())
-                                                    .padding(8)
-                                                    .frame(maxWidth: .infinity)
-                                                    .background(
-                                                        RoundedRectangle(cornerRadius: 4)
-                                                            .fill(getContrastBackground(for: getColorFromStyle(style)))
-                                                    )
-                                            }}
+                                            Text(String(describing: style))
+                                                .textStyle(style.style())
+                                                .padding(8)
+                                                .frame(maxWidth: .infinity)
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 4)
+                                                        .fill(getContrastBackground(for: getColorFromStyle(style)))
+                                                )
                                         }}
                                     }}
 """
@@ -400,7 +217,10 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
     }
 """
     
-    # Implementação do previewComponent
+    return body
+
+def generate_preview_component(component_info: ComponentInfo) -> str:
+    """Gera o componente de preview."""
     preview_component = """
     // Preview do componente com as configurações selecionadas
     private var previewComponent: some View {
@@ -473,7 +293,10 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
     }
 """
     
-    # Implementação da configurationSection
+    return preview_component
+
+def generate_configuration_section(component_info: ComponentInfo) -> str:
+    """Gera a seção de configuração."""
     configuration_section = """
     // Área de configuração
     private var configurationSection: some View {
@@ -569,14 +392,6 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
                 height: 120
             )
             
-            // Seletor para fundo
-            EnumSelector<ColorName>(
-                title: "Fundo",
-                selection: $selectedBackgroundColor,
-                columnsCount: 3,
-                height: 120
-            )
-            
 """
     elif component_info.style_cases and len(component_info.style_cases) > 0:
         # Fallback para StyleCase
@@ -604,7 +419,10 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
     }
 """
     
-    # Implementação da função generateSwiftCode
+    return configuration_section
+
+def generate_swift_code_section(component_info: ComponentInfo) -> str:
+    """Gera a seção para geração de código Swift."""
     generate_code = '''
     // Gera o código Swift para o componente configurado
     private func generateSwiftCode() -> String {
@@ -659,9 +477,12 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
     }
 '''
     
-    # Helper para obter o estilo selecionado
+    return generate_code
+
+def generate_helper_methods(component_info: ComponentInfo) -> str:
+    """Gera os métodos auxiliares."""
     helper_methods = ""
-    if component_info.style_functions and len(component_info.style_functions) > 0:
+    if component_info.name == "Text" and component_info.style_functions and len(component_info.style_functions) > 0:
         helper_methods = """
     // Helper para obter o TextStyle correspondente à função selecionada
     private func getSelectedTextStyle() -> some TextStyle {
@@ -693,32 +514,34 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
         // Calcular luminosidade da cor (fórmula perceptual)
         let luminance = 0.299 * red + 0.587 * green + 0.114 * blue
         
-        // Verificar se estamos lidando com a cor backgroundC ou cores com luminosidade similar
-        if (abs(luminance - 0.27) < 0.1) { // 0.27 é aproximadamente a luminosidade de #444444
-            // Para cinzas médios como backgroundC, criar um contraste mais definido
-            if luminance < 0.3 {
-                // Para cinzas que tendem ao escuro, usar um contraste bem claro
-                return Color.white.opacity(0.25)
+        // Tratamento específico para cinzas médios (como backgroundC)
+        if colorName == .backgroundC || (abs(red - green) < 0.1 && abs(green - blue) < 0.1 && luminance > 0.2 && luminance < 0.4) {
+            // Para o cinza médio, criar um contraste mais definido e claro
+            return Color.white.opacity(0.3)
+        }
+        
+        // Para cores com luminância média (nem claras nem escuras)
+        if luminance > 0.3 && luminance < 0.7 {
+            // Verificar se é mais para o claro ou para o escuro
+            if luminance < 0.5 {
+                // Tendendo ao escuro, usar um contraste claro mais forte
+                return Color.white.opacity(0.35)
             } else {
-                // Para cinzas que tendem ao claro, usar um contraste bem escuro
-                return Color.black.opacity(0.15)
+                // Tendendo ao claro, usar um contraste escuro mais forte
+                return Color.black.opacity(0.2)
             }
         }
         
-        // Para as demais cores, manter a lógica anterior mas aumentar o contraste
-        if luminance < 0.5 {
-            // Para cores escuras, gerar um contraste claro
-            return Color(red: min(red + 0.4, 1.0), 
-                        green: min(green + 0.4, 1.0), 
-                        blue: min(blue + 0.4, 1.0))
-                .opacity(0.35)
-        } else {
-            // Para cores claras, gerar um contraste escuro
-            return Color(red: max(red - 0.25, 0.0), 
-                        green: max(green - 0.25, 0.0), 
-                        blue: max(blue - 0.25, 0.0))
-                .opacity(0.2)
+        // Para cores bem escuras, usar um contraste bem claro
+        if luminance < 0.3 {
+            return Color.white.opacity(0.4)
         }
+        
+        // Para cores bem claras, usar um contraste escuro
+        return Color(red: max(red - 0.3, 0.0), 
+                    green: max(green - 0.3, 0.0), 
+                    blue: max(blue - 0.3, 0.0))
+                .opacity(0.25)
     }
 """
     elif component_info.name == "Text":
@@ -778,117 +601,41 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
         // Calcular luminosidade da cor (fórmula perceptual)
         let luminance = 0.299 * red + 0.587 * green + 0.114 * blue
         
-        // Verificar se estamos lidando com a cor backgroundC ou cores com luminosidade similar
-        if (abs(luminance - 0.27) < 0.1) { // 0.27 é aproximadamente a luminosidade de #444444
-            // Para cinzas médios como backgroundC, criar um contraste mais definido
-            if luminance < 0.3 {
-                // Para cinzas que tendem ao escuro, usar um contraste bem claro
-                return Color.white.opacity(0.25)
+        // Tratamento específico para cinzas médios (como backgroundC)
+        if colorName == .backgroundC || (abs(red - green) < 0.1 && abs(green - blue) < 0.1 && luminance > 0.2 && luminance < 0.4) {
+            // Para o cinza médio, criar um contraste mais definido e claro
+            return Color.white.opacity(0.3)
+        }
+        
+        // Para cores com luminância média (nem claras nem escuras)
+        if luminance > 0.3 && luminance < 0.7 {
+            // Verificar se é mais para o claro ou para o escuro
+            if luminance < 0.5 {
+                // Tendendo ao escuro, usar um contraste claro mais forte
+                return Color.white.opacity(0.35)
             } else {
-                // Para cinzas que tendem ao claro, usar um contraste bem escuro
-                return Color.black.opacity(0.15)
+                // Tendendo ao claro, usar um contraste escuro mais forte
+                return Color.black.opacity(0.2)
             }
         }
         
-        // Para as demais cores, manter a lógica anterior mas aumentar o contraste
-        if luminance < 0.5 {
-            // Para cores escuras, gerar um contraste claro
-            return Color(red: min(red + 0.4, 1.0), 
-                        green: min(green + 0.4, 1.0), 
-                        blue: min(blue + 0.4, 1.0))
-                .opacity(0.35)
-        } else {
-            // Para cores claras, gerar um contraste escuro
-            return Color(red: max(red - 0.25, 0.0), 
-                        green: max(green - 0.25, 0.0), 
-                        blue: max(blue - 0.25, 0.0))
-                .opacity(0.2)
+        // Para cores bem escuras, usar um contraste bem claro
+        if luminance < 0.3 {
+            return Color.white.opacity(0.4)
         }
+        
+        // Para cores bem claras, usar um contraste escuro
+        return Color(red: max(red - 0.3, 0.0), 
+                    green: max(green - 0.3, 0.0), 
+                    blue: max(blue - 0.3, 0.0))
+                .opacity(0.25)
     }
 """
-    # Adicionando funções auxiliares para qualquer componente que use StyleCase
-    elif component_info.style_cases and len(component_info.style_cases) > 0:
-        helper_methods = f"""
-    // Obtém a cor associada a um StyleCase
-    private func getColorFromStyle(_ style: {component_info.name}StyleCase) -> ColorName {{
-        let styleName = String(describing: style)
-        
-        if styleName.contains("HighlightA") {{
-            return .highlightA
-        }} else if styleName.contains("BackgroundA") {{
-            return .backgroundA
-        }} else if styleName.contains("BackgroundB") {{
-            return .backgroundB
-        }} else if styleName.contains("BackgroundC") {{
-            return .backgroundC
-        }} else if styleName.contains("BackgroundD") {{
-            return .backgroundD
-        }} else if styleName.contains("ContentA") {{
-            return .contentA
-        }} else if styleName.contains("ContentB") {{
-            return .contentB
-        }} else if styleName.contains("ContentC") {{
-            return .contentC
-        }} else if styleName.contains("Critical") {{
-            return .critical
-        }} else if styleName.contains("Attention") {{
-            return .attention
-        }} else if styleName.contains("Danger") {{
-            return .danger
-        }} else if styleName.contains("Positive") {{
-            return .positive
-        }} else {{
-            return .none
-        }}
-    }}
     
-    // Gera um fundo de contraste adequado para a cor especificada
-    private func getContrastBackground(for colorName: ColorName) -> Color {{
-        let color = colors.color(by: colorName) ?? colors.backgroundB
-        
-        // Extrair componentes RGB da cor
-        let uiColor = UIColor(color)
-        var red: CGFloat = 0
-        var green: CGFloat = 0
-        var blue: CGFloat = 0
-        var alpha: CGFloat = 0
-        
-        uiColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
-        
-        // Calcular luminosidade da cor (fórmula perceptual)
-        let luminance = 0.299 * red + 0.587 * green + 0.114 * blue
-        
-        // Verificar se estamos lidando com a cor backgroundC ou cores com luminosidade similar
-        if (abs(luminance - 0.27) < 0.1) {{ // 0.27 é aproximadamente a luminosidade de #444444
-            // Para cinzas médios como backgroundC, criar um contraste mais definido
-            if luminance < 0.3 {{
-                // Para cinzas que tendem ao escuro, usar um contraste bem claro
-                return Color.white.opacity(0.25)
-            }} else {{
-                // Para cinzas que tendem ao claro, usar um contraste bem escuro
-                return Color.black.opacity(0.15)
-            }}
-        }}
-        
-        // Para as demais cores, manter a lógica anterior mas aumentar o contraste
-        if luminance < 0.5 {{
-            // Para cores escuras, gerar um contraste claro
-            return Color(red: min(red + 0.4, 1.0), 
-                        green: min(green + 0.4, 1.0), 
-                        blue: min(blue + 0.4, 1.0))
-                .opacity(0.35)
-        }} else {{
-            // Para cores claras, gerar um contraste escuro
-            return Color(red: max(red - 0.25, 0.0), 
-                        green: max(green - 0.25, 0.0), 
-                        blue: max(blue - 0.25, 0.0))
-                .opacity(0.2)
-        }}
-    }}
-"""
-    
-    # Adicionar a declaração da enum StyleFunctionName no final do arquivo (fora da struct)
-    # para componentes com funções de estilo
+    return helper_methods
+
+def generate_enum_declaration(component_info: ComponentInfo) -> str:
+    """Gera a declaração de enum no final do arquivo."""
     enum_declaration = ""
     if component_info.style_functions and len(component_info.style_functions) > 0:
         style_func_names = [func['name'] for func in component_info.style_functions]
@@ -901,57 +648,4 @@ fileprivate enum StyleFunctionName: String, CaseIterable, Identifiable {{
 }}
 """
     
-    # Combinar tudo
-    full_content = imports + struct_start
-    full_content += "\n".join(states)
-    full_content += "\n" + view_options
-    full_content += body
-    full_content += preview_component
-    full_content += configuration_section
-    full_content += generate_code
-    full_content += helper_methods
-    full_content += "\n}"  # Fechar a struct
-    
-    # Adicionar a declaração do enum no final do arquivo (fora da struct)
-    full_content += enum_declaration
-    
-    return full_content
-
-def create_sample_file(component_name: str):
-    """Cria um arquivo Sample para um componente especificado."""
-    component_info = find_component_files(component_name)
-    
-    if not component_info:
-        return False
-    
-    # Determinar o caminho para salvar o arquivo Sample
-    sample_path = os.path.join(SAMPLES_PATH, component_info.type_path, component_name)
-    
-    # Criar os diretórios, se necessário
-    os.makedirs(sample_path, exist_ok=True)
-    
-    # Gerar o conteúdo do arquivo Sample
-    sample_content = generate_sample_file(component_info)
-    
-    # Salvar o arquivo
-    sample_file_path = os.path.join(sample_path, f"{component_name}Sample.swift")
-    try:
-        with open(sample_file_path, 'w') as file:
-            file.write(sample_content)
-        print(f"Arquivo Sample criado com sucesso: {sample_file_path}")
-        return True
-    except Exception as e:
-        print(f"Erro ao criar o arquivo Sample: {e}")
-        return False
-
-def main():
-    """Função principal."""
-    parser = argparse.ArgumentParser(description='Gerador de arquivos Sample para componentes Zenith')
-    parser.add_argument('component', help='Nome do componente para gerar o Sample (ex: Text, Button, etc.)')
-    
-    args = parser.parse_args()
-    
-    create_sample_file(args.component)
-
-if __name__ == "__main__":
-    main()
+    return enum_declaration
