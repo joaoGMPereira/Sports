@@ -29,9 +29,14 @@ struct ToggleSample: View, @preconcurrency BaseThemeDependencies {
                         .foregroundColor(colors.contentA)
                         .padding(.bottom, 8)
                     
-                    // Seletor de cor
-                    ColorSelector(selectedColor: $selectedColor)
-                        .padding(.bottom, 16)
+                    // Substituindo o ColorSelector pelo EnumSelector
+                    EnumSelector<ColorName>(
+                        title: "Cor do Toggle",
+                        selection: $selectedColor,
+                        columnsCount: 4,
+                        height: 120
+                    )
+                    .padding(.bottom, 16)
                     
                     // Estado atual
                     Toggle("Ligado", isOn: $isOn)

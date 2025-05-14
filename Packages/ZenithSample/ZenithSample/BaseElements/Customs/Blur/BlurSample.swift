@@ -26,8 +26,13 @@ struct BlurSample: View, @preconcurrency BaseThemeDependencies {
             },
             config: {
                 VStack(spacing: 16) {
-                    // Seletor de cor para o blur
-                    ColorSelector(selectedColor: $viewModel.selectedColor)
+                    // Substituindo ColorSelector pelo EnumSelector
+                    EnumSelector<ColorName>(
+                        title: "Cor do Blur",
+                        selection: $viewModel.selectedColor,
+                        columnsCount: 4,
+                        height: 120
+                    )
                     
                     // Seletor de tipo de view
                     BlurViewSelector(

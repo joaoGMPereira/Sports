@@ -92,11 +92,21 @@ struct TextSample: View, @preconcurrency BaseThemeDependencies {
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .padding(.horizontal)
             
-            // Seletor de fonte
-            FontSelector(selectedFont: $selectedFont)
+            // Substituindo FontSelector por EnumSelector
+            EnumSelector<FontName>(
+                title: "Fonte",
+                selection: $selectedFont,
+                columnsCount: 3,
+                height: 120
+            )
             
-            // Seletor de cor
-            ColorSelector(selectedColor: $selectedColor)
+            // Substituindo ColorSelector por EnumSelector
+            EnumSelector<ColorName>(
+                title: "Cor",
+                selection: $selectedColor,
+                columnsCount: 4,
+                height: 120
+            )
             
             // Toggles para opções
             VStack {

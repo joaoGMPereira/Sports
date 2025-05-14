@@ -72,9 +72,14 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                         .foregroundColor(colors.contentA)
                         .padding(spacings.small)
                     
-                    // Color selector for the style
-                    ColorSelector(selectedColor: $selectedColor)
-                        .padding(.bottom, spacings.small)
+                    // Color selector for the style usando EnumSelector diretamente
+                    EnumSelector<ColorName>(
+                        title: "Cor do Estilo",
+                        selection: $selectedColor,
+                        columnsCount: 4,
+                        height: 120
+                    )
+                    .padding(.bottom, spacings.small)
                     
                     // Display mode selector using GridSelector
                     GridSelector(
