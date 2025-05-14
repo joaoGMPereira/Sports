@@ -28,7 +28,8 @@ class ComponentInfo:
         self.config_path = ""
         self.styles_path = ""
         self.properties = []
-        self.style_cases = []
+        self.style_cases = []  # Para compatibilidade
+        self.style_functions = []  # Funções de estilo como small(), medium(), etc.
         self.enum_properties = []  # Propriedades que são enums
         self.text_properties = []  # Propriedades de texto
         self.bool_properties = []  # Propriedades booleanas
@@ -70,6 +71,45 @@ def extract_properties(content: str) -> List[Dict]:
     
     return properties
 
+def extract_style_functions(content: str, component_name: str) -> List[Dict]:
+    """Extrai funções de estilo de um arquivo de estilos."""
+    # Procura por extensões como: public extension TextStyle where Self == BaseTextStyle
+    extension_pattern = rf'public\s+extension\s+{component_name}Style\s+where\s+Self\s+==\s+Base{component_name}Style'
+    style_functions = []
+    
+    extension_match = re.search(extension_pattern, content)
+    if extension_match:
+        # Encontrar abertura de chave após a extensão
+        opening_brace_pos = content.find('{', extension_match.end())
+        if opening_brace_pos > 0:
+            # Encontrar chave de fechamento correspondente
+            brace_count = 1
+            i = opening_brace_pos + 1
+            while i < len(content) and brace_count > 0:
+                if content[i] == '{':
+                    brace_count += 1
+                elif content[i] == '}':
+                    brace_count -= 1
+                i += 1
+                
+            if brace_count == 0:
+                extension_content = content[opening_brace_pos:i]
+                
+                # Extrair funções de estilo
+                function_pattern = r'static\s+func\s+(\w+)\s*\(\s*(?:_\s+)?(\w+)\s*:\s*(\w+)(?:\s*(?:,|\)|\s))?'
+                for match in re.finditer(function_pattern, extension_content):
+                    func_name = match.group(1)  # Nome da função
+                    param_name = match.group(2)  # Nome do parâmetro
+                    param_type = match.group(3)  # Tipo do parâmetro
+                    
+                    style_functions.append({
+                        'name': func_name,
+                        'param_name': param_name,
+                        'param_type': param_type
+                    })
+    
+    return style_functions
+
 def extract_style_cases(content: str) -> List[str]:
     """Extrai casos de estilo de um arquivo StyleCase."""
     # Padrão para localizar enum cases em SwiftUI
@@ -89,17 +129,6 @@ def extract_style_cases(content: str) -> List[str]:
                 cases.append(match.group(1))
     
     return cases
-
-def extract_enum_properties(properties: List[Dict]) -> List[Dict]:
-    """Identifica propriedades que são enums."""
-    enum_properties = []
-    for prop in properties:
-        # Verifica se o tipo de dados tem 'Case' ou é um enum conhecido
-        if 'Case' in prop['data_type'] or prop['data_type'] in [
-            'FontName', 'ColorName', 'ButtonSize', 'ButtonStyle'
-        ]:
-            enum_properties.append(prop)
-    return enum_properties
 
 def categorize_properties(properties: List[Dict]) -> Tuple[List[Dict], List[Dict], List[Dict], List[Dict]]:
     """Categoriza propriedades por tipo para usar controles apropriados."""
@@ -160,7 +189,7 @@ def find_component_files(component_name: str) -> ComponentInfo:
         elif f"{component_name}Styles" in file:
             component_info.styles_path = file_path
     
-    # Extrair propriedades e casos de estilo
+    # Extrair propriedades, funções de estilo e casos de estilo
     if component_info.view_path:
         content = parse_swift_file(component_info.view_path)
         component_info.properties = extract_properties(content)
@@ -173,7 +202,11 @@ def find_component_files(component_name: str) -> ComponentInfo:
     
     if component_info.styles_path:
         content = parse_swift_file(component_info.styles_path)
-        component_info.style_cases = extract_style_cases(content)
+        component_info.style_functions = extract_style_functions(content, component_name)
+        
+        # Se não encontrou funções de estilo, tenta extrair do StyleCase (para compatibilidade)
+        if not component_info.style_functions:
+            component_info.style_cases = extract_style_cases(content)
     
     return component_info
 
@@ -237,8 +270,15 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
             else:
                 states.append(f'    @State private var {prop["name"]}: {enum_type} = .{enum_type.split(".")[-1].lower()}')
     
-    # Estado para o estilo selecionado
-    if component_info.style_cases and len(component_info.style_cases) > 0:
+    # Estados para estilos
+    if component_info.style_functions and len(component_info.style_functions) > 0:
+        # Usar a primeira função de estilo como padrão
+        default_style = component_info.style_functions[0]
+        if default_style['param_type'] == 'ColorName':
+            states.append(f'    @State private var selectedColorName: ColorName = .contentA')
+            states.append(f'    @State private var selectedStyleFunction = "{default_style["name"]}"')
+    elif component_info.style_cases and len(component_info.style_cases) > 0:
+        # Fallback para StyleCase se não houver funções de estilo
         default_style = component_info.style_cases[0]
         states.append(f'    @State private var selectedStyle = {component_info.name}StyleCase.{default_style}')
     
@@ -286,8 +326,37 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
                                 VStack(alignment: .leading, spacing: 8) {
 """
     
-    # Adicionar visualização de todos os estilos, se houver
-    if component_info.style_cases and len(component_info.style_cases) > 0:
+    # Adicionar visualização de todos os estilos, baseado no tipo de estilo disponível
+    if component_info.style_functions and len(component_info.style_functions) > 0:
+        # Usando funções de estilo
+        body += """                                    VStack(alignment: .leading, spacing: 16) {
+"""
+        for style_func in component_info.style_functions:
+            body += f"""                                        VStack(alignment: .leading) {{
+                                            Text("{style_func['name']}()")
+                                                .font(fonts.smallBold)
+                                                .foregroundColor(colors.contentA)
+                                                .padding(.bottom, 4)
+                                            
+                                            HStack(spacing: 8) {{
+                                                ForEach(ColorName.allCases, id: \\.self) {{ color in
+                                                    Text("\\(String(describing: color))")
+                                                        .padding(.vertical, 4)
+                                                        .padding(.horizontal, 8)
+                                                        .background(
+                                                            RoundedRectangle(cornerRadius: 4)
+                                                                .fill(colors.backgroundB.opacity(0.5))
+                                                        )
+                                                }}
+                                            }}
+                                            .padding(.horizontal)
+                                        }}
+                                        .padding(.vertical, 8)
+"""
+        body += """                                    }
+"""
+    elif component_info.style_cases and len(component_info.style_cases) > 0:
+        # Fallback para StyleCase
         body += f"""                                    ForEach({component_info.name}StyleCase.allCases, id: \\.self) {{ style in
                                         Text("\\(String(describing: style))")
                                             .padding(.vertical, 4)
@@ -320,7 +389,21 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
 
     # Baseado no componente, criar uma preview apropriada
     if component_info.name == "Text":
-        preview_component += """            // Preview do Text com o estilo selecionado
+        # Verificar se usamos funções de estilo ou StyleCase
+        if component_info.style_functions and len(component_info.style_functions) > 0:
+            preview_component += """            // Preview do Text com o estilo selecionado
+            Text(sampleText)
+                .textStyle(getSelectedTextStyle())
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(useContrastBackground ? colors.backgroundA : colors.backgroundB.opacity(0.2))
+                )
+"""
+        else:
+            # Fallback para StyleCase
+            preview_component += """            // Preview do Text com o estilo selecionado
             Text(sampleText)
                 .textStyle(selectedStyle.style())
                 .padding()
@@ -354,11 +437,7 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
         # Adicionar enums
         for prop in component_info.enum_properties:
             params.append(f'{prop["name"]}: {prop["name"]}')
-            
-        # Adicionar style se aplicável
-        if component_info.style_cases and len(component_info.style_cases) > 0:
-            params.append("style: selectedStyle.style()")
-            
+        
         preview_component += ", ".join(params)
         
         preview_component += """)
@@ -445,8 +524,32 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
             
 """
     
-    # Adicionar seletor de estilo, se houver estilos
-    if component_info.style_cases and len(component_info.style_cases) > 0:
+    # Adicionar seletor de estilo
+    if component_info.style_functions and len(component_info.style_functions) > 0:
+        # Seletor para funções de estilo
+        style_func_names = [func['name'] for func in component_info.style_functions]
+        style_func_names_str = ", ".join([f'"{name}"' for name in style_func_names])
+        
+        configuration_section += f"""            // Seletor para função de estilo
+            Picker("Estilo", selection: $selectedStyleFunction) {{
+                ForEach([{style_func_names_str}], id: \\.self) {{ styleName in
+                    Text(styleName).tag(styleName)
+                }}
+            }}
+            .pickerStyle(SegmentedPickerStyle())
+            .padding(.horizontal)
+            
+            // Seletor para cor
+            EnumSelector<ColorName>(
+                title: "Cor",
+                selection: $selectedColorName,
+                columnsCount: 3,
+                height: 120
+            )
+            
+"""
+    elif component_info.style_cases and len(component_info.style_cases) > 0:
+        # Fallback para StyleCase
         configuration_section += f"""            // Seletor de estilo
             EnumSelector<{component_info.name}StyleCase>(
                 title: "Estilo",
@@ -483,9 +586,14 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
     
     # Adicionar exemplo de código gerado
     if component_info.name == "Text":
-        # Usando string simples para evitar problemas com a interpolação Swift
-        generate_code += "        Text(sampleText)\n"
-        generate_code += "            .textStyle(selectedStyle.style())\n"
+        # Verificar se usamos funções de estilo ou StyleCase
+        if component_info.style_functions and len(component_info.style_functions) > 0:
+            generate_code += "        Text(sampleText)\n"
+            generate_code += "            .textStyle(." + "\\(selectedStyleFunction)" + "(." + "\\(String(describing: selectedColorName))" + "))\n"
+        else:
+            # Fallback para StyleCase
+            generate_code += "        Text(sampleText)\n"
+            generate_code += "            .textStyle(selectedStyle.style())\n"
     else:
         # Gerar código para outros componentes
         generate_code += f"        {component_info.name}("
@@ -513,10 +621,6 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
         generate_code += ", ".join(params)
         
         generate_code += ")\n"
-        
-        # Adicionar style se aplicável
-        if component_info.style_cases and len(component_info.style_cases) > 0:
-            generate_code += "            .style(selectedStyle.style())\n"
     
     generate_code += '''
         """
@@ -525,9 +629,25 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
     }
 '''
     
-    # Helper para obter o nome do estilo (apenas para Text)
+    # Helper para obter o estilo selecionado
     helper_methods = ""
-    if component_info.name == "Text":
+    if component_info.name == "Text" and component_info.style_functions and len(component_info.style_functions) > 0:
+        helper_methods = """
+    // Helper para obter o TextStyle correspondente à função selecionada
+    private func getSelectedTextStyle() -> any TextStyle {
+        switch selectedStyleFunction {
+"""
+        for func_info in component_info.style_functions:
+            helper_methods += f"""        case "{func_info['name']}":
+            return .{func_info['name']}(selectedColorName)
+"""
+        
+        helper_methods += """        default:
+            return .small(selectedColorName)
+        }
+    }
+"""
+    elif component_info.name == "Text":
         helper_methods = """
     // Helper para obter o nome do TextStyle correspondente
     private func getTextStyleName() -> String {
@@ -557,7 +677,6 @@ def create_sample_file(component_name: str):
         return False
     
     # Determinar o caminho para salvar o arquivo Sample
-    # O caminho deve seguir a mesma estrutura do componente original
     sample_path = os.path.join(SAMPLES_PATH, component_info.type_path, component_name)
     
     # Criar os diretórios, se necessário
