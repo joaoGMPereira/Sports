@@ -214,6 +214,14 @@ def generate_sample_file(component_info: ComponentInfo) -> str:
     """Gera o conteúdo do arquivo Sample com base nas informações do componente."""
     sample_name = f"{component_info.name}Sample"
     
+    # Determinar configurações específicas do componente que serão usadas em todo o código
+    component_config = {
+        "has_content_param": component_info.name == "Text",  # Se o componente precisa de texto como "sampleText"
+        "style_modifier": f"{component_info.name.lower()}Style",  # O nome do modificador de estilo
+        "style_type": f"{component_info.name}Style",  # Tipo do estilo
+        "style_case_type": f"{component_info.name}StyleCase"  # Tipo do case de estilo
+    }
+    
     # Imports
     imports = """import SwiftUI
 import Zenith
@@ -229,8 +237,8 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
     # Estados para propriedades e estilo
     states = []
     
-    # Estado para texto de exemplo se for componente Text
-    if component_info.name == "Text":
+    # Estado para texto de exemplo se o componente precisar de conteúdo
+    if component_config["has_content_param"]:
         states.append('    @State private var sampleText = "Exemplo de texto"')
     
     # Estados para propriedades de texto
@@ -280,7 +288,7 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
     elif component_info.style_cases and len(component_info.style_cases) > 0:
         # Fallback para StyleCase se não houver funções de estilo
         default_style = component_info.style_cases[0]
-        states.append(f'    @State private var selectedStyle = {component_info.name}StyleCase.{default_style}')
+        states.append(f'    @State private var selectedStyle = {component_config["style_case_type"]}.{default_style}')
     
     # Toggles para opções de visualização
     view_options = """    @State private var showAllStyles = false
@@ -343,13 +351,18 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
                                             LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], spacing: 8) {{
                                                 ForEach(ColorName.allCases, id: \\.self) {{ color in
                                                     VStack {{
-                                                        Text(String(describing: color))
+                                                        Text(color.rawValue)
                                                             .font(fonts.small)
                                                             .foregroundColor(colors.contentA)
                                                             .padding(.bottom, 2)
                                                         
-                                                        {component_info.name}()
-                                                            .{component_info.name.lower()}Style(.{style_func['name']}(color))
+                                                        {component_info.name}"""
+            
+            # Adicionar parâmetro se o componente tiver conteúdo
+            body += "(" + ("sampleText" if component_config["has_content_param"] else "") + ")"
+                
+            body += f"""
+                                                            .{component_config["style_modifier"]}(.{style_func['name']}(color))
                                                             .padding(8)
                                                             .frame(maxWidth: .infinity)
                                                             .background(
@@ -366,17 +379,21 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
 """
     elif component_info.style_cases and len(component_info.style_cases) > 0:
         # Fallback para StyleCase
-        style_modifier = f"{component_info.name.lower()}Style"
         body += f"""                                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], spacing: 8) {{
-                                        ForEach({component_info.name}StyleCase.allCases, id: \\.self) {{ style in
+                                        ForEach({component_config["style_case_type"]}.allCases, id: \\.self) {{ style in
                                             VStack {{
                                                 Text(String(describing: style))
                                                     .font(fonts.small)
                                                     .foregroundColor(colors.contentA)
                                                     .padding(.bottom, 2)
                                                 
-                                                {component_info.name}()
-                                                    .{style_modifier}(style.style())
+                                                {component_info.name}"""
+        
+        # Adicionar parâmetro se o componente tiver conteúdo
+        body += "(" + ("sampleText" if component_config["has_content_param"] else "") + ")"
+            
+        body += f"""
+                                                    .{component_config["style_modifier"]}(style.style())
                                                     .padding(8)
                                                     .frame(maxWidth: .infinity)
                                                     .background(
@@ -405,71 +422,58 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
     // Preview do componente com as configurações selecionadas
     private var previewComponent: some View {
         VStack {
+            // Preview do componente com as configurações atuais
 """
 
-    # Baseado no componente, criar uma preview apropriada
-    if component_info.name == "Text":
-        # Verificar se usamos funções de estilo ou StyleCase
-        if component_info.style_functions and len(component_info.style_functions) > 0:
-            preview_component += """            // Preview do Text com o estilo selecionado
-            Text(sampleText)
-                .textStyle(getSelectedTextStyle())
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(useContrastBackground ? getContrastBackground(for: selectedColorName) : colors.backgroundB.opacity(0.2))
-                )
-"""
-        else:
-            # Fallback para StyleCase
-            preview_component += """            // Preview do Text com o estilo selecionado
-            Text(sampleText)
-                .textStyle(selectedStyle.style())
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(useContrastBackground ? getContrastBackground(for: getColorFromStyle(selectedStyle)) : colors.backgroundB.opacity(0.2))
-                )
-"""
-    else:
-        # Gerar preview genérica para outros componentes
-        preview_component += f"""            // Preview do componente com as configurações atuais
-            {component_info.name}("""
+    # Inicialização do componente
+    preview_component += f"            {component_info.name}("
+    
+    # Adicionar conteúdo (sampleText) se for aplicável
+    if component_config["has_content_param"]:
+        preview_component += "sampleText"
         
-        # Adicionar parâmetros baseados nas propriedades
-        params = []
+    # Adicionar parâmetros baseados nas propriedades
+    params = []
+    
+    # Adicionar texto se for relevante
+    for prop in component_info.text_properties:
+        params.append(f'{prop["name"]}: {prop["name"]}')
+    
+    # Adicionar booleanos
+    for prop in component_info.bool_properties:
+        params.append(f'{prop["name"]}: {prop["name"]}')
         
-        # Adicionar texto se for relevante
-        if component_info.text_properties:
-            for prop in component_info.text_properties:
-                params.append(f'{prop["name"]}: {prop["name"]}')
+    # Adicionar numéricos
+    for prop in component_info.number_properties:
+        params.append(f'{prop["name"]}: {prop["name"]}')
         
-        # Adicionar booleanos
-        for prop in component_info.bool_properties:
-            params.append(f'{prop["name"]}: {prop["name"]}')
-            
-        # Adicionar numéricos
-        for prop in component_info.number_properties:
-            params.append(f'{prop["name"]}: {prop["name"]}')
-            
-        # Adicionar enums
-        for prop in component_info.enum_properties:
-            params.append(f'{prop["name"]}: {prop["name"]}')
+    # Adicionar enums
+    for prop in component_info.enum_properties:
+        params.append(f'{prop["name"]}: {prop["name"]}')
+    
+    # Adicionar vírgula se o componente já tiver um parâmetro e tiver mais parâmetros para adicionar
+    if component_config["has_content_param"] and params:
+        preview_component += ", "
         
-        preview_component += ", ".join(params)
+    preview_component += ", ".join(params)
+    preview_component += ")"
+    
+    # Adicionar o modificador de estilo apropriado
+    if component_info.style_functions and len(component_info.style_functions) > 0:
+        # Para componentes com funções de estilo
+        preview_component += f"\n                .{component_config['style_modifier']}(getSelectedStyle())"
+    elif component_info.style_cases and len(component_info.style_cases) > 0:
+        # Para componentes com StyleCase
+        preview_component += f"\n                .{component_config['style_modifier']}(selectedStyle.style())"
         
-        preview_component += """)
+    preview_component += """
                 .padding()
                 .frame(maxWidth: .infinity)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
                         .fill(useContrastBackground ? colors.backgroundA : colors.backgroundB.opacity(0.2))
                 )
-"""
-    
-    preview_component += """        }
+        }
     }
 """
     
@@ -480,8 +484,8 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
         VStack(spacing: 16) {
 """
     
-    # Se for Text, adicionar campo para texto de exemplo
-    if component_info.name == "Text":
+    # Se componente tem conteúdo, adicionar campo para texto de exemplo
+    if component_config["has_content_param"]:
         configuration_section += """            // Campo para texto de exemplo
             TextField("Texto de exemplo", text: $sampleText)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
@@ -569,19 +573,11 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
                 height: 120
             )
             
-            // Seletor para fundo
-            EnumSelector<ColorName>(
-                title: "Fundo",
-                selection: $selectedBackgroundColor,
-                columnsCount: 3,
-                height: 120
-            )
-            
 """
     elif component_info.style_cases and len(component_info.style_cases) > 0:
         # Fallback para StyleCase
         configuration_section += f"""            // Seletor de estilo
-            EnumSelector<{component_info.name}StyleCase>(
+            EnumSelector<{component_config["style_case_type"]}>(
                 title: "Estilo",
                 selection: $selectedStyle,
                 columnsCount: 3,
@@ -614,123 +610,85 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
         code += """
 '''
     
-    # Adicionar exemplo de código gerado
-    if component_info.name == "Text":
-        # Verificar se usamos funções de estilo ou StyleCase
-        if component_info.style_functions and len(component_info.style_functions) > 0:
-            generate_code += "        Text(sampleText)\n"
-            generate_code += "            .textStyle(." + "\\(selectedStyleFunction)" + "(." + "\\(String(describing: selectedColorName))" + "))\n"
-        else:
-            # Fallback para StyleCase
-            generate_code += "        Text(sampleText)\n"
-            generate_code += "            .textStyle(selectedStyle.style())\n"
-    else:
-        # Gerar código para outros componentes
-        generate_code += f"        {component_info.name}("
+    # Início do componente no código gerado
+    generate_code += f"        {component_info.name}("
+    
+    # Adicionar conteúdo (sampleText) se aplicável
+    if component_config["has_content_param"]:
+        generate_code += "sampleText"
+
+    # Adicionar parâmetros do init
+    params = []
+    
+    # Adicionar texto se for relevante
+    for prop in component_info.text_properties:
+        params.append(f'{prop["name"]}: {prop["name"]}')
+    
+    # Adicionar booleanos
+    for prop in component_info.bool_properties:
+        params.append(f'{prop["name"]}: {prop["name"]}')
         
-        # Adicionar parâmetros do init
-        params = []
+    # Adicionar numéricos
+    for prop in component_info.number_properties:
+        params.append(f'{prop["name"]}: {prop["name"]}')
         
-        # Adicionar texto se for relevante
-        if component_info.text_properties:
-            for prop in component_info.text_properties:
-                params.append(f'{prop["name"]}: {prop["name"]}')
+    # Adicionar enums
+    for prop in component_info.enum_properties:
+        params.append(f'{prop["name"]}: {prop["name"]}')
+    
+    # Adicionar vírgula se o componente já tiver um parâmetro e tiver mais parâmetros para adicionar
+    if component_config["has_content_param"] and params:
+        generate_code += ", "
         
-        # Adicionar booleanos
-        for prop in component_info.bool_properties:
-            params.append(f'{prop["name"]}: {prop["name"]}')
-            
-        # Adicionar numéricos
-        for prop in component_info.number_properties:
-            params.append(f'{prop["name"]}: {prop["name"]}')
-            
-        # Adicionar enums
-        for prop in component_info.enum_properties:
-            params.append(f'{prop["name"]}: {prop["name"]}')
-            
-        generate_code += ", ".join(params)
-        
-        generate_code += ")\n"
+    generate_code += ", ".join(params)
+    generate_code += ")"
+    
+    # Adicionar modificador de estilo se aplicável
+    if component_info.style_functions and len(component_info.style_functions) > 0:
+        generate_code += f"\n            .{component_config['style_modifier']}(." + "\\(selectedStyleFunction)" + "(." + "\\(String(describing: selectedColorName))" + "))"
+    elif component_info.style_cases and len(component_info.style_cases) > 0:
+        generate_code += f"\n            .{component_config['style_modifier']}(selectedStyle.style())"
     
     generate_code += '''
+
         """
         
         return code
     }
 '''
     
-    # Helper para obter o estilo selecionado
-    helper_methods = ""
+    # Helper para obter o estilo selecionado (genérico)
+    helper_methods = f"""
+    // Helper para obter o estilo correspondente à função selecionada
+    private func getSelectedStyle() -> some {component_config["style_type"]} {{
+"""
+    
     if component_info.style_functions and len(component_info.style_functions) > 0:
-        helper_methods = """
-    // Helper para obter o TextStyle correspondente à função selecionada
-    private func getSelectedTextStyle() -> some TextStyle {
-        switch selectedStyleFunction {
+        helper_methods += """        switch selectedStyleFunction {
 """
         for func_info in component_info.style_functions:
             helper_methods += f"""        case "{func_info['name']}":
             return .{func_info['name']}(selectedColorName)
 """
         
-        helper_methods += """        default:
-            return .small(selectedColorName)
-        }
-    }
-    
-    // Gera um fundo de contraste adequado para a cor especificada
-    private func getContrastBackground(for colorName: ColorName) -> Color {
-        let color = colors.color(by: colorName) ?? colors.backgroundB
-        
-        // Extrair componentes RGB da cor
-        let uiColor = UIColor(color)
-        var red: CGFloat = 0
-        var green: CGFloat = 0
-        var blue: CGFloat = 0
-        var alpha: CGFloat = 0
-        
-        uiColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
-        
-        // Calcular luminosidade da cor (fórmula perceptual)
-        let luminance = 0.299 * red + 0.587 * green + 0.114 * blue
-        
-        // Verificar se estamos lidando com a cor backgroundC ou cores com luminosidade similar
-        if (abs(luminance - 0.27) < 0.1) { // 0.27 é aproximadamente a luminosidade de #444444
-            // Para cinzas médios como backgroundC, criar um contraste mais definido
-            if luminance < 0.3 {
-                // Para cinzas que tendem ao escuro, usar um contraste bem claro
-                return Color.white.opacity(0.25)
-            } else {
-                // Para cinzas que tendem ao claro, usar um contraste bem escuro
-                return Color.black.opacity(0.15)
-            }
-        }
-        
-        // Para as demais cores, manter a lógica anterior mas aumentar o contraste
-        if luminance < 0.5 {
-            // Para cores escuras, gerar um contraste claro
-            return Color(red: min(red + 0.4, 1.0), 
-                        green: min(green + 0.4, 1.0), 
-                        blue: min(blue + 0.4, 1.0))
-                .opacity(0.35)
-        } else {
-            // Para cores claras, gerar um contraste escuro
-            return Color(red: max(red - 0.25, 0.0), 
-                        green: max(green - 0.25, 0.0), 
-                        blue: max(blue - 0.25, 0.0))
-                .opacity(0.2)
-        }
-    }
+        helper_methods += f"""        default:
+            return .{component_info.style_functions[0]['name']}(selectedColorName)
+        }}
 """
-    elif component_info.name == "Text":
-        helper_methods = """
-    // Helper para obter o nome do TextStyle correspondente
-    private func getTextStyleName() -> String {
-        // Identificamos o TextStyleCase mais próximo com base na fonte e cor selecionadas
-        return String(describing: selectedStyle).lowercased()
-    }
+    elif component_info.style_cases and len(component_info.style_cases) > 0:
+        helper_methods += f"""        return selectedStyle.style()
+"""
+    else:
+        # Fallback para componentes sem estilo
+        helper_methods += f"""        // Componente não tem estilos configurados
+        struct DefaultStyle: {component_config["style_type"]} {{}}
+        return DefaultStyle()
+"""
+        
+    helper_methods += """    }
     
     // Obtém a cor associada a um StyleCase
-    private func getColorFromStyle(_ style: TextStyleCase) -> ColorName {
+    private func getColorFromStyle<T>(_ style: T) -> ColorName {
         let styleName = String(describing: style)
         
         if styleName.contains("HighlightA") {
@@ -805,86 +763,6 @@ struct {sample_name}: View, @preconcurrency BaseThemeDependencies {{
                 .opacity(0.2)
         }
     }
-"""
-    # Adicionando funções auxiliares para qualquer componente que use StyleCase
-    elif component_info.style_cases and len(component_info.style_cases) > 0:
-        helper_methods = f"""
-    // Obtém a cor associada a um StyleCase
-    private func getColorFromStyle(_ style: {component_info.name}StyleCase) -> ColorName {{
-        let styleName = String(describing: style)
-        
-        if styleName.contains("HighlightA") {{
-            return .highlightA
-        }} else if styleName.contains("BackgroundA") {{
-            return .backgroundA
-        }} else if styleName.contains("BackgroundB") {{
-            return .backgroundB
-        }} else if styleName.contains("BackgroundC") {{
-            return .backgroundC
-        }} else if styleName.contains("BackgroundD") {{
-            return .backgroundD
-        }} else if styleName.contains("ContentA") {{
-            return .contentA
-        }} else if styleName.contains("ContentB") {{
-            return .contentB
-        }} else if styleName.contains("ContentC") {{
-            return .contentC
-        }} else if styleName.contains("Critical") {{
-            return .critical
-        }} else if styleName.contains("Attention") {{
-            return .attention
-        }} else if styleName.contains("Danger") {{
-            return .danger
-        }} else if styleName.contains("Positive") {{
-            return .positive
-        }} else {{
-            return .none
-        }}
-    }}
-    
-    // Gera um fundo de contraste adequado para a cor especificada
-    private func getContrastBackground(for colorName: ColorName) -> Color {{
-        let color = colors.color(by: colorName) ?? colors.backgroundB
-        
-        // Extrair componentes RGB da cor
-        let uiColor = UIColor(color)
-        var red: CGFloat = 0
-        var green: CGFloat = 0
-        var blue: CGFloat = 0
-        var alpha: CGFloat = 0
-        
-        uiColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
-        
-        // Calcular luminosidade da cor (fórmula perceptual)
-        let luminance = 0.299 * red + 0.587 * green + 0.114 * blue
-        
-        // Verificar se estamos lidando com a cor backgroundC ou cores com luminosidade similar
-        if (abs(luminance - 0.27) < 0.1) {{ // 0.27 é aproximadamente a luminosidade de #444444
-            // Para cinzas médios como backgroundC, criar um contraste mais definido
-            if luminance < 0.3 {{
-                // Para cinzas que tendem ao escuro, usar um contraste bem claro
-                return Color.white.opacity(0.25)
-            }} else {{
-                // Para cinzas que tendem ao claro, usar um contraste bem escuro
-                return Color.black.opacity(0.15)
-            }}
-        }}
-        
-        // Para as demais cores, manter a lógica anterior mas aumentar o contraste
-        if luminance < 0.5 {{
-            // Para cores escuras, gerar um contraste claro
-            return Color(red: min(red + 0.4, 1.0), 
-                        green: min(green + 0.4, 1.0), 
-                        blue: min(blue + 0.4, 1.0))
-                .opacity(0.35)
-        }} else {{
-            // Para cores claras, gerar um contraste escuro
-            return Color(red: max(red - 0.25, 0.0), 
-                        green: max(green - 0.25, 0.0), 
-                        blue: max(blue - 0.25, 0.0))
-                .opacity(0.2)
-        }}
-    }}
 """
     
     # Adicionar a declaração da enum StyleFunctionName no final do arquivo (fora da struct)
