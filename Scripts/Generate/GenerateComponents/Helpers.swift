@@ -10,6 +10,7 @@ import Foundation
 // MARK: - Constantes e configurações
 
 let homeDir = FileManager.default.homeDirectoryForCurrentUser.path
+let CLEAN_PACKAGES_DIR = true // Define se deve limpar mudanças no diretório de pacotes
 let ZENITH_PATH = "\(homeDir)/KettleGym/Packages/Zenith"
 let ZENITH_SAMPLE_PATH = "\(homeDir)/KettleGym/Packages/ZenithSample"
 let COMPONENTS_PATH = "\(ZENITH_PATH)/Sources/Zenith"
@@ -97,6 +98,41 @@ struct ConsoleUI {
 }
 
 // MARK: - Funções utilitárias
+
+// Função para limpar diretórios de pacotes se necessário
+func cleanPackagesDirectoryIfNeeded() {
+    if CLEAN_PACKAGES_DIR {
+        let packagesDir = "\(homeDir)/KettleGym/Packages"
+        
+        // Verifica se o diretório existe
+        var isDir: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: packagesDir, isDirectory: &isDir), isDir.boolValue else {
+            Log.log("Diretório de pacotes não encontrado: \(packagesDir)", level: .error)
+            return
+        }
+        
+        Log.log("Limpando diretório de pacotes: \(packagesDir)", level: .info)
+        
+        do {
+            // Executa git clean -fdx no diretório de pacotes
+            let process = Process()
+            process.currentDirectoryURL = URL(fileURLWithPath: packagesDir)
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+            process.arguments = ["checkout", "."]
+            
+            try process.run()
+            process.waitUntilExit()
+            
+            if process.terminationStatus == 0 {
+                Log.log("Diretório de pacotes limpo com sucesso", level: .info)
+            } else {
+                Log.log("Falha ao limpar diretório de pacotes (código \(process.terminationStatus))", level: .error)
+            }
+        } catch {
+            Log.log("Erro ao limpar diretório de pacotes: \(error.localizedDescription)", level: .error)
+        }
+    }
+}
 
 func readFile(at path: String) -> String? {
     do {

@@ -1,3 +1,5 @@
+import Foundation
+
 final class InteractionMenu {
     
     func mainMenu(exitCompletion: (() -> Void)) {
@@ -108,6 +110,36 @@ final class InteractionMenu {
         mainMenu(exitCompletion: exitCompletion)
     }
     
+    func findAvailableComponents() -> [String] {
+        var components: [String] = []
+        
+        // 1. Procurar componentes nativos
+        components.append(contentsOf: Array(NATIVE_COMPONENTS.keys).sorted())
+        
+        // 2. Procurar componentes customizados
+        do {
+            // BaseElements/Natives
+            if let entries = try? FileManager.default.contentsOfDirectory(atPath: "\(COMPONENTS_PATH)/BaseElements/Natives") {
+                for entry in entries {
+                    if !entry.hasPrefix(".") && !components.contains(entry) {
+                        components.append(entry)
+                    }
+                }
+            }
+            
+            // Components/Customs
+            if let entries = try? FileManager.default.contentsOfDirectory(atPath: "\(COMPONENTS_PATH)/Components/Customs") {
+                for entry in entries {
+                    if !entry.hasPrefix(".") && !components.contains(entry) {
+                        components.append(entry)
+                    }
+                }
+            }
+        }
+        
+        return components.sorted()
+    }
+    
     func generateAllNativeComponentSamples(exitCompletion: (() -> Void)) {
         clearConsole()
         ConsoleUI.printTitle("Gerando Samples para Componentes Nativos")
@@ -180,4 +212,71 @@ final class InteractionMenu {
         pauseForAction()
         mainMenu(exitCompletion: exitCompletion)
     }
+    
+    func createSampleFile(for componentName: String) -> Bool {
+        Log.log("Criando amostra para o componente: \(componentName)")
+        
+        // Procurar informações do componente
+        guard let componentInfo = componentConfiguration.findComponentFiles(componentName) else {
+            Log.log("Não foi possível encontrar o componente: \(componentName)", level: .error)
+            return false
+        }
+        
+        // Determinar o caminho para salvar o arquivo Sample
+        let samplePath = "\(SAMPLES_PATH)/\(componentInfo.typePath)/\(componentName)"
+        
+        // Criar os diretórios, se necessário
+        do {
+            try FileManager.default.createDirectory(atPath: samplePath, withIntermediateDirectories: true)
+        } catch {
+            Log.log("Erro ao criar diretórios: \(error)", level: .error)
+            return false
+        }
+        
+        // Gerar o conteúdo do arquivo Sample
+        var sampleContent: String
+        
+        if componentInfo.isNative {
+            sampleContent = generateComponent.generateNativeComponentSample(componentInfo)
+        } else {
+            // Esta parte implementaria o método generateSampleFile, que é mais complexo
+            // Para simplificar, podemos usar o mesmo método para componentes nativos por enquanto
+            sampleContent = generateComponent.generateNativeComponentSample(componentInfo)
+        }
+        
+        // Salvar o arquivo
+        let sampleFilePath = "\(samplePath)/\(componentName)Sample.swift"
+        do {
+            try sampleContent.write(toFile: sampleFilePath, atomically: true, encoding: .utf8)
+            Log.log("Arquivo Sample criado com sucesso: \(sampleFilePath)")
+            
+            // Formatar o arquivo gerado usando swiftformat
+            formatSwiftFile(sampleFilePath)
+            
+            return true
+        } catch {
+            Log.log("Erro ao criar o arquivo Sample: \(error)", level: .error)
+            return false
+        }
+    }
+    
+    func formatSwiftFile(_ filePath: String) {
+        Log.log("Formatando o arquivo: \(filePath)")
+        
+        // Usar a classe SwiftFormatter para formatar o arquivo
+        let formatter = SwiftFormatter(logger: { message, level in
+            Log.log(message, level: level)
+        })
+        
+        let result = formatter.formatFile(at: filePath)
+        
+        switch result {
+        case .success(let message):
+            Log.log(message, level: .info)
+        case .failure(let error):
+            Log.log(error, level: .warning)
+            Log.log("Use Command+A seguido de Control+I no Xcode para formatar o arquivo manualmente.", level: .warning)
+        }
+    }
+
 }

@@ -9,10 +9,24 @@ struct SwiftProperty {
     let defaultValue: String?
 }
 
+struct StyleParameter {
+    let name: String
+    let type: String
+    let defaultValue: String?
+}
+
 struct StyleFunction {
     let name: String
-    let paramName: String
-    let paramType: String
+    let parameters: [StyleParameter]
+    
+    // Para manter compatibilidade com o código existente
+    var paramName: String {
+        parameters.first?.name ?? "color"
+    }
+    
+    var paramType: String {
+        parameters.first?.type ?? "ColorName"
+    }
 }
 
 struct InitParameter {
@@ -99,137 +113,293 @@ final class ComponentConfiguration {
     func extractStyleFunctions(from content: String, componentName: String) -> [StyleFunction] {
         var styleFunctions: [StyleFunction] = []
         
-        // Procura por extensões como: public extension TextStyle where Self == BaseTextStyle
-        let extensionPattern = "public\\s+extension\\s+\(componentName)Style\\s+where\\s+Self\\s+==\\s+Base\(componentName)Style"
-        let extensionRegex = try! NSRegularExpression(pattern: extensionPattern, options: [])
+        // Procura por todas as extensões do estilo de componente
+        let extensionPatterns = [
+            "public\\s+extension\\s+\(componentName)Style\\s+where\\s+Self\\s+==\\s+Base\(componentName)Style",
+            "public\\s+extension\\s+\(componentName)Style\\s+where\\s+Self\\s+==\\s+\\w+\(componentName)Style",
+            "public\\s+extension\\s+\(componentName)Style\\s+where\\s+Self\\s+==\\s+\\w+Style",
+            "public\\s+extension\\s+ButtonStyle\\s+where\\s+Self\\s+==\\s+\\w+ButtonStyle",
+            "public\\s+extension\\s+ButtonStyle\\s+where\\s+Self\\s+==\\s+\\w+",
+            "public\\s+extension\\s+\(componentName)Style",
+            "public\\s+extension\\s+ButtonStyle"
+        ]
         
-        guard let extensionMatch = extensionRegex.firstMatch(in: content, options: [], range: NSRange(content.startIndex..., in: content)),
-              let extensionRange = Range(extensionMatch.range, in: content) else {
-            return []
-        }
+        // Encontra todas as extensões no conteúdo
+        var extensionRanges: [(ClosedRange<String.Index>, String)] = []
         
-        // Encontrar o bloco de código da extensão
-        guard let openBraceIndex = content[extensionRange.upperBound...].firstIndex(of: "{") else {
-            return []
-        }
-        
-        var braceCount = 1
-        var closeIndex = content.index(after: openBraceIndex)
-        
-        while braceCount > 0 && closeIndex < content.endIndex {
-            let char = content[closeIndex]
-            if char == "{" {
-                braceCount += 1
-            } else if char == "}" {
-                braceCount -= 1
-            }
-            if braceCount > 0 {
-                closeIndex = content.index(after: closeIndex)
-            }
-        }
-        
-        if braceCount == 0 {
-            let extensionContent = String(content[openBraceIndex...closeIndex])
+        for pattern in extensionPatterns {
+            let regex = try! NSRegularExpression(pattern: pattern, options: [])
+            let matches = regex.matches(in: content, options: [], range: NSRange(content.startIndex..., in: content))
             
-            // Extrair funções de estilo
-            let functionPattern = "static\\s+func\\s+(\\w+)\\s*\\(\\s*(?:_\\s+)?(\\w+)\\s*:\\s*(\\w+)(?:\\s*(?:,|\\)|\\s))?"
-            let functionRegex = try! NSRegularExpression(pattern: functionPattern, options: [])
-            let functionMatches = functionRegex.matches(in: extensionContent, options: [], range: NSRange(extensionContent.startIndex..., in: extensionContent))
-            
-            for match in functionMatches {
-                guard let nameRange = Range(match.range(at: 1), in: extensionContent),
-                      let paramNameRange = Range(match.range(at: 2), in: extensionContent),
-                      let paramTypeRange = Range(match.range(at: 3), in: extensionContent) else {
-                    continue
+            for match in matches {
+                guard let extensionRange = Range(match.range, in: content) else { continue }
+                let extensionType = String(content[extensionRange])
+                
+                // Encontrar o bloco de código da extensão
+                guard let openBraceIndex = content[extensionRange.upperBound...].firstIndex(of: "{") else { continue }
+                
+                var braceCount = 1
+                var closeIndex = content.index(after: openBraceIndex)
+                
+                while braceCount > 0 && closeIndex < content.endIndex {
+                    let char = content[closeIndex]
+                    if char == "{" {
+                        braceCount += 1
+                    } else if char == "}" {
+                        braceCount -= 1
+                    }
+                    if braceCount > 0 {
+                        closeIndex = content.index(after: closeIndex)
+                    }
                 }
                 
-                let funcName = String(extensionContent[nameRange])
-                let paramName = String(extensionContent[paramNameRange])
-                let paramType = String(extensionContent[paramTypeRange])
+                if braceCount == 0 {
+                    let blockRange = content[openBraceIndex...closeIndex]
+                    extensionRanges.append((openBraceIndex...closeIndex, String(blockRange)))
+                }
+            }
+        }
+        
+        // Extrai as funções de cada bloco de extensão
+        for (_, extensionContent) in extensionRanges {
+            let functions = extractFunctionsFromBlock(extensionContent)
+            styleFunctions.append(contentsOf: functions)
+        }
+        
+        return styleFunctions.isEmpty ? extractGenericStyleFunctions(from: content, componentName: componentName) : styleFunctions
+    }
+    
+    func extractFunctionsFromBlock(_ content: String) -> [StyleFunction] {
+        var functions: [StyleFunction] = []
+        
+        // Padrão para encontrar funções estáticas que retornam Self
+        let functionPattern = "static\\s+func\\s+(\\w+)\\s*\\(([^)]*?)\\)\\s*->\\s*Self"
+        let functionRegex = try! NSRegularExpression(pattern: functionPattern, options: [.dotMatchesLineSeparators])
+        let functionMatches = functionRegex.matches(in: content, options: [], range: NSRange(content.startIndex..., in: content))
+        
+        for match in functionMatches {
+            guard let nameRange = Range(match.range(at: 1), in: content) else { continue }
+            let funcName = String(content[nameRange])
+            
+            var parameters: [StyleParameter] = []
+            
+            // Extrair os parâmetros
+            if match.numberOfRanges > 2, let paramsRange = Range(match.range(at: 2), in: content) {
+                let paramsString = String(content[paramsRange]).trimmingCharacters(in: .whitespaces)
                 
+                if !paramsString.isEmpty {
+                    let paramsList = splitFunctionParameters(paramsString)
+                    
+                    for param in paramsList {
+                        if let styleParam = parseParameter(param) {
+                            parameters.append(styleParam)
+                        }
+                    }
+                }
+            }
+            
+            // Se não houver parâmetros, adicione um padrão para compatibilidade
+            if parameters.isEmpty {
+                parameters = [StyleParameter(name: "color", type: "ColorName", defaultValue: nil)]
+            }
+            
+            functions.append(StyleFunction(name: funcName, parameters: parameters))
+        }
+        
+        return functions
+    }
+    
+    func parseParameter(_ paramString: String) -> StyleParameter? {
+        // Padrão para extrair nome e tipo do parâmetro + valor padrão opcional
+        let paramPattern = "(?:_\\s+)?(\\w+)\\s*:\\s*([^=]+)(?:\\s*=\\s*(.+))?"
+        let paramRegex = try! NSRegularExpression(pattern: paramPattern, options: [])
+        
+        guard let match = paramRegex.firstMatch(in: paramString, options: [], range: NSRange(paramString.startIndex..., in: paramString)) else {
+            return nil
+        }
+        
+        guard let nameRange = Range(match.range(at: 1), in: paramString),
+              let typeRange = Range(match.range(at: 2), in: paramString) else {
+            return nil
+        }
+        
+        let name = String(paramString[nameRange])
+        let type = String(paramString[typeRange]).trimmingCharacters(in: .whitespaces)
+        
+        var defaultValue: String? = nil
+        if match.numberOfRanges > 3, let defaultValueRange = Range(match.range(at: 3), in: paramString) {
+            defaultValue = String(paramString[defaultValueRange]).trimmingCharacters(in: .whitespaces)
+        }
+        
+        return StyleParameter(name: name, type: type, defaultValue: defaultValue)
+    }
+    
+    func splitFunctionParameters(_ paramsString: String) -> [String] {
+        var params: [String] = []
+        var currentParam = ""
+        var braceCount = 0
+        var inQuotes = false
+        
+        for char in paramsString {
+            switch char {
+            case "," where braceCount == 0 && !inQuotes:
+                params.append(currentParam.trimmingCharacters(in: .whitespaces))
+                currentParam = ""
+            case "(", "[", "{":
+                braceCount += 1
+                currentParam.append(char)
+            case ")", "]", "}":
+                braceCount -= 1
+                currentParam.append(char)
+            case "\"":
+                inQuotes.toggle()
+                currentParam.append(char)
+            default:
+                currentParam.append(char)
+            }
+        }
+        
+        if !currentParam.trimmingCharacters(in: .whitespaces).isEmpty {
+            params.append(currentParam.trimmingCharacters(in: .whitespaces))
+        }
+        
+        return params
+    }
+
+    func extractGenericStyleFunctions(from content: String, componentName: String) -> [StyleFunction] {
+        var styleFunctions: [StyleFunction] = []
+        
+        // Procura por padrões como: static func contentA() -> Self { .init() }
+        // ou static func small(_ color: ColorName) -> Self { ... }
+        let genericFunctionPattern = "static\\s+func\\s+(\\w+)\\s*\\(([^)]*?)\\)\\s*->\\s*Self"
+        let functionRegex = try! NSRegularExpression(pattern: genericFunctionPattern, options: [.dotMatchesLineSeparators])
+        let functionMatches = functionRegex.matches(in: content, options: [], range: NSRange(content.startIndex..., in: content))
+        
+        for match in functionMatches {
+            guard let nameRange = Range(match.range(at: 1), in: content) else { continue }
+            let funcName = String(content[nameRange])
+            
+            var parameters: [StyleParameter] = []
+            
+            // Extrair os parâmetros
+            if match.numberOfRanges > 2, let paramsRange = Range(match.range(at: 2), in: content) {
+                let paramsString = String(content[paramsRange]).trimmingCharacters(in: .whitespaces)
+                
+                if !paramsString.isEmpty {
+                    let paramsList = splitFunctionParameters(paramsString)
+                    
+                    for param in paramsList {
+                        if let styleParam = parseParameter(param) {
+                            parameters.append(styleParam)
+                        }
+                    }
+                }
+            }
+            
+            // Se não houver parâmetros, adicione um padrão para compatibilidade
+            if parameters.isEmpty {
+                parameters = [StyleParameter(name: "color", type: "ColorName", defaultValue: nil)]
+            }
+            
+            styleFunctions.append(StyleFunction(name: funcName, parameters: parameters))
+        }
+        
+        // Se ainda não encontrou funções, procura por casos do enum StyleCase
+        if styleFunctions.isEmpty {
+            styleFunctions = inferStyleFunctionsFromEnum(in: content, componentName: componentName)
+        }
+        
+        // Se ainda não encontrou nada, adiciona um padrão mínimo
+        if styleFunctions.isEmpty {
+            Log.log("Não foi possível encontrar funções de estilo para \(componentName), usando padrão mínimo", level: .warning)
+            let defaultFunctions: [StyleFunction]
+            
+            // Define funções padrão específicas por componente
+            switch componentName {
+            case "Text":
+                defaultFunctions = [
+                    StyleFunction(name: "small", parameters: [StyleParameter(name: "color", type: "ColorName", defaultValue: nil)]),
+                    StyleFunction(name: "medium", parameters: [StyleParameter(name: "color", type: "ColorName", defaultValue: nil)]),
+                    StyleFunction(name: "large", parameters: [StyleParameter(name: "color", type: "ColorName", defaultValue: nil)])
+                ]
+            case "Button":
+                defaultFunctions = [
+                    StyleFunction(name: "contentA", parameters: [
+                        StyleParameter(name: "shape", type: "ButtonShape", defaultValue: ".rounded(cornerRadius: .infinity)"),
+                        StyleParameter(name: "state", type: "DSState", defaultValue: ".enabled")
+                    ]),
+                    StyleFunction(name: "highlightA", parameters: [
+                        StyleParameter(name: "shape", type: "ButtonShape", defaultValue: ".rounded(cornerRadius: .infinity)"),
+                        StyleParameter(name: "state", type: "DSState", defaultValue: ".enabled")
+                    ]),
+                    StyleFunction(name: "backgroundD", parameters: [
+                        StyleParameter(name: "shape", type: "ButtonShape", defaultValue: ".rounded(cornerRadius: .infinity)"),
+                        StyleParameter(name: "state", type: "DSState", defaultValue: ".enabled")
+                    ])
+                ]
+            case "Toggle":
+                defaultFunctions = [
+                    StyleFunction(name: "default", parameters: [StyleParameter(name: "color", type: "ColorName", defaultValue: nil)])
+                ]
+            default:
+                defaultFunctions = [
+                    StyleFunction(name: "contentA", parameters: [StyleParameter(name: "color", type: "ColorName", defaultValue: nil)]),
+                    StyleFunction(name: "contentB", parameters: [StyleParameter(name: "color", type: "ColorName", defaultValue: nil)]),
+                    StyleFunction(name: "highlightA", parameters: [StyleParameter(name: "color", type: "ColorName", defaultValue: nil)])
+                ]
+            }
+            
+            styleFunctions = defaultFunctions
+        }
+        
+        return styleFunctions
+    }
+    
+    func inferStyleFunctionsFromEnum(in content: String, componentName: String) -> [StyleFunction] {
+        var styleFunctions: [StyleFunction] = []
+        
+        // Procura por enum de casos de estilo
+        let enumPattern = "enum\\s+\(componentName)StyleCase\\s*:.*?\\{([^}]*?)\\}"
+        let enumRegex = try! NSRegularExpression(pattern: enumPattern, options: [.dotMatchesLineSeparators])
+        
+        guard let enumMatch = enumRegex.firstMatch(in: content, options: [], range: NSRange(content.startIndex..., in: content)),
+              let enumContentRange = Range(enumMatch.range(at: 1), in: content) else {
+            return []
+        }
+        
+        let enumContent = String(content[enumContentRange])
+        
+        // Extrair casos
+        let casePattern = "case\\s+(\\w+)"
+        let caseRegex = try! NSRegularExpression(pattern: casePattern, options: [])
+        let caseMatches = caseRegex.matches(in: enumContent, options: [], range: NSRange(enumContent.startIndex..., in: enumContent))
+        
+        for match in caseMatches {
+            guard let caseNameRange = Range(match.range(at: 1), in: enumContent) else {
+                continue
+            }
+            
+            let caseName = String(enumContent[caseNameRange])
+            
+            // Se for Button, inferir parâmetros típicos
+            if componentName == "Button" {
                 styleFunctions.append(StyleFunction(
-                    name: funcName,
-                    paramName: paramName,
-                    paramType: paramType
+                    name: caseName,
+                    parameters: [
+                        StyleParameter(name: "shape", type: "ButtonShape", defaultValue: ".rounded(cornerRadius: .infinity)"),
+                        StyleParameter(name: "state", type: "DSState", defaultValue: ".enabled")
+                    ]
+                ))
+            } else {
+                // Para outros componentes, usar valor padrão genérico
+                styleFunctions.append(StyleFunction(
+                    name: caseName,
+                    parameters: [StyleParameter(name: "color", type: "ColorName", defaultValue: nil)]
                 ))
             }
         }
         
         return styleFunctions
-    }
-
-    func extractStyleCases(from content: String) -> [String] {
-        var cases: [String] = []
-        
-        // Procura por enum com nome StyleCase
-        let enumPattern = "enum\\s+(\\w+StyleCase)"
-        let enumRegex = try! NSRegularExpression(pattern: enumPattern, options: [])
-        
-        guard let enumMatch = enumRegex.firstMatch(in: content, options: [], range: NSRange(content.startIndex..., in: content)),
-              let enumRange = Range(enumMatch.range(at: 1), in: content) else {
-            return []
-        }
-        
-        let enumName = String(content[enumRange])
-        
-        // Encontrar o bloco do enum
-        let enumBlockPattern = "\(enumName)[^{]*\\{([^}]*)\\}"
-        let enumBlockRegex = try! NSRegularExpression(pattern: enumBlockPattern, options: [.dotMatchesLineSeparators])
-        
-        guard let blockMatch = enumBlockRegex.firstMatch(in: content, options: [], range: NSRange(content.startIndex..., in: content)),
-              let blockRange = Range(blockMatch.range(at: 1), in: content) else {
-            return []
-        }
-        
-        let casesContent = String(content[blockRange])
-        
-        // Extrair casos
-        let casePattern = "case\\s+(\\w+)"
-        let caseRegex = try! NSRegularExpression(pattern: casePattern, options: [])
-        let caseMatches = caseRegex.matches(in: casesContent, options: [], range: NSRange(casesContent.startIndex..., in: casesContent))
-        
-        for match in caseMatches {
-            guard let caseRange = Range(match.range(at: 1), in: casesContent) else {
-                continue
-            }
-            
-            let caseName = String(casesContent[caseRange])
-            cases.append(caseName)
-        }
-        
-        return cases
-    }
-
-    func categorizeProperties(_ properties: [SwiftProperty]) -> (
-        enumProps: [SwiftProperty],
-        textProps: [SwiftProperty],
-        boolProps: [SwiftProperty],
-        numberProps: [SwiftProperty]
-    ) {
-        var enumProps: [SwiftProperty] = []
-        var textProps: [SwiftProperty] = []
-        var boolProps: [SwiftProperty] = []
-        var numberProps: [SwiftProperty] = []
-        
-        for prop in properties {
-            // Ignorar propriedades específicas
-            if ["body", "colors", "fonts"].contains(prop.name) {
-                continue
-            }
-            
-            // Detectar tipos de propriedades
-            if prop.dataType.contains("Case") || ["FontName", "ColorName"].contains(prop.dataType) {
-                enumProps.append(prop)
-            } else if prop.dataType.contains("String") {
-                textProps.append(prop)
-            } else if prop.dataType.contains("Bool") {
-                boolProps.append(prop)
-            } else if ["Int", "Double", "CGFloat", "Float"].contains(where: { prop.dataType.contains($0) }) {
-                numberProps.append(prop)
-            }
-        }
-        
-        return (enumProps, textProps, boolProps, numberProps)
     }
 
     func extractInitParams(from content: String, componentName: String) -> [InitParameter] {
@@ -524,4 +694,79 @@ final class ComponentConfiguration {
         
         return componentInfo
     }
+    
+    func extractStyleCases(from content: String) -> [String] {
+        var cases: [String] = []
+        
+        // Procura por enum com nome StyleCase
+        let enumPattern = "enum\\s+(\\w+StyleCase)"
+        let enumRegex = try! NSRegularExpression(pattern: enumPattern, options: [])
+        
+        guard let enumMatch = enumRegex.firstMatch(in: content, options: [], range: NSRange(content.startIndex..., in: content)),
+              let enumRange = Range(enumMatch.range(at: 1), in: content) else {
+            return []
+        }
+        
+        let enumName = String(content[enumRange])
+        
+        // Encontrar o bloco do enum
+        let enumBlockPattern = "\(enumName)[^{]*\\{([^}]*)\\}"
+        let enumBlockRegex = try! NSRegularExpression(pattern: enumBlockPattern, options: [.dotMatchesLineSeparators])
+        
+        guard let blockMatch = enumBlockRegex.firstMatch(in: content, options: [], range: NSRange(content.startIndex..., in: content)),
+              let blockRange = Range(blockMatch.range(at: 1), in: content) else {
+            return []
+        }
+        
+        let casesContent = String(content[blockRange])
+        
+        // Extrair casos
+        let casePattern = "case\\s+(\\w+)"
+        let caseRegex = try! NSRegularExpression(pattern: casePattern, options: [])
+        let caseMatches = caseRegex.matches(in: casesContent, options: [], range: NSRange(casesContent.startIndex..., in: casesContent))
+        
+        for match in caseMatches {
+            guard let caseRange = Range(match.range(at: 1), in: casesContent) else {
+                continue
+            }
+            
+            let caseName = String(casesContent[caseRange])
+            cases.append(caseName)
+        }
+        
+        return cases
+    }
+    
+    func categorizeProperties(_ properties: [SwiftProperty]) -> (
+            enumProps: [SwiftProperty],
+            textProps: [SwiftProperty],
+            boolProps: [SwiftProperty],
+            numberProps: [SwiftProperty]
+        ) {
+            var enumProps: [SwiftProperty] = []
+            var textProps: [SwiftProperty] = []
+            var boolProps: [SwiftProperty] = []
+            var numberProps: [SwiftProperty] = []
+            
+            for prop in properties {
+                // Ignorar propriedades específicas
+                if ["body", "colors", "fonts"].contains(prop.name) {
+                    continue
+                }
+                
+                // Detectar tipos de propriedades
+                if prop.dataType.contains("Case") || ["FontName", "ColorName"].contains(prop.dataType) {
+                    enumProps.append(prop)
+                } else if prop.dataType.contains("String") {
+                    textProps.append(prop)
+                } else if prop.dataType.contains("Bool") {
+                    boolProps.append(prop)
+                } else if ["Int", "Double", "CGFloat", "Float"].contains(where: { prop.dataType.contains($0) }) {
+                    numberProps.append(prop)
+                }
+            }
+            
+            return (enumProps, textProps, boolProps, numberProps)
+        }
+
 }

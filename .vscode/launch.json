@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:KettleGym}/Scripts/Generate/GenerateComponents",
+            "name": "Debug GenerateComponents (Scripts/Generate/GenerateComponents)",
+            "program": "${workspaceFolder:KettleGym}/Scripts/Generate/GenerateComponents/.build/debug/GenerateComponents",
+            "preLaunchTask": "swift: Build Debug GenerateComponents (Scripts/Generate/GenerateComponents)"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:KettleGym}/Scripts/Generate/GenerateComponents",
+            "name": "Release GenerateComponents (Scripts/Generate/GenerateComponents)",
+            "program": "${workspaceFolder:KettleGym}/Scripts/Generate/GenerateComponents/.build/release/GenerateComponents",
+            "preLaunchTask": "swift: Build Release GenerateComponents (Scripts/Generate/GenerateComponents)"
+        }
+    ]
+}

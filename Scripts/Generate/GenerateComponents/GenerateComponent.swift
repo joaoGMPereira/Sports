@@ -17,9 +17,7 @@ final class GenerateComponent {
         
         // Determinar configurações específicas do componente
         let hasContentParam = ["Text", "Button", "Toggle", "TextField"].contains(componentName)
-        _ = componentName == "Button" || componentInfo.hasActionParam
-        _ = "\(componentName.lowercased())Style"
-        _ = "\(componentName)Style"
+        let hasActionParam = componentName == "Button" || componentInfo.hasActionParam
         let styleCaseType = "\(componentName)StyleCase"
         
         // Início da estrutura
@@ -29,34 +27,26 @@ final class GenerateComponent {
             @Dependency(\\.themeConfigurator) var themeConfigurator
         """
         
-        // Estados básicos
+        // Estados básicos padronizados
         var states: [String] = []
         
-        // Estado para texto de exemplo se o componente precisar
-        if hasContentParam {
-            if componentName == "Text" {
-                states.append("\n    @State private var sampleText = \"Exemplo de texto\"")
-            } else if componentName == "Button" {
-                states.append("\n    @State private var buttonTitle = \"Botão de Exemplo\"")
-            } else if componentName == "Toggle" {
-                states.append("\n    @State private var toggleLabel = \"Toggle de Exemplo\"")
-                states.append("\n    @State private var isEnabled = false")
-            } else if componentName == "TextField" {
-                states.append("\n    @State private var textValue = \"\"")
-                states.append("\n    @State private var placeholder = \"Digite aqui\"")
-            }
+        // Estado para texto de exemplo padronizado para todos os componentes
+        states.append("\n    @State private var sampleText = \"Exemplo de texto\"")
+        
+        // Estado para cor padronizado para todos os componentes
+        states.append("\n    @State private var selectedColor: ColorName = .highlightA")
+        
+        // Estados específicos para tipo de componente
+        if componentName == "Text" {
+            states.append("\n    @State private var selectedStyleFunction = \"medium\"")
+        } else if componentName != "Divider" {
+            states.append("\n    @State private var selectedStyle = \(styleCaseType).\(componentInfo.styleCases.first ?? "contentA")")
         }
         
-        // Estados para estilo
-        if !componentInfo.styleCases.isEmpty {
-            let defaultStyle = componentInfo.styleCases[0]
-            states.append("\n    @State private var selectedStyle = \(styleCaseType).\(defaultStyle)")
-        } else if !componentInfo.styleFunctions.isEmpty {
-            let defaultStyle = componentInfo.styleFunctions[0]
-            if defaultStyle.paramType == "ColorName" {
-                states.append("\n    @State private var selectedColorName: ColorName = .contentA")
-                states.append("    @State private var selectedStyleFunction = \"\(defaultStyle.name)\"")
-            }
+        if componentName == "Toggle" {
+            states.append("\n    @State private var isEnabled = false")
+        } else if componentName == "TextField" {
+            states.append("\n    @State private var showError = false")
         }
         
         // Toggles para opções de visualização
@@ -111,55 +101,83 @@ final class GenerateComponent {
             }
         """
         
-        // ScrollView com todos os estilos
-        let exampleType = styleCaseType
-        var exampleCode = "// Exemplo do componente"
+        // ScrollView com todos os estilos baseado no tipo de componente
+        var scrollView = ""
         
-        // Preparar exemplos de código para cada componente
-        let buttonExample = """
-    Button(buttonTitle) {
-        // Ação vazia para exemplo
-    }
-    .buttonStyle(style.style())
-    """
-        
-        let textExample = """
-    Text(sampleText)
-        .textStyle(style.style())
-    """
-        
-        let dividerExample = """
-    Divider()
-        .dividerStyle(style.style())
-    """
-        
-        let toggleExample = """
-    Toggle(toggleLabel, isOn: .constant(true))
-        .toggleStyle(style.style())
-    """
-        
-        let textFieldExample = """
-    TextField(placeholder, text: .constant("Exemplo"))
-        .textFieldStyle(style.style())
-    """
-        
-        // Escolher o exemplo apropriado
-        switch componentName {
-        case "Button":
-            exampleCode = buttonExample
-        case "Text":
-            exampleCode = textExample
-        case "Divider":
-            exampleCode = dividerExample
-        case "Toggle":
-            exampleCode = toggleExample
-        case "TextField":
-            exampleCode = textFieldExample
-        default:
-            break
+        if componentName == "Text" {
+            scrollView = """
+            
+            private var scrollViewWithStyles: some View {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        ForEach(StyleFunctionName.allCases, id: \\.self) { function in
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text(function.rawValue)
+                                    .font(fonts.smallBold)
+                                    .foregroundColor(colors.contentA)
+                                    .padding(.bottom, 4)
+                                
+                                LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], spacing: 8) {
+                                    ForEach(ColorName.allCases, id: \\.self) { color in
+                                        VStack {
+                                            Text(color.rawValue)
+                                                .font(fonts.small)
+                                                .foregroundColor(colors.contentA)
+                                                .padding(.bottom, 2)
+                                            
+                                            Text(sampleText)
+                                                .textStyle(getTextStyle(function: function.rawValue, color: color))
+                                                .padding(8)
+                                                .frame(maxWidth: .infinity)
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 4)
+                                                        .fill(getContrastBackground(for: color))
+                                                )
+                                        }
+                                    }
+                                }
+                            }
+                            .padding(.vertical, 8)
+                        }
+                    }
+                }
+                .frame(maxHeight: 200)
+            }
+            """
+        } else {
+            // Para Button, Divider, Toggle, TextField e outros componentes
+            let exampleType = styleCaseType
+            var exampleCode = ""
+            
+            // Preparar exemplos de código específicos para cada componente
+            switch componentName {
+            case "Button":
+                exampleCode = """
+        Button(sampleText) {
+            // Ação vazia para exemplo
         }
-        
-        let scrollView = """
+        .buttonStyle(style.style())
+        """
+            case "Divider":
+                exampleCode = """
+        Divider()
+        .dividerStyle(style.style())
+        """
+            case "Toggle":
+                exampleCode = """
+        Toggle(sampleText, isOn: .constant(true))
+        .toggleStyle(style.style())
+        """
+            case "TextField":
+                exampleCode = """
+        TextField(sampleText, text: .constant(""))
+        .textFieldStyle(style.style())
+        """
+            default:
+                exampleCode = "// Exemplo para \(componentName)"
+            }
+            
+            scrollView = """
             
             private var scrollViewWithStyles: some View {
                 ScrollView {
@@ -186,7 +204,8 @@ final class GenerateComponent {
                 }
                 .frame(maxHeight: 200)
             }
-        """
+            """
+        }
         
         // Criando a seção de preview do componente
         var previewComponent = """
@@ -194,7 +213,7 @@ final class GenerateComponent {
             // Preview do componente com as configurações selecionadas
             private var previewComponent: some View {
                 VStack {
-                    // Preview do componente com as configurações atuais\n
+                    // Preview do componente com as configurações atuais
         """
         
         // Adicionar o exemplo correto para cada tipo de componente
@@ -202,48 +221,50 @@ final class GenerateComponent {
         case "Button":
             previewComponent += """
 
-                        Button(buttonTitle) {
-                            print("Botão pressionado")
-                        }
-                        .buttonStyle(selectedStyle.style())
-        """
+                    Button(sampleText) {
+                        print("Botão pressionado")
+                    }
+                    .buttonStyle(selectedStyle.style())
+            """
         case "Text":
             previewComponent += """
 
-                        Text(sampleText)
-                            .textStyle(selectedStyle.style())
-        """
+                    Text(sampleText)
+                        .textStyle(getTextStyle(function: selectedStyleFunction, color: selectedColor))
+            """
         case "Divider":
             previewComponent += """
 
-                        Divider()
-                            .dividerStyle(selectedStyle.style())
-        """
+                    Divider()
+                        .dividerStyle(.contentA())
+            """
         case "Toggle":
             previewComponent += """
 
-                        Toggle(toggleLabel, isOn: $isEnabled)
-                            .toggleStyle(selectedStyle.style())
-        """
+                    Toggle(sampleText, isOn: $isEnabled)
+                        .toggleStyle(.default(selectedColor))
+            """
         case "TextField":
             previewComponent += """
 
-                        TextField(placeholder, text: $textValue)
-                            .textFieldStyle(selectedStyle.style())
-        """
+                    TextField(sampleText, text: .constant(""))
+                        .textFieldStyle(selectedStyle.style(), 
+                          hasError: showError, 
+                          errorMessage: showError ? .constant("Campo com erro") : .constant(""))
+            """
         default:
             previewComponent += "\n                // Preview de \(componentName)"
         }
         
         previewComponent += """
-                        \n .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(useContrastBackground ? colors.backgroundA : colors.backgroundB.opacity(0.2))
-                        )
-                    }
+                    \n .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(useContrastBackground ? colors.backgroundA : colors.backgroundB.opacity(0.2))
+                    )
                 }
+            }
         """
         
         // Configuração específica para cada componente
@@ -252,65 +273,88 @@ final class GenerateComponent {
             // Área de configuração
             private var configurationSection: some View {
                 VStack(spacing: 16) {
-        """
-        
-        switch componentName {
-        case "Button":
-            configurationSection += """
-
-                    // Campo para texto do botão
-                    TextField("Texto do botão", text: $buttonTitle)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .padding(.horizontal)
-        """
-        case "Text":
-            configurationSection += """
-
                     // Campo para texto de exemplo
                     TextField("Texto de exemplo", text: $sampleText)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
                         .padding(.horizontal)
         """
-        case "Toggle":
+        
+        // Adicionar configurações específicas para cada componente
+        switch componentName {
+        case "Text":
             configurationSection += """
 
-                    // Campo para label do toggle
-                    TextField("Label do toggle", text: $toggleLabel)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .padding(.horizontal)
-                        
-                    // Toggle para testar o componente
-                    Toggle("Estado do toggle", isOn: $isEnabled)
-                        .toggleStyle(.default(.contentA))
-                        .padding(.horizontal)
-        """
+                    // Seletor para função de estilo
+                    EnumSelector<StyleFunctionName>(
+                        title: "Estilo",
+                        selection: Binding(
+                            get: { StyleFunctionName(rawValue: selectedStyleFunction) ?? .medium },
+                            set: { selectedStyleFunction = $0.rawValue }
+                        ),
+                        columnsCount: 3,
+                        height: 120
+                    )
+            """
         case "TextField":
             configurationSection += """
-
-                    // Campo para valor do texto
-                    TextField("Valor do texto", text: $textValue)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                    
+                    // Toggle para mostrar erro
+                    Toggle("Mostrar erro", isOn: $showError)
+                        .toggleStyle(.default(.highlightA))
                         .padding(.horizontal)
-                        
-                    // Campo para placeholder
-                    TextField("Placeholder", text: $placeholder)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .padding(.horizontal)
-        """
-        default:
-            break
-        }
-        
-        // Adicionar seletor de estilo para todos os componentes
-        configurationSection += """
-
+                    
                     // Seletor de estilo
-                    EnumSelector<\(styleCaseType)>(
+                    EnumSelector<TextFieldStyleCase>(
                         title: "Estilo",
                         selection: $selectedStyle,
                         columnsCount: 3,
                         height: 120
                     )
+            """
+        case "Toggle":
+            configurationSection += """
+                    
+                    // Toggle para testar o componente
+                    Toggle("Estado do toggle", isOn: $isEnabled)
+                        .toggleStyle(.default(.contentA))
+                        .padding(.horizontal)
+            """
+        case "Button":
+            configurationSection += """
+                    
+                    // Seletor de estilo
+                    EnumSelector<ButtonStyleCase>(
+                        title: "Estilo",
+                        selection: $selectedStyle,
+                        columnsCount: 3,
+                        height: 120
+                    )
+            """
+        case "Divider":
+            configurationSection += """
+                    // Este componente não tem configurações específicas além da cor
+            """
+        default:
+            break
+        }
+        
+        // Adicionar seletor de cor para todos os componentes (exceto quando já tiver configurações específicas)
+        if componentName != "Text" {
+            configurationSection += """
+                    
+                    // Seletor para cor
+                    EnumSelector<ColorName>(
+                        title: "Cor",
+                        selection: $selectedColor,
+                        columnsCount: 3,
+                        height: 120
+                    )
+            """
+        }
+        
+        // Adicionar toggles para opções de visualização para todos os componentes
+        configurationSection += """
+
                     
                     // Toggles para opções
                     VStack {
@@ -325,67 +369,96 @@ final class GenerateComponent {
             }
         """
         
-        // Exemplos a serem usados na função de gerar código
-        let buttonCodeExample = """
-    Button("\\(buttonTitle)") {
-        // Ação do botão aqui
-    }
-    .buttonStyle(selectedStyle.style())
-    """
-        
-        let textCodeExample = """
-    Text("\\(sampleText)")
-        .textStyle(selectedStyle.style())
-    """
-        
-        let dividerCodeExample = """
-    Divider()
-        .dividerStyle(selectedStyle.style())
-    """
-        
-        let toggleCodeExample = """
-    Toggle("\\(toggleLabel)", isOn: $isEnabled)
-        .toggleStyle(selectedStyle.style())
-    """
-        
-        let textFieldCodeExample = """
-    TextField("\\(placeholder)", text: $textValue)
-        .textFieldStyle(selectedStyle.style())
-    """
-        
-        // Geração de código Swift - corrigindo o formato da string multi-linha
+        // Geração de código Swift com base no componente
         var generateCode = """
             
             // Gera o código Swift para o componente configurado
             private func generateSwiftCode() -> String {
-                // Aqui você pode personalizar a geração de código com base no componente
                 var code = "// Código gerado automaticamente\\n"
                 
-                code += \"\"\"
-    """
-        generateCode += "\n"
+        """
+        
         // Código específico para cada componente
         switch componentName {
         case "Button":
-            generateCode += buttonCodeExample
-        case "Text":
-            generateCode += textCodeExample
-        case "Divider":
-            generateCode += dividerCodeExample
-        case "Toggle":
-            generateCode += toggleCodeExample
-        case "TextField":
-            generateCode += textFieldCodeExample
-        default:
-            break
+            generateCode += """
+                code += \"\"\"
+        Button("\\(sampleText)") {
+            // Ação do botão aqui
         }
-        generateCode += "\n"
-        generateCode += """
+        .buttonStyle(selectedStyle.style())
         \"\"\"
+        """
+        case "Text":
+            generateCode += """
+                code += \"\"\"
+        Text("\\(sampleText)")
+            .textStyle(.\\(selectedStyleFunction)(.\\(String(describing: selectedColor))))
+        \"\"\"
+        """
+        case "Divider":
+            generateCode += """
+                code += \"\"\"
+        Divider()
+            .dividerStyle(.contentA())
+        \"\"\"
+        """
+        case "Toggle":
+            generateCode += """
+                code += \"\"\"
+        Toggle("\\(sampleText)", isOn: $isEnabled)
+            .toggleStyle(.default(.\\(String(describing: selectedColor))))
+        \"\"\"
+        """
+        case "TextField":
+            generateCode += """
+                code += \"\"\"
+        TextField("\\(sampleText)", text: $textValue)
+            .textFieldStyle(selectedStyle.style()\\(showError ? ", hasError: true" : ""))
+        \"\"\"
+        """
+        default:
+            generateCode += """
+                code += \"\"\"
+        // Código para \(componentName)
+        \"\"\"
+        """
+        }
+        
+        generateCode += """
                 
                 return code
             }
         """
+        
+        // Função helper para os estilos do Text
+        var textStyleHelper = ""
+        if componentName == "Text" {
+            textStyleHelper = """
+            
+            // Helper para obter o estilo correspondente à função selecionada
+            private func getTextStyle(function: String, color: ColorName) -> some TextStyle {
+                switch function {
+                case "small":
+                    return .small(color)
+                case "smallBold":
+                    return .smallBold(color)
+                case "medium":
+                    return .medium(color)
+                case "mediumBold":
+                    return .mediumBold(color)
+                case "large":
+                    return .large(color)
+                case "largeBold":
+                    return .largeBold(color)
+                case "bigBold":
+                    return .bigBold(color)
+                default:
+                    return .small(color)
+                }
+            }
+            """
+        }
         
         // Helper methods padrão
         let helperMethods = """
@@ -468,6 +541,20 @@ final class GenerateComponent {
             }
         """
         
+        // Adicionar enum para as funções de estilo do Text
+        var styleEnums = ""
+        if componentName == "Text" {
+            styleEnums = """
+            
+            // Enum para seleção das funções de estilo
+            fileprivate enum StyleFunctionName: String, CaseIterable, Identifiable {
+                case small = "small", smallBold = "smallBold", medium = "medium", mediumBold = "mediumBold", large = "large", largeBold = "largeBold", bigBold = "bigBold"
+                
+                var id: Self { self }
+            }
+            """
+        }
+        
         // Combinar tudo
         var fullContent = imports
         fullContent += structStart
@@ -478,7 +565,9 @@ final class GenerateComponent {
         fullContent += previewComponent
         fullContent += configurationSection
         fullContent += generateCode
+        fullContent += textStyleHelper
         fullContent += helperMethods
+        fullContent += styleEnums
         fullContent += "\n}"  // Fechar a struct
         
         return fullContent
