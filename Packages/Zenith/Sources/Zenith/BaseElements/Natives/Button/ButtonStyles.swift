@@ -204,7 +204,7 @@ public struct CardButtonStyle: ButtonStyle, @preconcurrency BaseThemeDependencie
 }
 
 public extension ButtonStyle where Self == CardButtonStyle {
-    static func cardAppearance(_ type: CardType, state: DSState = .enabled) -> Self { Self(type: type, state: state) }
+    static func cardAppearance(_ type: CardType = .fill, state: DSState = .enabled) -> Self { Self(type: type, state: state) }
 }
 
 public enum ButtonStyleCase: String, Decodable, Sendable, Identifiable, CaseIterable {
