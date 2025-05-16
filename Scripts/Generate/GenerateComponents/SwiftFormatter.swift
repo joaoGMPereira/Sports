@@ -53,7 +53,7 @@ public class SwiftFormatter {
     private let options: FormatOptions
     
     /// Função de log para registrar mensagens
-    private let logger: (String, LogLevel) -> Void
+    private let logger: (String, Log) -> Void
     
     // MARK: - Inicialização
     
@@ -63,7 +63,7 @@ public class SwiftFormatter {
     ///   - logger: Função para registrar logs
     init(
         options: FormatOptions = .default,
-        logger: @escaping (String, LogLevel) -> Void = { message, level in
+        logger: @escaping (String, Log) -> Void = { message, level in
             let prefix: String
             switch level {
             case .info: prefix = "INFO"
@@ -201,7 +201,7 @@ public class SwiftFormatter {
         // Executar o AppleScript
         let script = NSAppleScript(source: scriptText)
         var errorDict: NSDictionary? = nil
-        let result = script?.executeAndReturnError(&errorDict)
+        let _ = script?.executeAndReturnError(&errorDict)
         
         if let error = errorDict {
             logger("Erro ao executar o AppleScript: \(error)", .warning)
