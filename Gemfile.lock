@@ -171,6 +171,7 @@ GEM
     nkf (0.2.0)
     optparse (0.6.0)
     os (1.1.4)
+    parallel (1.27.0)
     plist (3.7.2)
     public_suffix (6.0.2)
     rake (13.2.1)
@@ -204,6 +205,10 @@ GEM
     uber (0.1.0)
     unicode-display_width (2.6.0)
     word_wrap (1.0.0)
+    xccache (0.0.1)
+      claide
+      parallel
+      xcodeproj (>= 1.26.0)
     xcodeproj (1.27.0)
       CFPropertyList (>= 2.3.3, < 4.0)
       atomos (~> 0.1.3)
@@ -221,6 +226,7 @@ PLATFORMS
 
 DEPENDENCIES
   fastlane
+  xccache
 
 BUNDLED WITH
    2.4.19

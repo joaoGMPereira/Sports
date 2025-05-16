@@ -50,11 +50,11 @@ final class GenerateComponent {
         // Estados para estilo
         if !componentInfo.styleCases.isEmpty {
             let defaultStyle = componentInfo.styleCases[0]
-            states.append("    @State private var selectedStyle = \(styleCaseType).\(defaultStyle)")
+            states.append("\n    @State private var selectedStyle = \(styleCaseType).\(defaultStyle)")
         } else if !componentInfo.styleFunctions.isEmpty {
             let defaultStyle = componentInfo.styleFunctions[0]
             if defaultStyle.paramType == "ColorName" {
-                states.append("    @State private var selectedColorName: ColorName = .contentA")
+                states.append("\n    @State private var selectedColorName: ColorName = .contentA")
                 states.append("    @State private var selectedStyleFunction = \"\(defaultStyle.name)\"")
             }
         }
