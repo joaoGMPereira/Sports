@@ -3,7 +3,7 @@ import Foundation
 final class GenerateComponent {
     
     // MARK: - Geração de arquivos
-
+    
     func generateNativeComponentSample(_ componentInfo: ComponentInfo) -> String {
         let componentName = componentInfo.name
         let sampleName = "\(componentName)Sample"
@@ -14,11 +14,6 @@ final class GenerateComponent {
         import Zenith
         import ZenithCoreInterface
         """
-        
-        // Determinar configurações específicas do componente
-        let hasContentParam = ["Text", "Button", "Toggle", "TextField"].contains(componentName)
-        let hasActionParam = componentName == "Button" || componentInfo.hasActionParam
-        let styleCaseType = "\(componentName)StyleCase"
         
         // Início da estrutura
         let structStart = """
@@ -37,10 +32,12 @@ final class GenerateComponent {
         states.append("\n    @State private var selectedColor: ColorName = .highlightA")
         
         // Estados específicos para tipo de componente
-        if componentName == "Text" {
-            states.append("\n    @State private var selectedStyleFunction = \"medium\"")
-        } else if componentName != "Divider" {
-            states.append("\n    @State private var selectedStyle = \(styleCaseType).\(componentInfo.styleCases.first ?? "contentA")")
+        states.append("\n    @State private var selectedStyleFunction = \"\(componentInfo.styleFunctions.first!.name)\"")
+        
+        // Adicionar estados para parâmetros adicionais comuns
+        if componentName == "Button" {
+            states.append("\n    @State private var selectedShape = \"rounded\"")
+            states.append("\n    @State private var selectedState = \"enabled\"")
         }
         
         if componentName == "Toggle" {
@@ -146,57 +143,50 @@ final class GenerateComponent {
             """
         } else {
             // Para Button, Divider, Toggle, TextField e outros componentes
-            let exampleType = styleCaseType
-            var exampleCode = ""
-            
-            // Preparar exemplos de código específicos para cada componente
-            switch componentName {
-            case "Button":
-                exampleCode = """
-        Button(sampleText) {
-            // Ação vazia para exemplo
-        }
-        .buttonStyle(style.style())
-        """
-            case "Divider":
-                exampleCode = """
-        Divider()
-        .dividerStyle(style.style())
-        """
-            case "Toggle":
-                exampleCode = """
-        Toggle(sampleText, isOn: .constant(true))
-        .toggleStyle(style.style())
-        """
-            case "TextField":
-                exampleCode = """
-        TextField(sampleText, text: .constant(""))
-        .textFieldStyle(style.style())
-        """
-            default:
-                exampleCode = "// Exemplo para \(componentName)"
-            }
-            
             scrollView = """
             
             private var scrollViewWithStyles: some View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 8) {
+                        // Mostrar todas as funções de estilo disponíveis
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], spacing: 8) {
-                            ForEach(\(exampleType).allCases, id: \\.self) { style in
+                            ForEach(componentInfo.styleFunctions, id: \\.name) { styleFunc in
                                 VStack {
-                                    Text(String(describing: style))
+                                    Text(styleFunc.name)
                                         .font(fonts.small)
                                         .foregroundColor(colors.contentA)
                                         .padding(.bottom, 2)
                                     
-                                    \(exampleCode)
-                                        .padding(8)
-                                        .frame(maxWidth: .infinity)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 4)
-                                                .fill(getContrastBackground(for: getColorFromStyle(style)))
-                                        )
+                                    Group {
+                                        if componentName == "Button" {
+                                            Button(sampleText) {
+                                                // Ação vazia
+                                            }
+                                            .buttonStyle(applyDynamicStyle(for: componentName, function: styleFunc.name, color: .highlightA))
+                                        } else if componentName == "Divider" {
+                                            Divider()
+                                                .dividerStyle(applyDynamicStyle(for: componentName, function: styleFunc.name, color: .highlightA))
+                                        } else if componentName == "Toggle" {
+                                            Toggle(sampleText, isOn: .constant(true))
+                                                .toggleStyle(applyDynamicStyle(for: componentName, function: styleFunc.name, color: .highlightA))
+                                        } else if componentName == "TextField" {
+                                            TextField(sampleText, text: .constant(""))
+                                                .textFieldStyle(applyDynamicStyle(for: componentName, function: styleFunc.name, color: .highlightA))
+                                        } else {
+                                            // Componentes personalizados
+                                            Text("\\(styleFunc.name)")
+                                                .font(fonts.small)
+                                                .padding(4)
+                                                .foregroundColor(colors.highlightA)
+                                                .frame(height: 40)
+                                        }
+                                    }
+                                    .padding(8)
+                                    .frame(maxWidth: .infinity)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 4)
+                                            .fill(colors.backgroundB.opacity(0.2))
+                                    )
                                 }
                             }
                         }
@@ -220,40 +210,60 @@ final class GenerateComponent {
         switch componentName {
         case "Button":
             previewComponent += """
-
+            
                     Button(sampleText) {
                         print("Botão pressionado")
                     }
-                    .buttonStyle(selectedStyle.style())
+                    .buttonStyle(applyDynamicStyle(for: componentName, function: selectedStyleFunction, color: selectedColor, shape: selectedShape, state: selectedState))
             """
         case "Text":
             previewComponent += """
-
+            
                     Text(sampleText)
                         .textStyle(getTextStyle(function: selectedStyleFunction, color: selectedColor))
             """
         case "Divider":
             previewComponent += """
-
+            
                     Divider()
-                        .dividerStyle(.contentA())
+                        .dividerStyle(applyDynamicStyle(for: componentName, function: selectedStyleFunction, color: selectedColor))
             """
         case "Toggle":
             previewComponent += """
-
+            
                     Toggle(sampleText, isOn: $isEnabled)
-                        .toggleStyle(.default(selectedColor))
+                        .toggleStyle(applyDynamicStyle(for: componentName, function: selectedStyleFunction, color: selectedColor))
             """
         case "TextField":
             previewComponent += """
-
+            
                     TextField(sampleText, text: .constant(""))
-                        .textFieldStyle(selectedStyle.style(), 
-                          hasError: showError, 
-                          errorMessage: showError ? .constant("Campo com erro") : .constant(""))
+                        .textFieldStyle(applyDynamicStyle(for: componentName, function: selectedStyleFunction,
+                            color: selectedColor, hasError: showError),
+                            errorMessage: showError ? .constant("Campo com erro") : .constant(""))
             """
         default:
-            previewComponent += "\n                // Preview de \(componentName)"
+            previewComponent += """
+            
+                    // Componente genérico usando o estilo selecionado
+                    Text(sampleText)
+                        .padding()
+                        .foregroundColor(colors.color(by: selectedColor))
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(colors.color(by: selectedColor) ?? Color.gray, lineWidth: 1)
+                        )
+                        .overlay(
+                            Text("Estilo: \\(selectedStyleFunction)")
+                                .font(fonts.small)
+                                .foregroundColor(colors.contentA)
+                                .padding(4)
+                                .background(Color.white.opacity(0.8))
+                                .cornerRadius(4)
+                                .padding(4),
+                            alignment: .topTrailing
+                        )
+            """
         }
         
         previewComponent += """
@@ -283,7 +293,7 @@ final class GenerateComponent {
         switch componentName {
         case "Text":
             configurationSection += """
-
+            
                     // Seletor para função de estilo
                     EnumSelector<StyleFunctionName>(
                         title: "Estilo",
@@ -303,13 +313,14 @@ final class GenerateComponent {
                         .toggleStyle(.default(.highlightA))
                         .padding(.horizontal)
                     
-                    // Seletor de estilo
-                    EnumSelector<TextFieldStyleCase>(
-                        title: "Estilo",
-                        selection: $selectedStyle,
-                        columnsCount: 3,
-                        height: 120
-                    )
+                    // Seletor de função de estilo
+                    Picker("Estilo", selection: $selectedStyleFunction) {
+                        ForEach(componentInfo.styleFunctions, id: \\.name) { function in
+                            Text(function.name).tag(function.name)
+                        }
+                    }
+                    .pickerStyle(.wheel)
+                    .frame(height: 100)
             """
         case "Toggle":
             configurationSection += """
@@ -318,24 +329,71 @@ final class GenerateComponent {
                     Toggle("Estado do toggle", isOn: $isEnabled)
                         .toggleStyle(.default(.contentA))
                         .padding(.horizontal)
+                    
+                    // Seletor de função de estilo
+                    Picker("Estilo", selection: $selectedStyleFunction) {
+                        ForEach(componentInfo.styleFunctions, id: \\.name) { function in
+                            Text(function.name).tag(function.name)
+                        }
+                    }
+                    .pickerStyle(.wheel)
+                    .frame(height: 100)
             """
         case "Button":
             configurationSection += """
                     
-                    // Seletor de estilo
-                    EnumSelector<ButtonStyleCase>(
-                        title: "Estilo",
-                        selection: $selectedStyle,
-                        columnsCount: 3,
-                        height: 120
-                    )
+                    // Seletor de função de estilo
+                    Picker("Estilo", selection: $selectedStyleFunction) {
+                        ForEach(componentInfo.styleFunctions, id: \\.name) { function in
+                            Text(function.name).tag(function.name)
+                        }
+                    }
+                    .pickerStyle(.wheel)
+                    .frame(height: 100)
+                    
+                    // Seletor para forma do botão
+                    Picker("Forma", selection: $selectedShape) {
+                        Text("Arredondado").tag("rounded")
+                        Text("Retangular").tag("rectangle")
+                        Text("Circular").tag("circle")
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal)
+                    
+                    // Seletor para estado do botão
+                    Picker("Estado", selection: $selectedState) {
+                        Text("Normal").tag("enabled")
+                        Text("Pressionado").tag("pressed")
+                        Text("Desabilitado").tag("disabled")
+                        Text("Loading").tag("loading")
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal)
             """
         case "Divider":
             configurationSection += """
-                    // Este componente não tem configurações específicas além da cor
+                    
+                    // Seletor de função de estilo
+                    Picker("Estilo", selection: $selectedStyleFunction) {
+                        ForEach(componentInfo.styleFunctions, id: \\.name) { function in
+                            Text(function.name).tag(function.name)
+                        }
+                    }
+                    .pickerStyle(.wheel)
+                    .frame(height: 100)
             """
         default:
-            break
+            configurationSection += """
+                    
+                    // Seletor de função de estilo
+                    Picker("Estilo", selection: $selectedStyleFunction) {
+                        ForEach(componentInfo.styleFunctions, id: \\.name) { function in
+                            Text(function.name).tag(function.name)
+                        }
+                    }
+                    .pickerStyle(.wheel)
+                    .frame(height: 100)
+            """
         }
         
         // Adicionar seletor de cor para todos os componentes (exceto quando já tiver configurações específicas)
@@ -354,7 +412,7 @@ final class GenerateComponent {
         
         // Adicionar toggles para opções de visualização para todos os componentes
         configurationSection += """
-
+        
                     
                     // Toggles para opções
                     VStack {
@@ -386,7 +444,11 @@ final class GenerateComponent {
         Button("\\(sampleText)") {
             // Ação do botão aqui
         }
-        .buttonStyle(selectedStyle.style())
+        .buttonStyle(.\\(selectedStyleFunction)(
+            color: .\\(String(describing: selectedColor)),
+            shape: .\\(selectedShape)(cornerRadius: 8),
+            state: .\\(selectedState)
+        ))
         \"\"\"
         """
         case "Text":
@@ -400,27 +462,29 @@ final class GenerateComponent {
             generateCode += """
                 code += \"\"\"
         Divider()
-            .dividerStyle(.contentA())
+            .dividerStyle(.\\(selectedStyleFunction)(.\\(String(describing: selectedColor))))
         \"\"\"
         """
         case "Toggle":
             generateCode += """
                 code += \"\"\"
         Toggle("\\(sampleText)", isOn: $isEnabled)
-            .toggleStyle(.default(.\\(String(describing: selectedColor))))
+            .toggleStyle(.\\(selectedStyleFunction)(.\\(String(describing: selectedColor))))
         \"\"\"
         """
         case "TextField":
             generateCode += """
                 code += \"\"\"
         TextField("\\(sampleText)", text: $textValue)
-            .textFieldStyle(selectedStyle.style()\\(showError ? ", hasError: true" : ""))
+            .textFieldStyle(.\\(selectedStyleFunction)(color: .\\(String(describing: selectedColor))\\(showError ? ", hasError: true" : "")))
         \"\"\"
         """
         default:
             generateCode += """
                 code += \"\"\"
         // Código para \(componentName)
+        \(componentName)()
+            .\(componentName.lowercased())Style(.\\(selectedStyleFunction)(color: .\\(String(describing: selectedColor))))
         \"\"\"
         """
         }
@@ -460,7 +524,151 @@ final class GenerateComponent {
             """
         }
         
-        // Helper methods padrão
+        // Substituir helpers específicos por um helper genérico
+        var styleHelpers = """
+            
+            // Helper genérico para aplicar estilos dinâmicos baseados no nome da função
+            private func applyDynamicStyle<T>(for component: String, function: String, color: ColorName, shape: String = "rounded", state: String = "enabled", hasError: Bool = false) -> T {
+                // Parâmetros específicos para cada tipo de componente
+                let buttonShape = component == "Button" ? getButtonShape(shape) : nil
+                let buttonState = component == "Button" ? getButtonState(state) : nil
+                
+                // Usamos KeyPath para acessar a função de estilo apropriada
+                switch component {
+                case "Button":
+                    guard let buttonShape = buttonShape, let buttonState = buttonState else {
+                        // Fallback para estilo padrão se não puder construir os parâmetros
+                        return (ButtonStyle.contentA(color: color, shape: .rounded(cornerRadius: 8), state: .enabled) as! T)
+                    }
+                    
+                    // Aplicação dinâmica de estilos para Button
+                    switch function {
+                    case "contentA": return (ButtonStyle.contentA(color: color, shape: buttonShape, state: buttonState) as! T)
+                    case "contentB": return (ButtonStyle.contentB(color: color, shape: buttonShape, state: buttonState) as! T)
+                    case "contentC": return (ButtonStyle.contentC(color: color, shape: buttonShape, state: buttonState) as! T)
+                    case "highlightA": return (ButtonStyle.highlightA(color: color, shape: buttonShape, state: buttonState) as! T)
+                    case "backgroundA": return (ButtonStyle.backgroundA(color: color, shape: buttonShape, state: buttonState) as! T)
+                    case "backgroundB": return (ButtonStyle.backgroundB(color: color, shape: buttonShape, state: buttonState) as! T)
+                    case "backgroundC": return (ButtonStyle.backgroundC(color: color, shape: buttonShape, state: buttonState) as! T)
+                    case "backgroundD": return (ButtonStyle.backgroundD(color: color, shape: buttonShape, state: buttonState) as! T)
+                    default: return (ButtonStyle.contentA(color: color, shape: buttonShape, state: buttonState) as! T)
+                    }
+                    
+                case "Divider":
+                    // Aplicação dinâmica para Divider
+                    switch function {
+                    case "contentA": return (DividerStyle.contentA(color) as! T)
+                    case "contentB": return (DividerStyle.contentB(color) as! T)
+                    case "contentC": return (DividerStyle.contentC(color) as! T)
+                    case "highlightA": return (DividerStyle.highlightA(color) as! T)
+                    case "backgroundA": return (DividerStyle.backgroundA(color) as! T)
+                    case "backgroundB": return (DividerStyle.backgroundB(color) as! T)
+                    case "backgroundC": return (DividerStyle.backgroundC(color) as! T)
+                    case "backgroundD": return (DividerStyle.backgroundD(color) as! T)
+                    default: return (DividerStyle.contentA(color) as! T)
+                    }
+                    
+                case "Toggle":
+                    // Aplicação dinâmica para Toggle
+                    switch function {
+                    case "default": return (ToggleStyle.default(color) as! T)
+                    case "contentA": return (ToggleStyle.contentA(color) as! T)
+                    case "contentB": return (ToggleStyle.contentB(color) as! T)
+                    case "contentC": return (ToggleStyle.contentC(color) as! T)
+                    case "highlightA": return (ToggleStyle.highlightA(color) as! T)
+                    case "backgroundA": return (ToggleStyle.backgroundA(color) as! T)
+                    case "backgroundB": return (ToggleStyle.backgroundB(color) as! T)
+                    case "backgroundC": return (ToggleStyle.backgroundC(color) as! T)
+                    case "backgroundD": return (ToggleStyle.backgroundD(color) as! T)
+                    default: return (ToggleStyle.default(color) as! T)
+                    }
+                    
+                case "TextField":
+                    // Aplicação dinâmica para TextField
+                    switch function {
+                    case "default": return (TextFieldStyle.default(color: color, hasError: hasError) as! T)
+                    case "contentA": return (TextFieldStyle.contentA(color: color, hasError: hasError) as! T)
+                    case "contentB": return (TextFieldStyle.contentB(color: color, hasError: hasError) as! T)
+                    case "contentC": return (TextFieldStyle.contentC(color: color, hasError: hasError) as! T)
+                    case "highlightA": return (TextFieldStyle.highlightA(color: color, hasError: hasError) as! T)
+                    case "backgroundA": return (TextFieldStyle.backgroundA(color: color, hasError: hasError) as! T)
+                    case "backgroundB": return (TextFieldStyle.backgroundB(color: color, hasError: hasError) as! T)
+                    case "backgroundC": return (TextFieldStyle.backgroundC(color: color, hasError: hasError) as! T)
+                    case "backgroundD": return (TextFieldStyle.backgroundD(color: color, hasError: hasError) as! T)
+                    default: return (TextFieldStyle.default(color: color, hasError: hasError) as! T)
+                    }
+                    
+                default:
+                    // Se não for um dos componentes nativos conhecidos, tenta através de reflection (não implementado)
+                    fatalError("Estilo não suportado para o componente \\(component)")
+                }
+            }
+        """
+        
+        // Manter os helpers específicos do Button para converter shape e state
+        if componentName == "Button" {
+            styleHelpers += """
+            
+            // Helper para obter a forma do botão
+            private func getButtonShape(_ shape: String) -> ButtonShape {
+                switch shape {
+                case "rounded":
+                    return .rounded(cornerRadius: 8)
+                case "rectangle":
+                    return .rectangle
+                case "circle":
+                    return .circle
+                default:
+                    return .rounded(cornerRadius: 8)
+                }
+            }
+            
+            // Helper para obter o estado do botão
+            private func getButtonState(_ state: String) -> DSState {
+                switch state {
+                case "enabled":
+                    return .enabled
+                case "pressed":
+                    return .pressed
+                case "disabled":
+                    return .disabled
+                case "loading":
+                    return .loading
+                default:
+                    return .enabled
+                }
+            }
+            """
+        }
+        
+        // Adicionar enum para as funções de estilo do Text
+        var styleEnums = ""
+        if componentName == "Text" {
+            styleEnums = """
+            
+            // Enum para seleção das funções de estilo
+            fileprivate enum StyleFunctionName: String, CaseIterable, Identifiable {
+                case small = "small", smallBold = "smallBold", medium = "medium", mediumBold = "mediumBold", large = "large", largeBold = "largeBold", bigBold = "bigBold"
+                
+                var id: Self { self }
+            }
+            """
+        }
+        
+        // Combinar tudo
+        var fullContent = imports
+        fullContent += structStart
+        fullContent += states.joined(separator: "\n")
+        fullContent += "\n" + viewOptions
+        fullContent += bodyContent
+        fullContent += scrollView
+        fullContent += previewComponent
+        fullContent += configurationSection
+        fullContent += generateCode
+        fullContent += textStyleHelper
+        fullContent += styleHelpers
+        
+        // Adicionar o helperMethods que estava faltando
         let helperMethods = """
             
             // Helper para obter a cor associada a um StyleCase
@@ -541,35 +749,39 @@ final class GenerateComponent {
             }
         """
         
-        // Adicionar enum para as funções de estilo do Text
-        var styleEnums = ""
-        if componentName == "Text" {
-            styleEnums = """
-            
-            // Enum para seleção das funções de estilo
-            fileprivate enum StyleFunctionName: String, CaseIterable, Identifiable {
-                case small = "small", smallBold = "smallBold", medium = "medium", mediumBold = "mediumBold", large = "large", largeBold = "largeBold", bigBold = "bigBold"
-                
-                var id: Self { self }
-            }
-            """
-        }
-        
-        // Combinar tudo
-        var fullContent = imports
-        fullContent += structStart
-        fullContent += states.joined(separator: "\n")
-        fullContent += "\n" + viewOptions
-        fullContent += bodyContent
-        fullContent += scrollView
-        fullContent += previewComponent
-        fullContent += configurationSection
-        fullContent += generateCode
-        fullContent += textStyleHelper
         fullContent += helperMethods
         fullContent += styleEnums
         fullContent += "\n}"  // Fechar a struct
         
         return fullContent
+    }
+    
+    func generateGetStyle(with componentInfo: ComponentInfo) -> String {
+        let name = componentInfo.name.capitalized
+        let teste = """
+            private func get\(name)Style(function: String, color: ColorName) -> some \(name)Style {
+                switch function {
+                    \(componentInfo.styleFunctions.map { $0.name })
+                case "small":
+                    return .small(color)
+                case "smallBold":
+                    return .smallBold(color)
+                case "medium":
+                    return .medium(color)
+                case "mediumBold":
+                    return .mediumBold(color)
+                case "large":
+                    return .large(color)
+                case "largeBold":
+                    return .largeBold(color)
+                case "bigBold":
+                    return .bigBold(color)
+                default:
+                    return .small(color)
+                }
+            }
+        """
+        
+        return teste
     }
 }
