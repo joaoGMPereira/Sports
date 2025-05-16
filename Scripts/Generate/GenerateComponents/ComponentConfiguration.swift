@@ -73,6 +73,43 @@ class ComponentInfo {
 
 final class ComponentConfiguration {
     
+    // Adicionar funções que estão faltando
+    func readFile(at path: String) -> String? {
+        do {
+            return try String(contentsOfFile: path, encoding: .utf8)
+        } catch {
+            Log.log("Erro ao ler o arquivo \(path): \(error)", level: .error)
+            return nil
+        }
+    }
+    
+    func splitParameters(_ paramsStr: String) -> [String] {
+        var params: [String] = []
+        var currentParam = ""
+        var nestedLevel = 0
+        
+        for char in paramsStr {
+            if char == "(" || char == "<" {
+                nestedLevel += 1
+                currentParam.append(char)
+            } else if char == ")" || char == ">" {
+                nestedLevel -= 1
+                currentParam.append(char)
+            } else if char == "," && nestedLevel == 0 {
+                params.append(currentParam.trimmingCharacters(in: .whitespaces))
+                currentParam = ""
+            } else {
+                currentParam.append(char)
+            }
+        }
+        
+        if !currentParam.isEmpty {
+            params.append(currentParam.trimmingCharacters(in: .whitespaces))
+        }
+        
+        return params
+    }
+    
     // MARK: - Análise de código Swift (Parser)
 
     func extractProperties(from content: String) -> [SwiftProperty] {
@@ -112,16 +149,16 @@ final class ComponentConfiguration {
 
     func extractStyleFunctions(from content: String, componentName: String) -> [StyleFunction] {
         var styleFunctions: [StyleFunction] = []
+        var uniqueFunctionNames = Set<String>() // Para evitar duplicações
         
-        // Procura por todas as extensões do estilo de componente
+        // Log para debug
+        Log.log("Extraindo funções de estilo para \(componentName)", level: .info)
+        
+        // Padrão simplificado para localizar extensões de estilo do componente
+        // Captura qualquer extensão pública que se refira ao estilo do componente
         let extensionPatterns = [
-            "public\\s+extension\\s+\(componentName)Style\\s+where\\s+Self\\s+==\\s+Base\(componentName)Style",
-            "public\\s+extension\\s+\(componentName)Style\\s+where\\s+Self\\s+==\\s+\\w+\(componentName)Style",
-            "public\\s+extension\\s+\(componentName)Style\\s+where\\s+Self\\s+==\\s+\\w+Style",
-            "public\\s+extension\\s+ButtonStyle\\s+where\\s+Self\\s+==\\s+\\w+ButtonStyle",
-            "public\\s+extension\\s+ButtonStyle\\s+where\\s+Self\\s+==\\s+\\w+",
-            "public\\s+extension\\s+\(componentName)Style",
-            "public\\s+extension\\s+ButtonStyle"
+            // Extensões específicas para o componente
+            "public\\s+extension\\s+\(componentName)Style"
         ]
         
         // Encontra todas as extensões no conteúdo
@@ -163,17 +200,86 @@ final class ComponentConfiguration {
         // Extrai as funções de cada bloco de extensão
         for (_, extensionContent) in extensionRanges {
             let functions = extractFunctionsFromBlock(extensionContent)
-            styleFunctions.append(contentsOf: functions)
+            for function in functions {
+                if !uniqueFunctionNames.contains(function.name) {
+                    uniqueFunctionNames.insert(function.name)
+                    styleFunctions.append(function)
+                }
+            }
         }
         
+        // Além disso, procurar diretamente por static func que retornam Self
+        // Isso captura funções que possam estar em outras extensões
+        let directFunctions = extractAllStaticFunctionsFromContent(content)
+        
+        // Adicionar funções encontradas diretamente, se ainda não foram adicionadas
+        for function in directFunctions {
+            if !uniqueFunctionNames.contains(function.name) {
+                uniqueFunctionNames.insert(function.name)
+                styleFunctions.append(function)
+                Log.log("Função de estilo encontrada diretamente: \(function.name)", level: .info)
+            }
+        }
+        
+        // Log para debug
+        Log.log("Funções de estilo encontradas: \(styleFunctions.map { $0.name }.joined(separator: ", "))", level: .info)
+        
         return styleFunctions.isEmpty ? extractGenericStyleFunctions(from: content, componentName: componentName) : styleFunctions
+    }
+    
+    // Função melhorada para extrair todas as funções static -> Self do conteúdo
+    func extractAllStaticFunctionsFromContent(_ content: String) -> [StyleFunction] {
+        var styleFunctions: [StyleFunction] = []
+        var uniqueFunctionNames = Set<String>()
+        
+        // Padrão universal para funções estáticas que retornam Self
+        // Captura qualquer função estática independente de qual extensão ela está
+        // Usamos um padrão mais robusto que consegue lidar com parênteses aninhados nos valores padrão
+        let staticFuncPattern = "static\\s+func\\s+(\\w+)\\s*\\((.*?)\\)\\s*->\\s*Self"
+        let funcRegex = try! NSRegularExpression(pattern: staticFuncPattern, options: [.dotMatchesLineSeparators])
+        let funcMatches = funcRegex.matches(in: content, options: [], range: NSRange(content.startIndex..., in: content))
+        
+        for match in funcMatches {
+            guard let nameRange = Range(match.range(at: 1), in: content) else { continue }
+            let funcName = String(content[nameRange])
+            
+            if !uniqueFunctionNames.contains(funcName) {
+                uniqueFunctionNames.insert(funcName)
+                
+                // Extrair parâmetros
+                var parameters: [StyleParameter] = []
+                if match.numberOfRanges > 2, let paramsRange = Range(match.range(at: 2), in: content) {
+                    let paramsString = String(content[paramsRange]).trimmingCharacters(in: .whitespaces)
+                    
+                    if !paramsString.isEmpty {
+                        let paramsList = splitFunctionParameters(paramsString)
+                        
+                        for param in paramsList {
+                            if let styleParam = parseParameter(param) {
+                                parameters.append(styleParam)
+                            }
+                        }
+                    }
+                }
+                
+                // Se não houver parâmetros, adicionar um padrão
+                if parameters.isEmpty {
+                    parameters = [StyleParameter(name: "color", type: "ColorName", defaultValue: nil)]
+                }
+                
+                styleFunctions.append(StyleFunction(name: funcName, parameters: parameters))
+            }
+        }
+        
+        return styleFunctions
     }
     
     func extractFunctionsFromBlock(_ content: String) -> [StyleFunction] {
         var functions: [StyleFunction] = []
         
         // Padrão para encontrar funções estáticas que retornam Self
-        let functionPattern = "static\\s+func\\s+(\\w+)\\s*\\(([^)]*?)\\)\\s*->\\s*Self"
+        // Usamos um padrão mais robusto que consegue lidar com parênteses aninhados nos valores padrão
+        let functionPattern = "static\\s+func\\s+(\\w+)\\s*\\((.*?)\\)\\s*->\\s*Self"
         let functionRegex = try! NSRegularExpression(pattern: functionPattern, options: [.dotMatchesLineSeparators])
         let functionMatches = functionRegex.matches(in: content, options: [], range: NSRange(content.startIndex..., in: content))
         
@@ -271,7 +377,8 @@ final class ComponentConfiguration {
         
         // Procura por padrões como: static func contentA() -> Self { .init() }
         // ou static func small(_ color: ColorName) -> Self { ... }
-        let genericFunctionPattern = "static\\s+func\\s+(\\w+)\\s*\\(([^)]*?)\\)\\s*->\\s*Self"
+        // Usamos um padrão mais robusto que consegue lidar com parênteses aninhados nos valores padrão
+        let genericFunctionPattern = "static\\s+func\\s+(\\w+)\\s*\\((.*?)\\)\\s*->\\s*Self"
         let functionRegex = try! NSRegularExpression(pattern: genericFunctionPattern, options: [.dotMatchesLineSeparators])
         let functionMatches = functionRegex.matches(in: content, options: [], range: NSRange(content.startIndex..., in: content))
         

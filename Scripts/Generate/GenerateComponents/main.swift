@@ -16,7 +16,6 @@ if CommandLine.arguments.count > 1 {
     exit(success ? 0 : 1)
 } else {
     // Iniciar interface interativa
-    cleanPackagesDirectoryIfNeeded()
     interactionMenu.mainMenu {
         exit(0)
     }

@@ -10,7 +10,8 @@ import Foundation
 // MARK: - Constantes e configurações
 
 let homeDir = FileManager.default.homeDirectoryForCurrentUser.path
-let CLEAN_PACKAGES_DIR = true // Define se deve limpar mudanças no diretório de pacotes
+let CLEAN_PACKAGES_DIR = false // Define se deve limpar mudanças no diretório de pacotes
+let CHECKOUT_REPO = true // Define se deve fazer checkout do repositório antes de executar
 let ZENITH_PATH = "\(homeDir)/KettleGym/Packages/Zenith"
 let ZENITH_SAMPLE_PATH = "\(homeDir)/KettleGym/Packages/ZenithSample"
 let COMPONENTS_PATH = "\(ZENITH_PATH)/Sources/Zenith"
@@ -33,7 +34,9 @@ let IS_RUNNING_IN_XCODE = ProcessInfo.processInfo.environment["XPC_SERVICE_NAME"
 
 func clearConsole() {
     // ANSI escape code para limpar a tela
-    print("\u{001B}[2J\u{001B}[H", terminator: "")
+    if IS_RUNNING_IN_XCODE == false {
+        print("\u{001B}[2J\u{001B}[H", terminator: "")
+    }
 }
 
 func pauseForAction() {
@@ -99,73 +102,24 @@ struct ConsoleUI {
 
 // MARK: - Funções utilitárias
 
-// Função para limpar diretórios de pacotes se necessário
-func cleanPackagesDirectoryIfNeeded() {
-    if CLEAN_PACKAGES_DIR {
-        let packagesDir = "\(homeDir)/KettleGym/Packages"
+// Função para fazer checkout do repositório
+func checkoutRepositoryIfNeeded() {
+    if CHECKOUT_REPO {
+        let repoDir = "\(homeDir)/KettleGym"
         
-        // Verifica se o diretório existe
-        var isDir: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: packagesDir, isDirectory: &isDir), isDir.boolValue else {
-            Log.log("Diretório de pacotes não encontrado: \(packagesDir)", level: .error)
-            return
-        }
-        
-        Log.log("Limpando diretório de pacotes: \(packagesDir)", level: .info)
+        Log.log("Executando checkout do repositório em: \(repoDir)", level: .info)
         
         do {
-            // Executa git clean -fdx no diretório de pacotes
+            // Executa git checkout . no diretório raiz
             let process = Process()
-            process.currentDirectoryURL = URL(fileURLWithPath: packagesDir)
+            process.currentDirectoryURL = URL(fileURLWithPath: repoDir)
             process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
-            process.arguments = ["checkout", "."]
+            process.arguments = ["checkout", "Packages/"]
             
             try process.run()
             process.waitUntilExit()
-            
-            if process.terminationStatus == 0 {
-                Log.log("Diretório de pacotes limpo com sucesso", level: .info)
-            } else {
-                Log.log("Falha ao limpar diretório de pacotes (código \(process.terminationStatus))", level: .error)
-            }
         } catch {
-            Log.log("Erro ao limpar diretório de pacotes: \(error.localizedDescription)", level: .error)
+            Log.log("Erro ao fazer checkout do repositório: \(error.localizedDescription)", level: .error)
         }
     }
-}
-
-func readFile(at path: String) -> String? {
-    do {
-        return try String(contentsOfFile: path, encoding: .utf8)
-    } catch {
-        Log.log("Erro ao ler o arquivo \(path): \(error)", level: .error)
-        return nil
-    }
-}
-
-func splitParameters(_ paramsStr: String) -> [String] {
-    var params: [String] = []
-    var currentParam = ""
-    var nestedLevel = 0
-    
-    for char in paramsStr {
-        if char == "(" || char == "<" {
-            nestedLevel += 1
-            currentParam.append(char)
-        } else if char == ")" || char == ">" {
-            nestedLevel -= 1
-            currentParam.append(char)
-        } else if char == "," && nestedLevel == 0 {
-            params.append(currentParam.trimmingCharacters(in: .whitespaces))
-            currentParam = ""
-        } else {
-            currentParam.append(char)
-        }
-    }
-    
-    if !currentParam.isEmpty {
-        params.append(currentParam.trimmingCharacters(in: .whitespaces))
-    }
-    
-    return params
 }

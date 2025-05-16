@@ -15,7 +15,7 @@ final class InteractionMenu {
         ]
         
         let choice = ConsoleUI.promptForChoice("Escolha uma opção:", options: options)
-        
+        checkoutRepositoryIfNeeded()
         switch choice {
         case 1:
             componentSelectionMenu(exitCompletion: exitCompletion)

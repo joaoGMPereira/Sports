@@ -69,6 +69,7 @@ public class SwiftFormatter {
             case .info: prefix = "INFO"
             case .warning: prefix = "WARNING"
             case .error: prefix = "ERROR"
+            case .success: prefix = "SUCCESS"
             }
             print("\(prefix) - \(message)")
         }
