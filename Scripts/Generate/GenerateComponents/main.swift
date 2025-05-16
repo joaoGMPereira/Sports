@@ -366,7 +366,6 @@ func extractStyleFunctions(from content: String, componentName: String) -> [Styl
     }
     
     // Encontrar o bloco de código da extensão
-    let extensionStart = content.distance(from: content.startIndex, to: extensionRange.upperBound)
     guard let openBraceIndex = content[extensionRange.upperBound...].firstIndex(of: "{") else {
         return []
     }
@@ -824,9 +823,9 @@ func generateNativeComponentSample(_ componentInfo: ComponentInfo) -> String {
     
     // Determinar configurações específicas do componente
     let hasContentParam = ["Text", "Button", "Toggle", "TextField"].contains(componentName)
-    let isButtonType = componentName == "Button" || componentInfo.hasActionParam
-    let styleModifier = "\(componentName.lowercased())Style"
-    let styleType = "\(componentName)Style"
+    _ = componentName == "Button" || componentInfo.hasActionParam
+    _ = "\(componentName.lowercased())Style"
+    _ = "\(componentName)Style"
     let styleCaseType = "\(componentName)StyleCase"
     
     // Início da estrutura
@@ -842,15 +841,15 @@ func generateNativeComponentSample(_ componentInfo: ComponentInfo) -> String {
     // Estado para texto de exemplo se o componente precisar
     if hasContentParam {
         if componentName == "Text" {
-            states.append("    @State private var sampleText = \"Exemplo de texto\"")
+            states.append("\n    @State private var sampleText = \"Exemplo de texto\"")
         } else if componentName == "Button" {
-            states.append("    @State private var buttonTitle = \"Botão de Exemplo\"")
+            states.append("\n    @State private var buttonTitle = \"Botão de Exemplo\"")
         } else if componentName == "Toggle" {
-            states.append("    @State private var toggleLabel = \"Toggle de Exemplo\"")
-            states.append("    @State private var isEnabled = false")
+            states.append("\n    @State private var toggleLabel = \"Toggle de Exemplo\"")
+            states.append("\n    @State private var isEnabled = false")
         } else if componentName == "TextField" {
-            states.append("    @State private var textValue = \"\"")
-            states.append("    @State private var placeholder = \"Digite aqui\"")
+            states.append("\n    @State private var textValue = \"\"")
+            states.append("\n    @State private var placeholder = \"Digite aqui\"")
         }
     }
     
@@ -919,20 +918,49 @@ func generateNativeComponentSample(_ componentInfo: ComponentInfo) -> String {
     """
     
     // ScrollView com todos os estilos
-    var exampleType = styleCaseType
+    let exampleType = styleCaseType
     var exampleCode = "// Exemplo do componente"
     
+    // Preparar exemplos de código para cada componente
+    let buttonExample = """
+Button(buttonTitle) {
+    // Ação vazia para exemplo
+}
+.buttonStyle(style.style())
+"""
+    
+    let textExample = """
+Text(sampleText)
+    .textStyle(style.style())
+"""
+    
+    let dividerExample = """
+Divider()
+    .dividerStyle(style.style())
+"""
+    
+    let toggleExample = """
+Toggle(toggleLabel, isOn: .constant(true))
+    .toggleStyle(style.style())
+"""
+    
+    let textFieldExample = """
+TextField(placeholder, text: .constant("Exemplo"))
+    .textFieldStyle(style.style())
+"""
+    
+    // Escolher o exemplo apropriado
     switch componentName {
     case "Button":
-        exampleCode = "Button(buttonTitle) {\n                                // Ação vazia para exemplo\n                            }\n                            .buttonStyle(style.style())"
+        exampleCode = buttonExample
     case "Text":
-        exampleCode = "Text(sampleText)\n                            .textStyle(style.style())"
+        exampleCode = textExample
     case "Divider":
-        exampleCode = "Divider()\n                            .dividerStyle(style.style())"
+        exampleCode = dividerExample
     case "Toggle":
-        exampleCode = "Toggle(toggleLabel, isOn: .constant(true))\n                            .toggleStyle(style.style())"
+        exampleCode = toggleExample
     case "TextField":
-        exampleCode = "TextField(placeholder, text: .constant(\"Exemplo\"))\n                            .textFieldStyle(style.style())"
+        exampleCode = textFieldExample
     default:
         break
     }
@@ -972,13 +1000,14 @@ func generateNativeComponentSample(_ componentInfo: ComponentInfo) -> String {
         // Preview do componente com as configurações selecionadas
         private var previewComponent: some View {
             VStack {
-                // Preview do componente com as configurações atuais
+                // Preview do componente com as configurações atuais\n
     """
     
     // Adicionar o exemplo correto para cada tipo de componente
     switch componentName {
     case "Button":
         previewComponent += """
+
                     Button(buttonTitle) {
                         print("Botão pressionado")
                     }
@@ -986,30 +1015,34 @@ func generateNativeComponentSample(_ componentInfo: ComponentInfo) -> String {
     """
     case "Text":
         previewComponent += """
+
                     Text(sampleText)
                         .textStyle(selectedStyle.style())
     """
     case "Divider":
         previewComponent += """
+
                     Divider()
                         .dividerStyle(selectedStyle.style())
     """
     case "Toggle":
         previewComponent += """
+
                     Toggle(toggleLabel, isOn: $isEnabled)
                         .toggleStyle(selectedStyle.style())
     """
     case "TextField":
         previewComponent += """
+
                     TextField(placeholder, text: $textValue)
                         .textFieldStyle(selectedStyle.style())
     """
     default:
-        previewComponent += "                // Preview de \(componentName)"
+        previewComponent += "\n                // Preview de \(componentName)"
     }
     
     previewComponent += """
-                    .padding()
+                    \n .padding()
                     .frame(maxWidth: .infinity)
                     .background(
                         RoundedRectangle(cornerRadius: 8)
@@ -1030,6 +1063,7 @@ func generateNativeComponentSample(_ componentInfo: ComponentInfo) -> String {
     switch componentName {
     case "Button":
         configurationSection += """
+
                 // Campo para texto do botão
                 TextField("Texto do botão", text: $buttonTitle)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
@@ -1037,6 +1071,7 @@ func generateNativeComponentSample(_ componentInfo: ComponentInfo) -> String {
     """
     case "Text":
         configurationSection += """
+
                 // Campo para texto de exemplo
                 TextField("Texto de exemplo", text: $sampleText)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
@@ -1044,6 +1079,7 @@ func generateNativeComponentSample(_ componentInfo: ComponentInfo) -> String {
     """
     case "Toggle":
         configurationSection += """
+
                 // Campo para label do toggle
                 TextField("Label do toggle", text: $toggleLabel)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
@@ -1056,6 +1092,7 @@ func generateNativeComponentSample(_ componentInfo: ComponentInfo) -> String {
     """
     case "TextField":
         configurationSection += """
+
                 // Campo para valor do texto
                 TextField("Valor do texto", text: $textValue)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
@@ -1072,7 +1109,7 @@ func generateNativeComponentSample(_ componentInfo: ComponentInfo) -> String {
     
     // Adicionar seletor de estilo para todos os componentes
     configurationSection += """
-                
+
                 // Seletor de estilo
                 EnumSelector<\(styleCaseType)>(
                     title: "Estilo",
@@ -1094,7 +1131,35 @@ func generateNativeComponentSample(_ componentInfo: ComponentInfo) -> String {
         }
     """
     
-    // Geração de código Swift
+    // Exemplos a serem usados na função de gerar código
+    let buttonCodeExample = """
+Button("\\(buttonTitle)") {
+    // Ação do botão aqui
+}
+.buttonStyle(selectedStyle.style())
+"""
+    
+    let textCodeExample = """
+Text("\\(sampleText)")
+    .textStyle(selectedStyle.style())
+"""
+    
+    let dividerCodeExample = """
+Divider()
+    .dividerStyle(selectedStyle.style())
+"""
+    
+    let toggleCodeExample = """
+Toggle("\\(toggleLabel)", isOn: $isEnabled)
+    .toggleStyle(selectedStyle.style())
+"""
+    
+    let textFieldCodeExample = """
+TextField("\\(placeholder)", text: $textValue)
+    .textFieldStyle(selectedStyle.style())
+"""
+    
+    // Geração de código Swift - corrigindo o formato da string multi-linha
     var generateCode = """
         
         // Gera o código Swift para o componente configurado
@@ -1102,46 +1167,27 @@ func generateNativeComponentSample(_ componentInfo: ComponentInfo) -> String {
             // Aqui você pode personalizar a geração de código com base no componente
             var code = "// Código gerado automaticamente\\n"
             
-            code +=
-    """
-    
+            code += \"\"\"
+"""
+    generateCode += "\n"
     // Código específico para cada componente
     switch componentName {
     case "Button":
-        generateCode += """
-    Button("\\(buttonTitle)") {
-        // Ação do botão aqui
-    }
-    .buttonStyle(selectedStyle.style())
-    """
+        generateCode += buttonCodeExample
     case "Text":
-        generateCode += """
-    Text("\\(sampleText)")
-        .textStyle(selectedStyle.style())
-    """
+        generateCode += textCodeExample
     case "Divider":
-        generateCode += """
-    Divider()
-        .dividerStyle(selectedStyle.style())
-    """
+        generateCode += dividerCodeExample
     case "Toggle":
-        generateCode += """
-    Toggle("\\(toggleLabel)", isOn: $isEnabled)
-        .toggleStyle(selectedStyle.style())
-    """
+        generateCode += toggleCodeExample
     case "TextField":
-        generateCode += """
-    TextField("\\(placeholder)", text: $textValue)
-        .textFieldStyle(selectedStyle.style())
-    """
+        generateCode += textFieldCodeExample
     default:
         break
     }
-    
+    generateCode += "\n"
     generateCode += """
-            """
-    
-    generateCode += """
+    \"\"\"
             
             return code
         }
@@ -1280,10 +1326,35 @@ func createSampleFile(for componentName: String) -> Bool {
     do {
         try sampleContent.write(toFile: sampleFilePath, atomically: true, encoding: .utf8)
         log("Arquivo Sample criado com sucesso: \(sampleFilePath)")
+        
+        // Formatar o arquivo gerado usando swiftformat
+        formatSwiftFile(sampleFilePath)
+        
         return true
     } catch {
         log("Erro ao criar o arquivo Sample: \(error)", level: .error)
         return false
+    }
+}
+
+// MARK: - Formatação de código Swift
+
+func formatSwiftFile(_ filePath: String) {
+    log("Formatando o arquivo: \(filePath)")
+    
+    // Usar a classe SwiftFormatter para formatar o arquivo
+    let formatter = SwiftFormatter(logger: { message, level in
+        log(message, level: level)
+    })
+    
+    let result = formatter.formatFile(at: filePath)
+    
+    switch result {
+    case .success(let message):
+        log(message, level: .info)
+    case .failure(let error):
+        log(error, level: .warning)
+        log("Use Command+A seguido de Control+I no Xcode para formatar o arquivo manualmente.", level: .warning)
     }
 }
 
