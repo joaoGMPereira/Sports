@@ -13,6 +13,7 @@ struct NativeComponent {
     let typePath: String
     let defaultContent: String?
     let defaultStyleCase: String
+    let contextualModule: Bool
     let initParams: [NativeComponentParameter]
     let exampleCode: String
 }
@@ -22,10 +23,8 @@ let NATIVE_COMPONENTS: [String: NativeComponent] = [
         typePath: "BaseElements/Natives",
         defaultContent: "Button",
         defaultStyleCase: "contentA",
-        initParams: [
-            NativeComponentParameter(label: nil, name: "title", type: "String", defaultValue: nil, isAction: false),
-            NativeComponentParameter(label: nil, name: "action", type: "() -> Void", defaultValue: nil, isAction: true)
-        ],
+        contextualModule: false,
+        initParams: [],
         exampleCode: """
         Button(sampleText) {
             // Ação do botão
@@ -36,8 +35,9 @@ let NATIVE_COMPONENTS: [String: NativeComponent] = [
         typePath: "BaseElements/Natives",
         defaultContent: "Text",
         defaultStyleCase: "smallContentA",
+        contextualModule: false,
         initParams: [
-            NativeComponentParameter(label: nil, name: "content", type: "String", defaultValue: nil, isAction: false)
+            NativeComponentParameter(label: nil, name: "content", type: "String", defaultValue: "\"\"", isAction: false)
         ],
         exampleCode: """
         Text(sampleText)
@@ -47,6 +47,7 @@ let NATIVE_COMPONENTS: [String: NativeComponent] = [
         typePath: "BaseElements/Natives",
         defaultContent: nil,
         defaultStyleCase: "contentA",
+        contextualModule: false,
         initParams: [],
         exampleCode: """
         Divider()
@@ -56,24 +57,24 @@ let NATIVE_COMPONENTS: [String: NativeComponent] = [
         typePath: "BaseElements/Natives",
         defaultContent: "Toggle",
         defaultStyleCase: "mediumHighlightA",
+        contextualModule: false,
         initParams: [
-            NativeComponentParameter(label: nil, name: "isOn", type: "Binding<Bool>", defaultValue: nil, isAction: false),
-            NativeComponentParameter(label: nil, name: "label", type: "String", defaultValue: nil, isAction: false)
+            NativeComponentParameter(label: nil, name: "isOn", type: "Bool", defaultValue: "false", isAction: false)
         ],
         exampleCode: """
-        Toggle(sampleText, isOn: $isEnabled)
+        Toggle(sampleText, isOn: $isOn)
         """
     ),
     "TextField": NativeComponent(
         typePath: "BaseElements/Natives",
         defaultContent: "TextField",
         defaultStyleCase: "contentA",
+        contextualModule: true,
         initParams: [
-            NativeComponentParameter(label: nil, name: "text", type: "Binding<String>", defaultValue: nil, isAction: false),
-            NativeComponentParameter(label: nil, name: "placeholder", type: "String", defaultValue: nil, isAction: false)
+            NativeComponentParameter(label: nil, name: "placeholder", type: "String", defaultValue: "\"\"", isAction: false)
         ],
         exampleCode: """
-        TextField("Placeholder", text: $sampleText)
+        TextField(placeholder, text: $sampleText)
         """
     )
 ]

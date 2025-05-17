@@ -28,9 +28,6 @@ final class GenerateComponent {
         // Estado para texto de exemplo padronizado para todos os componentes
         states.append("\n    @State private var sampleText = \"Exemplo de texto\"")
         
-        // Estado para cor padronizado para todos os componentes
-        states.append("\n    @State private var selectedColor: ColorName = .highlightA")
-        
         // Estados específicos para tipo de componente
         states.append("\n    @State private var style = \"\(componentInfo.styleFunctions.first!.name)\"")
         
@@ -44,15 +41,25 @@ final class GenerateComponent {
             if let defaultValue = parameter.defaultValue {
                 states.append("\n    @State private var \(parameter.name): \(parameter.type) = \(defaultValue)")
             } else {
-                states.append("\n    @State private var \(parameter.name): \(parameter.type)? = nil")
+                states.append("\n    @State private var \(parameter.name): (\(parameter.type))?")
             }
         }
         
-        // Toggles para opções de visualização
+        let uniqueInitParams = componentInfo.publicInitParams
+
+        uniqueInitParams.forEach { initParam in
+            if let defaultValue = initParam.defaultValue {
+                states.append("\n    @State private var \(initParam.name): \(initParam.type) = \(defaultValue)")
+            } else {
+                states.append("\n    @State private var \(initParam.name): (\(initParam.type))?")
+            }
+        }
+        
+        // Toggles para opções de visualização´
         let viewOptions = """
             @State private var showAllStyles = false
             @State private var useContrastBackground = true
-            @State private var showFixedHeader = false
+            @State private var showFixedHeader = false\n
         """
         
         // Implementação do body com preview e configuração
@@ -108,10 +115,10 @@ final class GenerateComponent {
                     VStack(alignment: .leading, spacing: 8) {
                         // Mostrar todas as funções de estilo disponíveis
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], spacing: 8) {
-                            ForEach(\(componentInfo.name.capitalizedSentence)StyleCase.allCases, id: \\.self) { style in
+                            ForEach(\(componentInfo.name)StyleCase.allCases, id: \\.self) { style in
                                 VStack {
                                     \(componentInfo.exampleCode)
-                                    .\(componentInfo.name.lowercased())Style(style.style())
+                                    .\(componentInfo.name.firstLowerCased)Style(style.style())
                                     .padding(8)
                                     .frame(maxWidth: .infinity)
                                     .background(
@@ -139,7 +146,7 @@ final class GenerateComponent {
         previewComponent += """
         
                 \(componentInfo.exampleCode)
-                .\(componentInfo.name.lowercased())Style(get\(componentInfo.name)Style(style))
+                .\(componentInfo.name.firstLowerCased)Style(get\(componentInfo.name)Style(style))
         """
         previewComponent += """
                     \n .padding()
@@ -183,14 +190,53 @@ final class GenerateComponent {
                     .accentColor(colors.highlightA)\n
                 """
             default:
+                if parameter.type.contains("->") {
+                    ""
+                } else {
+                    """
+                    EnumSelector<\(parameter.type)>(
+                        title: "\(parameter.type)",
+                        selection: $\(parameter.name),
+                        columnsCount: 3,
+                        height: 120
+                    )\n
+                    """
+                }
+            }
+            configurationSection += parameterComponent
+        }
+        
+        uniqueInitParams.forEach { parameter in
+            let parameterComponent = switch parameter.type {
+            case "String":
                 """
-                EnumSelector<\(parameter.type)>(
-                    title: "\(parameter.type)",
-                    selection: $\(parameter.name),
-                    columnsCount: 3,
-                    height: 120
-                )\n
+                TextField("\(parameter.name)", text: $\(parameter.name))
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .padding(.horizontal)\n
                 """
+            case "Bool":
+                """
+                Toggle("\(parameter.name)", isOn: $\(parameter.name))
+                    .toggleStyle(.default(.highlightA))\n
+                """
+            case "Int", "Double", "CGFloat":
+                """
+                Slider(value: $\(parameter.name), in: 0...100, step: 1)
+                    .accentColor(colors.highlightA)\n
+                """
+            default:
+                if parameter.type.contains("->") {
+                    ""
+                } else {
+                    """
+                    EnumSelector<\(parameter.type)>(
+                        title: "\(parameter.type)",
+                        selection: $\(parameter.name),
+                        columnsCount: 3,
+                        height: 120
+                    )\n
+                    """
+                }
             }
             configurationSection += parameterComponent
         }
@@ -221,7 +267,7 @@ final class GenerateComponent {
         generateCode += """
         code += \"\"\"
         \(componentInfo.exampleCode)
-        .\(componentInfo.name.lowercased())Style(.\\(style)())
+        .\(componentInfo.name.firstLowerCased)Style(.\\(style)())
         \"\"\"\n
         """
         generateCode += """
@@ -335,7 +381,7 @@ final class GenerateComponent {
     }
     
     func generateGetStyle(with componentInfo: ComponentInfo) -> String {
-        let name = componentInfo.name.capitalizedSentence
+        let name = componentInfo.name
         var cases = ""
         componentInfo.styleFunctions.forEach { styleFunction in
             var parameters = ""
@@ -347,13 +393,14 @@ final class GenerateComponent {
         let firstStyle = componentInfo.styleFunctions.first!
         var defaultParameters = ""
         defaultParameters += firstStyle.parameters.joined()
+        let prefix = componentInfo.contextualModule ? "Zenith." : ""
         let defaultCase = """
             default:
                 .\(firstStyle.name)(\(defaultParameters))
         """
         return """
             private func get\(name)Style(_ style: String) -> Any\(name)Style {
-                let style: any \(componentInfo.name)Style = switch style {
+                let style: any \(prefix)\(componentInfo.name)Style = switch style {
                 \(cases)
                 \(defaultCase)
                 }
@@ -369,6 +416,15 @@ extension String {
         let firstLetter = self.prefix(1).capitalized
         // 2
         let remainingLetters = self.dropFirst().lowercased()
+        // 3
+        return firstLetter + remainingLetters
+    }
+    
+    var firstLowerCased: String {
+        // 1
+        let firstLetter = self.prefix(1).lowercased()
+        // 2
+        let remainingLetters = self.dropFirst()
         // 3
         return firstLetter + remainingLetters
     }

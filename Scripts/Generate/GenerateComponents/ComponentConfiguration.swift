@@ -21,7 +21,7 @@ struct StyleFunction {
     let parameters: [StyleParameter]
 }
 
-struct InitParameter {
+struct InitParameter: Hashable {
     let label: String?
     let name: String
     let type: String
@@ -52,6 +52,7 @@ class ComponentInfo {
     var hasActionParam: Bool = false
     var isNative: Bool = false
     var exampleCode: String = ""
+    var contextualModule: Bool = false
     
     init(name: String, typePath: String) {
         self.name = name
@@ -535,6 +536,7 @@ final class ComponentConfiguration {
             Log.log("Componente nativo encontrado: \(componentName)")
             let componentInfo = ComponentInfo(name: componentName, typePath: nativeInfo.typePath)
             componentInfo.isNative = true
+            componentInfo.contextualModule = nativeInfo.contextualModule
             
             // Converter init params do formato nativo para o formato interno
             for param in nativeInfo.initParams {

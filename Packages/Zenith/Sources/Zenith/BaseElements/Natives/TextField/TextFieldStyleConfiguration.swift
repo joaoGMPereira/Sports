@@ -45,7 +45,7 @@ public struct TextFieldStyleKey: EnvironmentKey {
 }
 
 public extension EnvironmentValues {
-    var textfieldStyle : any TextFieldStyle {
+    var textFieldStyle : any TextFieldStyle {
         get { self[TextFieldStyleKey.self] }
         set { self[TextFieldStyleKey.self] = newValue }
     }

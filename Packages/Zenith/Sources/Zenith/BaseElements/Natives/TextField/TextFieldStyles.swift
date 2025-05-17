@@ -4,7 +4,7 @@ import Combine
 
 public extension TextField where Label == Text {
     func textFieldStyle(
-        _ style: some TextFieldStyle, 
+        _ style: some TextFieldStyle,
         placeholder: String? = nil,
         hasError: Bool = false,
         errorMessage: Binding<String> = .constant("")
@@ -17,7 +17,7 @@ public extension TextField where Label == Text {
                     hasError: hasError,
                     errorMessage: errorMessage
                 )
-            ).environment(\.textfieldStyle, style)
+            ).environment(\.textFieldStyle, style)
         )
     }
 }

@@ -116,10 +116,10 @@ public class SwiftFormatter {
     ///   - indentSize: Tamanho da indentação desejada
     /// - Returns: Resultado da formatação ou nil se todas as ferramentas falharem
     private func tryExternalFormatters(for filePath: String, indentSize: Int = 4) -> FormatResult? {
-        // 1. Tentar SwiftFormat (agora com --swiftversion 6.0.0)
+        // 1. Tentar SwiftFormat (diretamente)
         if let result = runFormatter(
-            executable: "/usr/bin/env",
-            arguments: ["swiftFormat", filePath, "--swiftversion", "6.0.0"],
+            executable: "/usr/local/bin/swiftformat",
+            arguments: [filePath, "--swiftversion", "6.0.0"],
             successMessage: "Arquivo formatado com sucesso usando SwiftFormat (Swift 6.0.0)"
         ) {
             return result

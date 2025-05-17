@@ -41,7 +41,7 @@ public struct SmallToggleStyle: ToggleStyle, @preconcurrency BaseThemeDependenci
 }
 
 public extension ToggleStyle where Self == SmallToggleStyle {
-    static func small(_ color: ColorName) -> Self { .init(color: color) }
+    static func small(_ color: ColorName = .highlightA) -> Self { .init(color: color) }
 }
 
 public struct DefaultToggleStyle: ToggleStyle, @preconcurrency BaseThemeDependencies {
@@ -68,7 +68,7 @@ public struct DefaultToggleStyle: ToggleStyle, @preconcurrency BaseThemeDependen
 }
 
 public extension ToggleStyle where Self == DefaultToggleStyle {
-    static func `default`(_ color: ColorName) -> Self { .init(color: color) }
+    static func `default`(_ color: ColorName = .highlightA) -> Self { .init(color: color) }
 }
 
 private struct BaseToggle: View, @preconcurrency BaseThemeDependencies {

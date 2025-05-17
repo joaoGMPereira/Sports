@@ -4,13 +4,17 @@ import ZenithCoreInterface
 
 struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) var themeConfigurator
-    
-    @State var text = ""
-    @State var text2 = ""
-    @State var selectedStyle = TextFieldStyleCase.contentA
-    @State var showError = false
-    @State var showFixedHeader = false
-    
+    @State private var sampleText = "Exemplo de texto"
+
+    @State private var style = "contentA"
+
+    @State private var state: DSState = .enabled
+
+    @State private var placeholder: String = ""
+    @State private var showAllStyles = false
+    @State private var useContrastBackground = true
+    @State private var showFixedHeader = false
+
     var body: some View {
         SampleWithFixedHeader(
             showFixedHeader: $showFixedHeader,
@@ -18,171 +22,204 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
                 Card(action: {
                     showFixedHeader.toggle()
                 }) {
-                    TextField("", text: $text)
-                        .textFieldStyle(
-                            selectedStyle.style(),
-                            placeholder: "Digite seu nome",
-                            errorMessage: showError ? .constant("Campo obrigatório") : .constant("")
-                        )
-                        .padding()
+                    VStack(spacing: 16) {
+                        // Preview do componente com configurações atuais
+                        previewComponent
+                    }
+                    .padding()
                 }
                 .padding()
             },
             config: {
-                VStack(alignment: .leading, spacing: 20) {
-                    Text("Configurações")
-                        .font(fonts.mediumBold)
-                        .foregroundColor(colors.contentA)
-                    
-                    // Texto atual
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Texto digitado: \(text.isEmpty ? "(vazio)" : text)")
-                            .font(fonts.small)
-                            .foregroundColor(colors.contentA)
-                        
-                        Button(action: {
-                            text = ""
-                        }) {
-                            Text("Limpar")
-                                .padding(spacings.extraSmall)
-                                .font(fonts.small)
+                VStack(spacing: 16) {
+                    // Área de configuração
+                    configurationSection
+
+                    // Preview do código gerado
+                    CodePreviewSection(generateCode: generateSwiftCode)
+
+                    // Exibição de todos os estilos (opcional)
+                    if showAllStyles {
+                        Divider().padding(.vertical, 4)
+
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Todos os Estilos")
+                                .font(fonts.mediumBold)
+                                .foregroundColor(colors.contentA)
+
+                            scrollViewWithStyles
                         }
-                        .buttonStyle(.highlightA())
-                        .disabled(text.isEmpty)
                     }
-                    .padding()
-                    .background(colors.backgroundB.opacity(0.3))
-                    .cornerRadius(8)
-                    
-                    // Controle de erro
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Mensagem de erro")
-                            .font(fonts.smallBold)
-                            .foregroundColor(colors.contentA)
-                        
-                        Toggle("Mostrar erro", isOn: $showError)
-                            .toggleStyle(.default(.highlightA))
-                            .foregroundColor(colors.contentA)
-                    }
-                    .padding()
-                    .background(colors.backgroundB.opacity(0.3))
-                    .cornerRadius(8)
-                    
-                    // Seletor de estilos
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Estilo do TextField")
-                            .font(fonts.smallBold)
-                            .foregroundColor(colors.contentA)
-                        
-                        ScrollView {
-                            VStack(spacing: 8) {
-                                ForEach(TextFieldStyleCase.allCases, id: \.self) { style in
-                                    HStack {
-                                        Text(style.rawValue)
-                                            .font(fonts.small)
-                                            .foregroundColor(selectedStyle == style ? colors.contentC : colors.contentA)
-                                            .tag(style)
-                                            .padding(8)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                            .background(
-                                                RoundedRectangle(cornerRadius: 6)
-                                                    .fill(selectedStyle == style ? colors.highlightA : colors.backgroundC)
-                                            )
-                                            .onTapGesture {
-                                                selectedStyle = style
-                                            }
-                                    }
-                                }
-                            }
-                        }
-                        .frame(height: 160)
-                        .scrollIndicators(.hidden)
-                    }
-                    .padding()
-                    .background(colors.backgroundB.opacity(0.3))
-                    .cornerRadius(8)
-                    
-                    // Exemplos
-                    Text("Exemplos")
-                        .font(fonts.mediumBold)
-                        .foregroundColor(colors.contentA)
-                        .padding(.top, 16)
-                    
-                    // TextField simples
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("TextField Simples")
-                            .font(fonts.smallBold)
-                            .foregroundColor(colors.contentA)
-                        
-                        TextField("Texto simples", text: $text)
-                            .textFieldStyle(selectedStyle.style())
-                    }
-                    .padding()
-                    .background(colors.backgroundB.opacity(0.3))
-                    .cornerRadius(8)
-                    
-                    // TextField com placeholder animado
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("TextField com Placeholder Animado")
-                            .font(fonts.smallBold)
-                            .foregroundColor(colors.contentA)
-                        
-                        TextField("", text: $text)
-                            .textFieldStyle(
-                                selectedStyle.style(),
-                                placeholder: "Digite seu nome",
-                                errorMessage: showError ? .constant("Campo obrigatório") : .constant("")
-                            )
-                    }
-                    .padding()
-                    .background(colors.backgroundB.opacity(0.3))
-                    .cornerRadius(8)
-                    
-                    // Segundo TextField com placeholder animado
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Segundo TextField com Placeholder Animado")
-                            .font(fonts.smallBold)
-                            .foregroundColor(colors.contentA)
-                        
-                        TextField("", text: $text2)
-                            .textFieldStyle(
-                                selectedStyle.style(),
-                                placeholder: "Digite seu email",
-                                errorMessage: showError ? .constant("Campo obrigatório") : .constant("")
-                            )
-                    }
-                    .padding()
-                    .background(colors.backgroundB.opacity(0.3))
-                    .cornerRadius(8)
-                    
-                    // Código para implementação
-                    CodePreviewSection(generateCode: generateCode)
-                        .padding(.top, 16)
                 }
-                .padding()
+                .padding(.horizontal)
             }
         )
     }
-    
-    private func generateCode() -> String {
-        let errorPart = showError ? 
-            """
-            , errorMessage: .constant("Campo obrigatório")
-            """ : ""
-        
-        return """
-        @State var text = "\(text)"
-        
-        // TextField simples
-        TextField("Texto simples", text: $text)
-            .textFieldStyle(.\(selectedStyle.rawValue)())
-        
-        // TextField com placeholder animado
-        TextField("", text: $text)
-            .textFieldStyle(
-                .\(selectedStyle.rawValue)(),
-                placeholder: "Digite seu nome"\(errorPart)
+
+    private var scrollViewWithStyles: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 8) {
+                // Mostrar todas as funções de estilo disponíveis
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], spacing: 8) {
+                    ForEach(TextFieldStyleCase.allCases, id: \.self) { style in
+                        VStack {
+                            TextField(placeholder, text: $sampleText)
+                                .textFieldStyle(style.style())
+                                .padding(8)
+                                .frame(maxWidth: .infinity)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 4)
+                                        .fill(colors.backgroundB.opacity(0.2))
+                                )
+                        }
+                    }
+                }
+            }
+        }
+        .frame(maxHeight: 200)
+    }
+
+    // Preview do componente com as configurações selecionadas
+    private var previewComponent: some View {
+        VStack {
+            // Preview do componente com as configurações atuais
+            TextField(placeholder, text: $sampleText)
+                .textFieldStyle(getTextFieldStyle(style))
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(useContrastBackground ? colors.backgroundA : colors.backgroundB.opacity(0.2))
+                )
+        }
+    }
+
+    // Área de configuração
+    private var configurationSection: some View {
+        VStack(spacing: 16) {
+            // Campo para texto de exemplo
+            TextField("Texto de exemplo", text: $sampleText)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .padding(.horizontal)
+            EnumSelector<DSState>(
+                title: "DSState",
+                selection: $state,
+                columnsCount: 3,
+                height: 120
             )
+            TextField("placeholder", text: $placeholder)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .padding(.horizontal)
+            // Toggles para opções
+            VStack {
+                Toggle("Usar fundo contrastante", isOn: $useContrastBackground)
+                    .toggleStyle(.default(.highlightA))
+
+                Toggle("Mostrar Todos os Estilos", isOn: $showAllStyles)
+                    .toggleStyle(.default(.highlightA))
+            }
+            .padding(.horizontal)
+        }
+    }
+
+    // Gera o código Swift para o componente configurado
+    private func generateSwiftCode() -> String {
+        var code = "// Código gerado automaticamente\n"
+        code += """
+        TextField(placeholder, text: $sampleText)
+        .textFieldStyle(.\(style)())
         """
+        return code
+    }
+
+    private func getTextFieldStyle(_ style: String) -> AnyTextFieldStyle {
+        let style: any Zenith.TextFieldStyle = switch style {
+        case "contentA":
+            .contentA(state)
+        case "contentC":
+            .contentC(state)
+        case "highlightA":
+            .highlightA(state)
+        default:
+            .contentA(state)
+        }
+        return AnyTextFieldStyle(style)
+    }
+
+    // Helper para obter a cor associada a um StyleCase
+    private func getColorFromStyle(_ style: some Any) -> ColorName {
+        let styleName = String(describing: style)
+
+        if styleName.contains("HighlightA") {
+            return .highlightA
+        } else if styleName.contains("BackgroundA") {
+            return .backgroundA
+        } else if styleName.contains("BackgroundB") {
+            return .backgroundB
+        } else if styleName.contains("BackgroundC") {
+            return .backgroundC
+        } else if styleName.contains("BackgroundD") {
+            return .backgroundD
+        } else if styleName.contains("ContentA") {
+            return .contentA
+        } else if styleName.contains("ContentB") {
+            return .contentB
+        } else if styleName.contains("ContentC") {
+            return .contentC
+        } else if styleName.contains("Critical") {
+            return .critical
+        } else if styleName.contains("Attention") {
+            return .attention
+        } else if styleName.contains("Danger") {
+            return .danger
+        } else if styleName.contains("Positive") {
+            return .positive
+        } else {
+            return .none
+        }
+    }
+
+    // Gera um fundo de contraste adequado para a cor especificada
+    private func getContrastBackground(for colorName: ColorName) -> Color {
+        let color = colors.color(by: colorName) ?? colors.backgroundB
+
+        // Extrair componentes RGB da cor
+        let uiColor = UIColor(color)
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+
+        uiColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+
+        // Calcular luminosidade da cor (fórmula perceptual)
+        let luminance = 0.299 * red + 0.587 * green + 0.114 * blue
+
+        // Verificar se estamos lidando com a cor backgroundC ou cores com luminosidade similar
+        if abs(luminance - 0.27) < 0.1 { // 0.27 é aproximadamente a luminosidade de #444444
+            // Para cinzas médios como backgroundC, criar um contraste mais definido
+            if luminance < 0.3 {
+                // Para cinzas que tendem ao escuro, usar um contraste bem claro
+                return Color.white.opacity(0.25)
+            } else {
+                // Para cinzas que tendem ao claro, usar um contraste bem escuro
+                return Color.black.opacity(0.15)
+            }
+        }
+
+        // Para as demais cores, manter a lógica anterior mas aumentar o contraste
+        if luminance < 0.5 {
+            // Para cores escuras, gerar um contraste claro
+            return Color(red: min(red + 0.4, 1.0),
+                         green: min(green + 0.4, 1.0),
+                         blue: min(blue + 0.4, 1.0))
+                .opacity(0.35)
+        } else {
+            // Para cores claras, gerar um contraste escuro
+            return Color(red: max(red - 0.25, 0.0),
+                         green: max(green - 0.25, 0.0),
+                         blue: max(blue - 0.25, 0.0))
+                .opacity(0.2)
+        }
     }
 }
