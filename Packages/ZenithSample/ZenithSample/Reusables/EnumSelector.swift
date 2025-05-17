@@ -52,7 +52,7 @@ struct EnumSelector<T: Hashable>: View, @preconcurrency BaseThemeDependencies {
                 }
                 .padding(.horizontal, 4)
             }
-            .frame(height: height)
+            .frame(minHeight: 40, maxHeight: height)
         }
     }
     

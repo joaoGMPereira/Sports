@@ -27,10 +27,9 @@ let NATIVE_COMPONENTS: [String: NativeComponent] = [
             NativeComponentParameter(label: nil, name: "action", type: "() -> Void", defaultValue: nil, isAction: true)
         ],
         exampleCode: """
-        Button("Exemplo") {
+        Button(sampleText) {
             // Ação do botão
         }
-        .buttonStyle(.contentA())
         """
     ),
     "Text": NativeComponent(
@@ -41,8 +40,7 @@ let NATIVE_COMPONENTS: [String: NativeComponent] = [
             NativeComponentParameter(label: nil, name: "content", type: "String", defaultValue: nil, isAction: false)
         ],
         exampleCode: """
-        Text("Exemplo de texto")
-            .textStyle(.small(.contentA))
+        Text(sampleText)
         """
     ),
     "Divider": NativeComponent(
@@ -52,7 +50,6 @@ let NATIVE_COMPONENTS: [String: NativeComponent] = [
         initParams: [],
         exampleCode: """
         Divider()
-            .dividerStyle(.contentA())
         """
     ),
     "Toggle": NativeComponent(
@@ -64,8 +61,7 @@ let NATIVE_COMPONENTS: [String: NativeComponent] = [
             NativeComponentParameter(label: nil, name: "label", type: "String", defaultValue: nil, isAction: false)
         ],
         exampleCode: """
-        Toggle("Exemplo de Toggle", isOn: $isEnabled)
-            .toggleStyle(.default(.highlightA))
+        Toggle(sampleText, isOn: $isEnabled)
         """
     ),
     "TextField": NativeComponent(
@@ -77,8 +73,7 @@ let NATIVE_COMPONENTS: [String: NativeComponent] = [
             NativeComponentParameter(label: nil, name: "placeholder", type: "String", defaultValue: nil, isAction: false)
         ],
         exampleCode: """
-        TextField("Placeholder", text: $textValue)
-            .textFieldStyle(.contentA())
+        TextField("Placeholder", text: $sampleText)
         """
     )
 ]

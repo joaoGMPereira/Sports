@@ -9,7 +9,8 @@ struct SwiftProperty {
     let defaultValue: String?
 }
 
-struct StyleParameter {
+struct StyleParameter: Hashable {
+    let hasObfuscatedArgument: Bool
     let name: String
     let type: String
     let defaultValue: String?
@@ -18,15 +19,6 @@ struct StyleParameter {
 struct StyleFunction {
     let name: String
     let parameters: [StyleParameter]
-    
-    // Para manter compatibilidade com o código existente
-    var paramName: String {
-        parameters.first?.name ?? "color"
-    }
-    
-    var paramType: String {
-        parameters.first?.type ?? "ColorName"
-    }
 }
 
 struct InitParameter {
@@ -262,10 +254,10 @@ final class ComponentConfiguration {
                     }
                 }
                 
-                // Se não houver parâmetros, adicionar um padrão
-                if parameters.isEmpty {
-                    parameters = [StyleParameter(name: "color", type: "ColorName", defaultValue: nil)]
-                }
+//                // Se não houver parâmetros, adicionar um padrão
+//                if parameters.isEmpty {
+//                    parameters = [StyleParameter(name: "color", type: "ColorName", defaultValue: nil)]
+//                }
                 
                 styleFunctions.append(StyleFunction(name: funcName, parameters: parameters))
             }
@@ -305,9 +297,9 @@ final class ComponentConfiguration {
             }
             
             // Se não houver parâmetros, adicione um padrão para compatibilidade
-            if parameters.isEmpty {
-                parameters = [StyleParameter(name: "color", type: "ColorName", defaultValue: nil)]
-            }
+//            if parameters.isEmpty {
+//                parameters = [StyleParameter(name: "color", type: "ColorName", defaultValue: nil)]
+//            }
             
             functions.append(StyleFunction(name: funcName, parameters: parameters))
         }
@@ -337,7 +329,7 @@ final class ComponentConfiguration {
             defaultValue = String(paramString[defaultValueRange]).trimmingCharacters(in: .whitespaces)
         }
         
-        return StyleParameter(name: name, type: type, defaultValue: defaultValue)
+        return StyleParameter(hasObfuscatedArgument: paramString.starts(with: "_"), name: name, type: type, defaultValue: defaultValue)
     }
     
     func splitFunctionParameters(_ paramsString: String) -> [String] {
@@ -404,106 +396,11 @@ final class ComponentConfiguration {
             }
             
             // Se não houver parâmetros, adicione um padrão para compatibilidade
-            if parameters.isEmpty {
-                parameters = [StyleParameter(name: "color", type: "ColorName", defaultValue: nil)]
-            }
+//            if parameters.isEmpty {
+//                parameters = [StyleParameter(name: "color", type: "ColorName", defaultValue: nil)]
+//            }
             
             styleFunctions.append(StyleFunction(name: funcName, parameters: parameters))
-        }
-        
-        // Se ainda não encontrou funções, procura por casos do enum StyleCase
-        if styleFunctions.isEmpty {
-            styleFunctions = inferStyleFunctionsFromEnum(in: content, componentName: componentName)
-        }
-        
-        // Se ainda não encontrou nada, adiciona um padrão mínimo
-        if styleFunctions.isEmpty {
-            Log.log("Não foi possível encontrar funções de estilo para \(componentName), usando padrão mínimo", level: .warning)
-            let defaultFunctions: [StyleFunction]
-            
-            // Define funções padrão específicas por componente
-            switch componentName {
-            case "Text":
-                defaultFunctions = [
-                    StyleFunction(name: "small", parameters: [StyleParameter(name: "color", type: "ColorName", defaultValue: nil)]),
-                    StyleFunction(name: "medium", parameters: [StyleParameter(name: "color", type: "ColorName", defaultValue: nil)]),
-                    StyleFunction(name: "large", parameters: [StyleParameter(name: "color", type: "ColorName", defaultValue: nil)])
-                ]
-            case "Button":
-                defaultFunctions = [
-                    StyleFunction(name: "contentA", parameters: [
-                        StyleParameter(name: "shape", type: "ButtonShape", defaultValue: ".rounded(cornerRadius: .infinity)"),
-                        StyleParameter(name: "state", type: "DSState", defaultValue: ".enabled")
-                    ]),
-                    StyleFunction(name: "highlightA", parameters: [
-                        StyleParameter(name: "shape", type: "ButtonShape", defaultValue: ".rounded(cornerRadius: .infinity)"),
-                        StyleParameter(name: "state", type: "DSState", defaultValue: ".enabled")
-                    ]),
-                    StyleFunction(name: "backgroundD", parameters: [
-                        StyleParameter(name: "shape", type: "ButtonShape", defaultValue: ".rounded(cornerRadius: .infinity)"),
-                        StyleParameter(name: "state", type: "DSState", defaultValue: ".enabled")
-                    ])
-                ]
-            case "Toggle":
-                defaultFunctions = [
-                    StyleFunction(name: "default", parameters: [StyleParameter(name: "color", type: "ColorName", defaultValue: nil)])
-                ]
-            default:
-                defaultFunctions = [
-                    StyleFunction(name: "contentA", parameters: [StyleParameter(name: "color", type: "ColorName", defaultValue: nil)]),
-                    StyleFunction(name: "contentB", parameters: [StyleParameter(name: "color", type: "ColorName", defaultValue: nil)]),
-                    StyleFunction(name: "highlightA", parameters: [StyleParameter(name: "color", type: "ColorName", defaultValue: nil)])
-                ]
-            }
-            
-            styleFunctions = defaultFunctions
-        }
-        
-        return styleFunctions
-    }
-    
-    func inferStyleFunctionsFromEnum(in content: String, componentName: String) -> [StyleFunction] {
-        var styleFunctions: [StyleFunction] = []
-        
-        // Procura por enum de casos de estilo
-        let enumPattern = "enum\\s+\(componentName)StyleCase\\s*:.*?\\{([^}]*?)\\}"
-        let enumRegex = try! NSRegularExpression(pattern: enumPattern, options: [.dotMatchesLineSeparators])
-        
-        guard let enumMatch = enumRegex.firstMatch(in: content, options: [], range: NSRange(content.startIndex..., in: content)),
-              let enumContentRange = Range(enumMatch.range(at: 1), in: content) else {
-            return []
-        }
-        
-        let enumContent = String(content[enumContentRange])
-        
-        // Extrair casos
-        let casePattern = "case\\s+(\\w+)"
-        let caseRegex = try! NSRegularExpression(pattern: casePattern, options: [])
-        let caseMatches = caseRegex.matches(in: enumContent, options: [], range: NSRange(enumContent.startIndex..., in: enumContent))
-        
-        for match in caseMatches {
-            guard let caseNameRange = Range(match.range(at: 1), in: enumContent) else {
-                continue
-            }
-            
-            let caseName = String(enumContent[caseNameRange])
-            
-            // Se for Button, inferir parâmetros típicos
-            if componentName == "Button" {
-                styleFunctions.append(StyleFunction(
-                    name: caseName,
-                    parameters: [
-                        StyleParameter(name: "shape", type: "ButtonShape", defaultValue: ".rounded(cornerRadius: .infinity)"),
-                        StyleParameter(name: "state", type: "DSState", defaultValue: ".enabled")
-                    ]
-                ))
-            } else {
-                // Para outros componentes, usar valor padrão genérico
-                styleFunctions.append(StyleFunction(
-                    name: caseName,
-                    parameters: [StyleParameter(name: "color", type: "ColorName", defaultValue: nil)]
-                ))
-            }
         }
         
         return styleFunctions
@@ -803,45 +700,156 @@ final class ComponentConfiguration {
     }
     
     func extractStyleCases(from content: String) -> [String] {
-        var cases: [String] = []
+        var cases = Set<String>() // Uso Set para evitar duplicatas
         
-        // Procura por enum com nome StyleCase
-        let enumPattern = "enum\\s+(\\w+StyleCase)"
+        // Procura por enum com nome que termina com StyleCase
+        let enumPattern = "enum\\s+(\\w+StyleCase)[^{]*\\{"
         let enumRegex = try! NSRegularExpression(pattern: enumPattern, options: [])
         
-        guard let enumMatch = enumRegex.firstMatch(in: content, options: [], range: NSRange(content.startIndex..., in: content)),
-              let enumRange = Range(enumMatch.range(at: 1), in: content) else {
-            return []
-        }
+        // Tentar encontrar a declaração do enum
+        let enumMatches = enumRegex.matches(in: content, options: [], range: NSRange(content.startIndex..., in: content))
         
-        let enumName = String(content[enumRange])
-        
-        // Encontrar o bloco do enum
-        let enumBlockPattern = "\(enumName)[^{]*\\{([^}]*)\\}"
-        let enumBlockRegex = try! NSRegularExpression(pattern: enumBlockPattern, options: [.dotMatchesLineSeparators])
-        
-        guard let blockMatch = enumBlockRegex.firstMatch(in: content, options: [], range: NSRange(content.startIndex..., in: content)),
-              let blockRange = Range(blockMatch.range(at: 1), in: content) else {
-            return []
-        }
-        
-        let casesContent = String(content[blockRange])
-        
-        // Extrair casos
-        let casePattern = "case\\s+(\\w+)"
-        let caseRegex = try! NSRegularExpression(pattern: casePattern, options: [])
-        let caseMatches = caseRegex.matches(in: casesContent, options: [], range: NSRange(casesContent.startIndex..., in: casesContent))
-        
-        for match in caseMatches {
-            guard let caseRange = Range(match.range(at: 1), in: casesContent) else {
+        for enumMatch in enumMatches {
+            guard let enumNameRange = Range(enumMatch.range(at: 1), in: content),
+                  let enumStartRange = Range(enumMatch.range, in: content) else {
                 continue
             }
             
-            let caseName = String(casesContent[caseRange])
-            cases.append(caseName)
+            let enumName = String(content[enumNameRange])
+            
+            // Encontrar o fim do bloco do enum contando chaves
+            var blockStart = content.index(after: content.index(enumStartRange.upperBound, offsetBy: -1))
+            var braceCount = 1
+            var blockEnd = blockStart
+            
+            while braceCount > 0 && blockEnd < content.endIndex {
+                let char = content[blockEnd]
+                if char == "{" {
+                    braceCount += 1
+                } else if char == "}" {
+                    braceCount -= 1
+                }
+                
+                if braceCount > 0 {
+                    blockEnd = content.index(after: blockEnd)
+                }
+            }
+            
+            // Extrai todo o conteúdo do enum, mas paramos antes de qualquer função dentro do enum
+            let fullBlockContent = String(content[blockStart..<blockEnd])
+            
+            // Remover qualquer parte que comece com "func", que seria uma função dentro do enum
+            var blockContent = fullBlockContent
+            if let funcRange = fullBlockContent.range(of: "\\s+func\\s+", options: .regularExpression) {
+                blockContent = String(fullBlockContent[fullBlockContent.startIndex..<funcRange.lowerBound])
+            }
+            
+            // Padrão 1: case a, b, c, d (em uma única linha)
+            let multiCasePattern = "case\\s+([^:\\{\\n]+)"
+            let multiCaseRegex = try! NSRegularExpression(pattern: multiCasePattern, options: [])
+            let multiCaseMatches = multiCaseRegex.matches(in: blockContent, options: [], range: NSRange(blockContent.startIndex..., in: blockContent))
+            
+            for match in multiCaseMatches {
+                guard let caseListRange = Range(match.range(at: 1), in: blockContent) else {
+                    continue
+                }
+                
+                let caseList = String(blockContent[caseListRange])
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                
+                // Separar casos múltiplos listados na mesma linha (a, b, c)
+                let caseNames = caseList.components(separatedBy: ",")
+                    .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                    .filter { !$0.isEmpty && !$0.hasPrefix(".") } // Filtra valores vazios e que começam com ponto
+                
+                cases.formUnion(caseNames)
+            }
+            
+            // Para casos que estão em linhas separadas, usamos um padrão diferente
+            let singleCasePattern = "case\\s+(\\w+)\\s*$"
+            let singleCaseRegex = try! NSRegularExpression(pattern: singleCasePattern, options: [.anchorsMatchLines])
+            let singleCaseMatches = singleCaseRegex.matches(in: blockContent, options: [], range: NSRange(blockContent.startIndex..., in: blockContent))
+            
+            for match in singleCaseMatches {
+                guard let caseRange = Range(match.range(at: 1), in: blockContent) else {
+                    continue
+                }
+                
+                let caseName = String(blockContent[caseRange])
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                
+                // Verificar se o caso não está vazio e não começa com ponto
+                if !caseName.isEmpty && !caseName.hasPrefix(".") {
+                    cases.insert(caseName)
+                }
+            }
         }
         
-        return cases
+        // Se não encontrou casos suficientes, tenta uma abordagem alternativa
+        // Procuramos apenas por 'case' seguido de palavra, mas não dentro de uma função
+        if cases.count < 2 {
+            // Encontrar primeiro todas as funções para excluí-las da busca
+            var functionsRanges: [Range<String.Index>] = []
+            let funcPattern = "func\\s+\\w+\\s*\\([^)]*\\)\\s*[^{]*\\{"
+            let funcRegex = try! NSRegularExpression(pattern: funcPattern, options: [.dotMatchesLineSeparators])
+            let funcMatches = funcRegex.matches(in: content, options: [], range: NSRange(content.startIndex..., in: content))
+            
+            for match in funcMatches {
+                guard let matchRange = Range(match.range, in: content) else { continue }
+                
+                // Encontrar o fim do bloco da função
+                var braceCount = 1
+                var endIndex = content.index(after: matchRange.upperBound)
+                
+                while braceCount > 0 && endIndex < content.endIndex {
+                    if content[endIndex] == "{" {
+                        braceCount += 1
+                    } else if content[endIndex] == "}" {
+                        braceCount -= 1
+                    }
+                    
+                    if braceCount > 0 {
+                        endIndex = content.index(after: endIndex)
+                    }
+                }
+                
+                functionsRanges.append(matchRange.lowerBound..<endIndex)
+            }
+            
+            // Agora vamos procurar todos os 'case' que não estejam dentro de funções
+            let directCasePattern = "case\\s+(\\w+)(?:\\s*,\\s*(\\w+))*"
+            let directCaseRegex = try! NSRegularExpression(pattern: directCasePattern, options: [])
+            let directCaseMatches = directCaseRegex.matches(in: content, options: [], range: NSRange(content.startIndex..., in: content))
+            
+            matchLoop: for match in directCaseMatches {
+                guard let matchRange = Range(match.range, in: content) else { continue }
+                
+                // Verificar se o match está dentro de alguma função
+                for funcRange in functionsRanges {
+                    if funcRange.contains(matchRange.lowerBound) {
+                        continue matchLoop
+                    }
+                }
+                
+                // Extrair cada grupo de captura
+                for i in 1..<match.numberOfRanges {
+                    guard let caseRange = Range(match.range(at: i), in: content), 
+                          match.range(at: i).location != NSNotFound else { continue }
+                    
+                    let caseName = String(content[caseRange])
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                    
+                    if !caseName.isEmpty && !caseName.hasPrefix(".") {
+                        cases.insert(caseName)
+                    }
+                }
+            }
+        }
+        
+        // Log para debug
+        Log.log("Casos de estilo extraídos: \(Array(cases).sorted())", level: .info)
+        
+        return Array(cases).sorted()
     }
     
     func categorizeProperties(_ properties: [SwiftProperty]) -> (

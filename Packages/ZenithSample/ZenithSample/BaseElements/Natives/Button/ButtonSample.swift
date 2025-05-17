@@ -1,15 +1,22 @@
 import SwiftUI
 import Zenith
 import ZenithCoreInterface
-
 struct ButtonSample: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) var themeConfigurator
-    @State private var selectedStyle = ButtonStyleCase.contentA
-    @State private var buttonTitle = "Botão de Exemplo"
+    @State private var sampleText = "Exemplo de texto"
+
+    @State private var selectedColor: ColorName = .highlightA
+
+    @State private var style = "contentA"
+
+    @State private var state: DSState = .enabled
+
+    @State private var type: CardType = .fill
+
+    @State private var shape: ButtonShape = .rounded(cornerRadius: .infinity)
     @State private var showAllStyles = false
     @State private var useContrastBackground = true
-    @State private var showFixedHeader = false
-    
+    @State private var showFixedHeader = false    
     var body: some View {
         SampleWithFixedHeader(
             showFixedHeader: $showFixedHeader,
@@ -42,32 +49,7 @@ struct ButtonSample: View, @preconcurrency BaseThemeDependencies {
                                 .font(fonts.mediumBold)
                                 .foregroundColor(colors.contentA)
                             
-                            ScrollView {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], spacing: 8) {
-                                        ForEach(ButtonStyleCase.allCases, id: \.self) { style in
-                                            VStack {
-                                                Text(String(describing: style))
-                                                    .font(fonts.small)
-                                                    .foregroundColor(colors.contentA)
-                                                    .padding(.bottom, 2)
-                                                
-                                                Button(buttonTitle) {
-                                                    // Ação vazia para exemplo
-                                                }
-                                                .buttonStyle(style.style())
-                                                .padding(8)
-                                                .frame(maxWidth: .infinity)
-                                                .background(
-                                                    RoundedRectangle(cornerRadius: 4)
-                                                        .fill(getContrastBackground(for: getColorFromStyle(style)))
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            .frame(maxHeight: 200)
+                            scrollViewWithStyles
                         }
                     }
                 }
@@ -76,39 +58,71 @@ struct ButtonSample: View, @preconcurrency BaseThemeDependencies {
         )
     }
 
+private var scrollViewWithStyles: some View {
+    ScrollView {
+        VStack(alignment: .leading, spacing: 8) {
+            // Mostrar todas as funções de estilo disponíveis
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], spacing: 8) {
+                ForEach(ButtonStyleCase.allCases, id: \.self) { style in
+                    VStack {
+                        Button(sampleText) {
+    // Ação do botão
+}
+                        .buttonStyle(style.style())
+                        .padding(8)
+                        .frame(maxWidth: .infinity)
+                        .background(
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(colors.backgroundB.opacity(0.2))
+                        )
+                    }
+                }
+            }
+        }
+    }
+    .frame(maxHeight: 200)
+}    
     // Preview do componente com as configurações selecionadas
     private var previewComponent: some View {
         VStack {
             // Preview do componente com as configurações atuais
-            Button(buttonTitle) {
-                print("Botão pressionado")
-            }
-            .buttonStyle(selectedStyle.style())
-            .padding()
+        Button(sampleText) {
+    // Ação do botão
+}
+        .buttonStyle(getButtonStyle(style))            
+ .padding()
             .frame(maxWidth: .infinity)
             .background(
                 RoundedRectangle(cornerRadius: 8)
                     .fill(useContrastBackground ? colors.backgroundA : colors.backgroundB.opacity(0.2))
             )
         }
-    }
-
+    }    
     // Área de configuração
     private var configurationSection: some View {
         VStack(spacing: 16) {
-            // Campo para texto do botão
-            TextField("Texto do botão", text: $buttonTitle)
+            // Campo para texto de exemplo
+            TextField("Texto de exemplo", text: $sampleText)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .padding(.horizontal)
-            
-            // Seletor de estilo
-            EnumSelector<ButtonStyleCase>(
-                title: "Estilo",
-                selection: $selectedStyle,
-                columnsCount: 3,
-                height: 120
-            )
-            
+EnumSelector<DSState>(
+    title: "DSState",
+    selection: $state,
+    columnsCount: 3,
+    height: 120
+)
+EnumSelector<CardType>(
+    title: "CardType",
+    selection: $type,
+    columnsCount: 3,
+    height: 120
+)
+EnumSelector<ButtonShape>(
+    title: "ButtonShape",
+    selection: $shape,
+    columnsCount: 3,
+    height: 120
+)
             // Toggles para opções
             VStack {
                 Toggle("Usar fundo contrastante", isOn: $useContrastBackground)
@@ -119,29 +133,35 @@ struct ButtonSample: View, @preconcurrency BaseThemeDependencies {
             }
             .padding(.horizontal)
         }
-    }
-    
+    }    
     // Gera o código Swift para o componente configurado
     private func generateSwiftCode() -> String {
-        // Aqui você pode personalizar a geração de código com base no componente
         var code = "// Código gerado automaticamente\n"
-        
         code += """
-        Button("\(buttonTitle)") {
-            // Ação do botão aqui
-        }
-        .buttonStyle(selectedStyle.style())
-        """
-        
+Button(sampleText) {
+    // Ação do botão
+}
+.buttonStyle(.\(style)())
+"""
         return code
     }
-    
-    // Helper para obter o estilo correspondente à função selecionada
-    private func getSelectedStyle() -> some ButtonStyle {
-        return selectedStyle.style()
-    }
-    
-    // Obtém a cor associada a um StyleCase
+        private func getButtonStyle(_ style: String) -> AnyButtonStyle {
+        let style: any ButtonStyle = switch style {
+        case "contentA":
+    .contentA(shape: shape, state: state)
+case "highlightA":
+    .highlightA(shape: shape, state: state)
+case "backgroundD":
+    .backgroundD(shape: shape, state: state)
+case "cardAppearance":
+    .cardAppearance(type, state: state)
+
+            default:
+        .contentA(shape: shape, state: state)
+        }
+        return AnyButtonStyle(style)
+    }    
+    // Helper para obter a cor associada a um StyleCase
     private func getColorFromStyle<T>(_ style: T) -> ColorName {
         let styleName = String(describing: style)
         
