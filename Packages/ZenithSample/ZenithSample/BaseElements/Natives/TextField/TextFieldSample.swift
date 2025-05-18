@@ -11,6 +11,10 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
     @State private var state: DSState = .enabled
 
     @State private var placeholder: String = ""
+
+    @State private var hasError: Bool = false
+
+    @State private var errorMessage: String = ""
     @State private var showAllStyles = false
     @State private var useContrastBackground = true
     @State private var showFixedHeader = false
@@ -64,7 +68,7 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
                     ForEach(TextFieldStyleCase.allCases, id: \.self) { style in
                         VStack {
                             TextField(placeholder, text: $sampleText)
-                                .textFieldStyle(style.style())
+                                .textFieldStyle(style.style(), placeholder: placeholder, hasError: hasError, errorMessage: $errorMessage)
                                 .padding(8)
                                 .frame(maxWidth: .infinity)
                                 .background(
@@ -84,7 +88,7 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
         VStack {
             // Preview do componente com as configurações atuais
             TextField(placeholder, text: $sampleText)
-                .textFieldStyle(getTextFieldStyle(style))
+                .textFieldStyle(getTextFieldStyle(style), placeholder: placeholder, hasError: hasError, errorMessage: $errorMessage)
                 .padding()
                 .frame(maxWidth: .infinity)
                 .background(
@@ -110,6 +114,11 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
             TextField("placeholder", text: $placeholder)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .padding(.horizontal)
+            Toggle("hasError", isOn: $hasError)
+                .toggleStyle(.default(.highlightA))
+            TextField("errorMessage", text: $errorMessage)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .padding(.horizontal)
             // Toggles para opções
             VStack {
                 Toggle("Usar fundo contrastante", isOn: $useContrastBackground)
@@ -125,9 +134,11 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
     // Gera o código Swift para o componente configurado
     private func generateSwiftCode() -> String {
         var code = "// Código gerado automaticamente\n"
+        let styleFunctionsCases = [".contentA(.\(state.rawValue))", ".contentC(.\(state.rawValue))", ".highlightA(.\(state.rawValue))"]
+        let selectedStyle = styleFunctionsCases.first(where: { $0.contains(style) }) ?? ".\(style)()"
         code += """
         TextField(placeholder, text: $sampleText)
-        .textFieldStyle(.\(style)())
+        .textFieldStyle(\(selectedStyle), placeholder: "\(placeholder)", hasError: \(hasError), errorMessage: .constant("\(errorMessage)"))
         """
         return code
     }

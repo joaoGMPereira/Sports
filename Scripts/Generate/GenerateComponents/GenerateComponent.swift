@@ -323,7 +323,7 @@ final class GenerateComponent {
             styleFunctionsCases.append("\".\(styleFunction.name)(\(parameters))\"")
         }
         
-        var styleParametersCases: [String] = []
+        var styleParametersCases: String = ""
         componentInfo.styleParameters.forEach { styleParameter in
             var parameters = ", "
             parameters += styleParameter.parameters.sampleJoined()
@@ -519,7 +519,7 @@ extension Array where Element == StyleParameter {
             var parameterValue = switch item.type {
                 
             case "String":
-                "\\(\(item.name))"
+                "\"\\(\(item.name))\""
             case "Bool":
                 "\\(\(item.name))"
             case "Int", "Double", "CGFloat":
