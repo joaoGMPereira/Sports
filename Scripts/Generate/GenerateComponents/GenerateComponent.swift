@@ -29,7 +29,7 @@ final class GenerateComponent {
         states.append("\n    @State private var sampleText = \"Exemplo de texto\"")
         
         // Estados específicos para tipo de componente
-        states.append("\n    @State private var style = \"\(componentInfo.styleFunctions.first!.name)\"")
+        states.append("\n    @State private var style: Generate\(componentInfo.name)SampleEnum = .\(componentInfo.styleFunctions.first!.name)")
         
         var styleFunctions = Set<StyleParameter>()
         componentInfo.styleFunctions.forEach { function in
@@ -163,7 +163,7 @@ final class GenerateComponent {
         previewComponent += """
         
                 \(componentInfo.exampleCode)
-                .\(componentInfo.name.firstLowerCased)Style(get\(componentInfo.name)Style(style)\(styleParams))
+                .\(componentInfo.name.firstLowerCased)Style(get\(componentInfo.name)Style(style.rawValue)\(styleParams))
         """
         previewComponent += """
                     \n .padding()
@@ -185,7 +185,13 @@ final class GenerateComponent {
                     // Campo para texto de exemplo
                     TextField("Texto de exemplo", text: $sampleText)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .padding(.horizontal)\n
+                        .padding(.horizontal)
+                    EnumSelector<Generate\(componentInfo.name)SampleEnum>(
+                        title: "\(componentInfo.name) Estilos",
+                        selection: $style,
+                        columnsCount: 3,
+                        height: 120
+                    )\n
         """
         
         styleFunctions.forEach { parameter in
@@ -325,14 +331,14 @@ final class GenerateComponent {
         
         var styleParametersCases: String = ""
         componentInfo.styleParameters.forEach { styleParameter in
-            var parameters = ", "
+            var parameters = styleParameter.parameters.isEmpty ? "" : ", "
             parameters += styleParameter.parameters.sampleJoined()
             styleParametersCases.append(parameters)
         }
         
         generateCode += """
         let styleFunctionsCases = [\(styleFunctionsCases.joined(separator: ", "))]
-        let selectedStyle = styleFunctionsCases.first(where: { $0.contains(style) }) ?? \".\\(style)()\"
+        let selectedStyle = styleFunctionsCases.first(where: { $0.contains(style.rawValue) }) ?? \".\\(style.rawValue)()\"
         code += \"\"\"
         \(componentInfo.exampleCode)
         .\(componentInfo.name.firstLowerCased)Style(\\(selectedStyle)\(styleParametersCases))
@@ -360,90 +366,9 @@ final class GenerateComponent {
         fullContent += configurationSection
         fullContent += generateCode
         fullContent += styleHelpers
-        
-        // Adicionar o helperMethods que estava faltando
-        let helperMethods = """
-            
-            // Helper para obter a cor associada a um StyleCase
-            private func getColorFromStyle<T>(_ style: T) -> ColorName {
-                let styleName = String(describing: style)
-                
-                if styleName.contains("HighlightA") {
-                    return .highlightA
-                } else if styleName.contains("BackgroundA") {
-                    return .backgroundA
-                } else if styleName.contains("BackgroundB") {
-                    return .backgroundB
-                } else if styleName.contains("BackgroundC") {
-                    return .backgroundC
-                } else if styleName.contains("BackgroundD") {
-                    return .backgroundD
-                } else if styleName.contains("ContentA") {
-                    return .contentA
-                } else if styleName.contains("ContentB") {
-                    return .contentB
-                } else if styleName.contains("ContentC") {
-                    return .contentC
-                } else if styleName.contains("Critical") {
-                    return .critical
-                } else if styleName.contains("Attention") {
-                    return .attention
-                } else if styleName.contains("Danger") {
-                    return .danger
-                } else if styleName.contains("Positive") {
-                    return .positive
-                } else {
-                    return .none
-                }
-            }
-            
-            // Gera um fundo de contraste adequado para a cor especificada
-            private func getContrastBackground(for colorName: ColorName) -> Color {
-                let color = colors.color(by: colorName) ?? colors.backgroundB
-                
-                // Extrair componentes RGB da cor
-                let uiColor = UIColor(color)
-                var red: CGFloat = 0
-                var green: CGFloat = 0
-                var blue: CGFloat = 0
-                var alpha: CGFloat = 0
-                
-                uiColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
-                
-                // Calcular luminosidade da cor (fórmula perceptual)
-                let luminance = 0.299 * red + 0.587 * green + 0.114 * blue
-                
-                // Verificar se estamos lidando com a cor backgroundC ou cores com luminosidade similar
-                if (abs(luminance - 0.27) < 0.1) { // 0.27 é aproximadamente a luminosidade de #444444
-                    // Para cinzas médios como backgroundC, criar um contraste mais definido
-                    if luminance < 0.3 {
-                        // Para cinzas que tendem ao escuro, usar um contraste bem claro
-                        return Color.white.opacity(0.25)
-                    } else {
-                        // Para cinzas que tendem ao claro, usar um contraste bem escuro
-                        return Color.black.opacity(0.15)
-                    }
-                }
-                
-                // Para as demais cores, manter a lógica anterior mas aumentar o contraste
-                if luminance < 0.5 {
-                    // Para cores escuras, gerar um contraste claro
-                    return Color(red: min(red + 0.4, 1.0), 
-                                green: min(green + 0.4, 1.0), 
-                                blue: min(blue + 0.4, 1.0))
-                        .opacity(0.35)
-                } else {
-                    // Para cores claras, gerar um contraste escuro
-                    return Color(red: max(red - 0.25, 0.0), 
-                                green: max(green - 0.25, 0.0), 
-                                blue: max(blue - 0.25, 0.0))
-                        .opacity(0.2)
-                }
-            }
-        """
-        
-        fullContent += helperMethods
-        fullContent += "\n}"  // Fechar a struct
+
+        fullContent += "\n}\n"
+        fullContent += generateEnumStyle(with: componentInfo)
         
         return fullContent
     }
@@ -473,6 +398,24 @@ final class GenerateComponent {
                 \(defaultCase)
                 }
                 return Any\(name)Style(style)
+            }
+        """
+    }
+    
+    func generateEnumStyle(with componentInfo: ComponentInfo) -> String {
+        let name = componentInfo.name
+        var cases = ""
+        componentInfo.styleFunctions.forEach { styleFunction in
+            var parameters = ""
+            parameters += styleFunction.parameters.joined()
+            cases += "case \(styleFunction.name)\n"
+        }
+        
+        return """
+            enum Generate\(componentInfo.name)SampleEnum: String, CaseIterable, Identifiable {
+                public var id: Self { self }
+        
+                \(cases)
             }
         """
     }

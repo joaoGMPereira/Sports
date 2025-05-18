@@ -6,15 +6,15 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) var themeConfigurator
     @State private var sampleText = "Exemplo de texto"
 
-    @State private var style = "contentA"
+    @State private var style: GenerateTextFieldSampleEnum = .contentA
 
     @State private var state: DSState = .enabled
 
     @State private var placeholder: String = ""
 
-    @State private var hasError: Bool = false
-
     @State private var errorMessage: String = ""
+
+    @State private var hasError: Bool = false
     @State private var showAllStyles = false
     @State private var useContrastBackground = true
     @State private var showFixedHeader = false
@@ -88,7 +88,7 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
         VStack {
             // Preview do componente com as configurações atuais
             TextField(placeholder, text: $sampleText)
-                .textFieldStyle(getTextFieldStyle(style), placeholder: placeholder, hasError: hasError, errorMessage: $errorMessage)
+                .textFieldStyle(getTextFieldStyle(style.rawValue), placeholder: placeholder, hasError: hasError, errorMessage: $errorMessage)
                 .padding()
                 .frame(maxWidth: .infinity)
                 .background(
@@ -105,6 +105,12 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
             TextField("Texto de exemplo", text: $sampleText)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .padding(.horizontal)
+            EnumSelector<GenerateTextFieldSampleEnum>(
+                title: "TextField Estilos",
+                selection: $style,
+                columnsCount: 3,
+                height: 120
+            )
             EnumSelector<DSState>(
                 title: "DSState",
                 selection: $state,
@@ -114,11 +120,11 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
             TextField("placeholder", text: $placeholder)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .padding(.horizontal)
-            Toggle("hasError", isOn: $hasError)
-                .toggleStyle(.default(.highlightA))
             TextField("errorMessage", text: $errorMessage)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .padding(.horizontal)
+            Toggle("hasError", isOn: $hasError)
+                .toggleStyle(.default(.highlightA))
             // Toggles para opções
             VStack {
                 Toggle("Usar fundo contrastante", isOn: $useContrastBackground)
@@ -135,7 +141,7 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
     private func generateSwiftCode() -> String {
         var code = "// Código gerado automaticamente\n"
         let styleFunctionsCases = [".contentA(.\(state.rawValue))", ".contentC(.\(state.rawValue))", ".highlightA(.\(state.rawValue))"]
-        let selectedStyle = styleFunctionsCases.first(where: { $0.contains(style) }) ?? ".\(style)()"
+        let selectedStyle = styleFunctionsCases.first(where: { $0.contains(style.rawValue) }) ?? ".\(style.rawValue)()"
         code += """
         TextField(placeholder, text: $sampleText)
         .textFieldStyle(\(selectedStyle), placeholder: "\(placeholder)", hasError: \(hasError), errorMessage: .constant("\(errorMessage)"))
@@ -156,81 +162,12 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
         }
         return AnyTextFieldStyle(style)
     }
+}
 
-    // Helper para obter a cor associada a um StyleCase
-    private func getColorFromStyle(_ style: some Any) -> ColorName {
-        let styleName = String(describing: style)
+enum GenerateTextFieldSampleEnum: String, CaseIterable, Identifiable {
+    public var id: Self { self }
 
-        if styleName.contains("HighlightA") {
-            return .highlightA
-        } else if styleName.contains("BackgroundA") {
-            return .backgroundA
-        } else if styleName.contains("BackgroundB") {
-            return .backgroundB
-        } else if styleName.contains("BackgroundC") {
-            return .backgroundC
-        } else if styleName.contains("BackgroundD") {
-            return .backgroundD
-        } else if styleName.contains("ContentA") {
-            return .contentA
-        } else if styleName.contains("ContentB") {
-            return .contentB
-        } else if styleName.contains("ContentC") {
-            return .contentC
-        } else if styleName.contains("Critical") {
-            return .critical
-        } else if styleName.contains("Attention") {
-            return .attention
-        } else if styleName.contains("Danger") {
-            return .danger
-        } else if styleName.contains("Positive") {
-            return .positive
-        } else {
-            return .none
-        }
-    }
-
-    // Gera um fundo de contraste adequado para a cor especificada
-    private func getContrastBackground(for colorName: ColorName) -> Color {
-        let color = colors.color(by: colorName) ?? colors.backgroundB
-
-        // Extrair componentes RGB da cor
-        let uiColor = UIColor(color)
-        var red: CGFloat = 0
-        var green: CGFloat = 0
-        var blue: CGFloat = 0
-        var alpha: CGFloat = 0
-
-        uiColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
-
-        // Calcular luminosidade da cor (fórmula perceptual)
-        let luminance = 0.299 * red + 0.587 * green + 0.114 * blue
-
-        // Verificar se estamos lidando com a cor backgroundC ou cores com luminosidade similar
-        if abs(luminance - 0.27) < 0.1 { // 0.27 é aproximadamente a luminosidade de #444444
-            // Para cinzas médios como backgroundC, criar um contraste mais definido
-            if luminance < 0.3 {
-                // Para cinzas que tendem ao escuro, usar um contraste bem claro
-                return Color.white.opacity(0.25)
-            } else {
-                // Para cinzas que tendem ao claro, usar um contraste bem escuro
-                return Color.black.opacity(0.15)
-            }
-        }
-
-        // Para as demais cores, manter a lógica anterior mas aumentar o contraste
-        if luminance < 0.5 {
-            // Para cores escuras, gerar um contraste claro
-            return Color(red: min(red + 0.4, 1.0),
-                         green: min(green + 0.4, 1.0),
-                         blue: min(blue + 0.4, 1.0))
-                .opacity(0.35)
-        } else {
-            // Para cores claras, gerar um contraste escuro
-            return Color(red: max(red - 0.25, 0.0),
-                         green: max(green - 0.25, 0.0),
-                         blue: max(blue - 0.25, 0.0))
-                .opacity(0.2)
-        }
-    }
+    case contentA
+    case contentC
+    case highlightA
 }

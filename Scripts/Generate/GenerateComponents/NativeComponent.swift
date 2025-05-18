@@ -36,9 +36,7 @@ let NATIVE_COMPONENTS: [String: NativeComponent] = [
         defaultContent: "Text",
         defaultStyleCase: "smallContentA",
         contextualModule: false,
-        initParams: [
-            NativeComponentParameter(label: nil, name: "content", type: "String", defaultValue: "\"\"", isAction: false)
-        ],
+        initParams: [],
         exampleCode: """
         Text(sampleText)
         """
