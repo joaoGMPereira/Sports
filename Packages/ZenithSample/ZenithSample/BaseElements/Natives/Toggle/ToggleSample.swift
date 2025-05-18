@@ -98,8 +98,8 @@ struct ToggleSample: View, @preconcurrency BaseThemeDependencies {
     private var configurationSection: some View {
         VStack(spacing: 16) {
             // Campo para texto de exemplo
-            TextField("Texto de exemplo", text: $sampleText)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
+            TextField("", text: $sampleText)
+                .textFieldStyle(.contentA(), placeholder: "Texto de exemplo")
                 .padding(.horizontal)
             EnumSelector<GenerateToggleSampleEnum>(
                 title: "Toggle Estilos",
@@ -107,14 +107,17 @@ struct ToggleSample: View, @preconcurrency BaseThemeDependencies {
                 columnsCount: 3,
                 height: 120
             )
+            .padding(.horizontal)
             EnumSelector<ColorName>(
                 title: "ColorName",
                 selection: $color,
                 columnsCount: 3,
                 height: 120
             )
+            .padding(.horizontal)
             Toggle("isOn", isOn: $isOn)
                 .toggleStyle(.default(.highlightA))
+                .padding(.horizontal)
             // Toggles para opções
             VStack {
                 Toggle("Usar fundo contrastante", isOn: $useContrastBackground)
@@ -130,7 +133,7 @@ struct ToggleSample: View, @preconcurrency BaseThemeDependencies {
     // Gera o código Swift para o componente configurado
     private func generateSwiftCode() -> String {
         var code = "// Código gerado automaticamente\n"
-        let styleFunctionsCases = [".small(.\(color.rawValue))"]
+        let styleFunctionsCases = [".small(.\(color.rawValue))", ".default(.\(color.rawValue))"]
         let selectedStyle = styleFunctionsCases.first(where: { $0.contains(style.rawValue) }) ?? ".\(style.rawValue)()"
         code += """
         Toggle(sampleText, isOn: $isOn)
@@ -144,6 +147,9 @@ struct ToggleSample: View, @preconcurrency BaseThemeDependencies {
         case "small":
             .small(color)
 
+        case "default":
+            .default(color)
+
         default:
             .small(color)
         }
@@ -155,4 +161,5 @@ enum GenerateToggleSampleEnum: String, CaseIterable, Identifiable {
     public var id: Self { self }
 
     case small
+    case `default`
 }

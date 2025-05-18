@@ -10,9 +10,9 @@ struct ButtonSample: View, @preconcurrency BaseThemeDependencies {
 
     @State private var type: CardType = .fill
 
-    @State private var state: DSState = .enabled
-
     @State private var shape: ButtonShape = .rounded(cornerRadius: .infinity)
+
+    @State private var state: DSState = .enabled
     @State private var showAllStyles = false
     @State private var useContrastBackground = true
     @State private var showFixedHeader = false
@@ -104,8 +104,8 @@ struct ButtonSample: View, @preconcurrency BaseThemeDependencies {
     private var configurationSection: some View {
         VStack(spacing: 16) {
             // Campo para texto de exemplo
-            TextField("Texto de exemplo", text: $sampleText)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
+            TextField("", text: $sampleText)
+                .textFieldStyle(.contentA(), placeholder: "Texto de exemplo")
                 .padding(.horizontal)
             EnumSelector<GenerateButtonSampleEnum>(
                 title: "Button Estilos",
@@ -113,24 +113,28 @@ struct ButtonSample: View, @preconcurrency BaseThemeDependencies {
                 columnsCount: 3,
                 height: 120
             )
+            .padding(.horizontal)
             EnumSelector<CardType>(
                 title: "CardType",
                 selection: $type,
                 columnsCount: 3,
                 height: 120
             )
-            EnumSelector<DSState>(
-                title: "DSState",
-                selection: $state,
-                columnsCount: 3,
-                height: 120
-            )
+            .padding(.horizontal)
             EnumSelector<ButtonShape>(
                 title: "ButtonShape",
                 selection: $shape,
                 columnsCount: 3,
                 height: 120
             )
+            .padding(.horizontal)
+            EnumSelector<DSState>(
+                title: "DSState",
+                selection: $state,
+                columnsCount: 3,
+                height: 120
+            )
+            .padding(.horizontal)
             // Toggles para opções
             VStack {
                 Toggle("Usar fundo contrastante", isOn: $useContrastBackground)

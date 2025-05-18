@@ -96,8 +96,8 @@ struct TextSample: View, @preconcurrency BaseThemeDependencies {
     private var configurationSection: some View {
         VStack(spacing: 16) {
             // Campo para texto de exemplo
-            TextField("Texto de exemplo", text: $sampleText)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
+            TextField("", text: $sampleText)
+                .textFieldStyle(.contentA(), placeholder: "Texto de exemplo")
                 .padding(.horizontal)
             EnumSelector<GenerateTextSampleEnum>(
                 title: "Text Estilos",
@@ -105,12 +105,14 @@ struct TextSample: View, @preconcurrency BaseThemeDependencies {
                 columnsCount: 3,
                 height: 120
             )
+            .padding(.horizontal)
             EnumSelector<ColorName>(
                 title: "ColorName",
                 selection: $color,
                 columnsCount: 3,
                 height: 120
             )
+            .padding(.horizontal)
             // Toggles para opções
             VStack {
                 Toggle("Usar fundo contrastante", isOn: $useContrastBackground)

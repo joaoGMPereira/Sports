@@ -10,9 +10,9 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
 
     @State private var state: DSState = .enabled
 
-    @State private var placeholder: String = ""
-
     @State private var errorMessage: String = ""
+
+    @State private var placeholder: String = ""
 
     @State private var hasError: Bool = false
     @State private var showAllStyles = false
@@ -102,8 +102,8 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
     private var configurationSection: some View {
         VStack(spacing: 16) {
             // Campo para texto de exemplo
-            TextField("Texto de exemplo", text: $sampleText)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
+            TextField("", text: $sampleText)
+                .textFieldStyle(.contentA(), placeholder: "Texto de exemplo")
                 .padding(.horizontal)
             EnumSelector<GenerateTextFieldSampleEnum>(
                 title: "TextField Estilos",
@@ -111,20 +111,23 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
                 columnsCount: 3,
                 height: 120
             )
+            .padding(.horizontal)
             EnumSelector<DSState>(
                 title: "DSState",
                 selection: $state,
                 columnsCount: 3,
                 height: 120
             )
-            TextField("placeholder", text: $placeholder)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
+            .padding(.horizontal)
+            TextField("", text: $errorMessage)
+                .textFieldStyle(.contentA(), placeholder: "errorMessage")
                 .padding(.horizontal)
-            TextField("errorMessage", text: $errorMessage)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
+            TextField("", text: $placeholder)
+                .textFieldStyle(.contentA(), placeholder: "placeholder")
                 .padding(.horizontal)
             Toggle("hasError", isOn: $hasError)
                 .toggleStyle(.default(.highlightA))
+                .padding(.horizontal)
             // Toggles para opções
             VStack {
                 Toggle("Usar fundo contrastante", isOn: $useContrastBackground)

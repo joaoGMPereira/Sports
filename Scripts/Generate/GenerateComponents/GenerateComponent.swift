@@ -183,34 +183,37 @@ final class GenerateComponent {
             private var configurationSection: some View {
                 VStack(spacing: 16) {
                     // Campo para texto de exemplo
-                    TextField("Texto de exemplo", text: $sampleText)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                    TextField("", text: $sampleText)
+                        .textFieldStyle(.contentA(), placeholder: "Texto de exemplo")
                         .padding(.horizontal)
                     EnumSelector<Generate\(componentInfo.name)SampleEnum>(
                         title: "\(componentInfo.name) Estilos",
                         selection: $style,
                         columnsCount: 3,
                         height: 120
-                    )\n
+                    )
+                    .padding(.horizontal)\n
         """
         
         styleFunctions.forEach { parameter in
             let parameterComponent = switch parameter.type {
             case "String":
                 """
-                TextField("\(parameter.name)", text: $\(parameter.name))
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                TextField("", text: $\(parameter.name))
+                    .textFieldStyle(.contentA(), placeholder: "\(parameter.name)")
                     .padding(.horizontal)\n
                 """
             case "Bool":
                 """
                 Toggle("\(parameter.name)", isOn: $\(parameter.name))
-                    .toggleStyle(.default(.highlightA))\n
+                    .toggleStyle(.default(.highlightA))
+                    .padding(.horizontal)\n
                 """
             case "Int", "Double", "CGFloat":
                 """
                 Slider(value: $\(parameter.name), in: 0...100, step: 1)
-                    .accentColor(colors.highlightA)\n
+                    .accentColor(colors.highlightA)
+                    .padding(.horizontal)\n
                 """
             default:
                 if parameter.type.contains("->") {
@@ -222,7 +225,8 @@ final class GenerateComponent {
                         selection: $\(parameter.name),
                         columnsCount: 3,
                         height: 120
-                    )\n
+                    )
+                    .padding(.horizontal)\n
                     """
                 }
             }
@@ -233,19 +237,21 @@ final class GenerateComponent {
             let parameterComponent = switch parameter.type {
             case "String":
                 """
-                TextField("\(parameter.name)", text: $\(parameter.name))
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                TextField("", text: $\(parameter.name))
+                    .textFieldStyle(.contentA(), placeholder: "\(parameter.name)")
                     .padding(.horizontal)\n
                 """
             case "Bool":
                 """
                 Toggle("\(parameter.name)", isOn: $\(parameter.name))
-                    .toggleStyle(.default(.highlightA))\n
+                    .toggleStyle(.default(.highlightA))
+                    .padding(.horizontal)\n
                 """
             case "Int", "Double", "CGFloat":
                 """
                 Slider(value: $\(parameter.name), in: 0...100, step: 1)
-                    .accentColor(colors.highlightA)\n
+                    .accentColor(colors.highlightA)
+                    .padding(.horizontal)\n
                 """
             default:
                 if parameter.type.contains("->") {
@@ -257,7 +263,8 @@ final class GenerateComponent {
                         selection: $\(parameter.name),
                         columnsCount: 3,
                         height: 120
-                    )\n
+                    )
+                    .padding(.horizontal)\n
                     """
                 }
             }
@@ -268,19 +275,21 @@ final class GenerateComponent {
             let parameterComponent = switch parameter.type {
             case "String":
                 """
-                TextField("\(parameter.name)", text: $\(parameter.name))
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                TextField("", text: $\(parameter.name))
+                    .textFieldStyle(.contentA(), placeholder: "\(parameter.name)")
                     .padding(.horizontal)\n
                 """
             case "Bool":
                 """
                 Toggle("\(parameter.name)", isOn: $\(parameter.name))
-                    .toggleStyle(.default(.highlightA))\n
+                    .toggleStyle(.default(.highlightA))
+                    .padding(.horizontal)\n
                 """
             case "Int", "Double", "CGFloat":
                 """
                 Slider(value: $\(parameter.name), in: 0...100, step: 1)
-                    .accentColor(colors.highlightA)\n
+                    .accentColor(colors.highlightA)
+                    .padding(.horizontal)\n
                 """
             default:
                 if parameter.type.contains("->") {
@@ -292,7 +301,8 @@ final class GenerateComponent {
                         selection: $\(parameter.name),
                         columnsCount: 3,
                         height: 120
-                    )\n
+                    )
+                    .padding(.horizontal)\n
                     """
                 }
             }
@@ -408,7 +418,11 @@ final class GenerateComponent {
         componentInfo.styleFunctions.forEach { styleFunction in
             var parameters = ""
             parameters += styleFunction.parameters.joined()
-            cases += "case \(styleFunction.name)\n"
+            var name = styleFunction.name
+            if styleFunction.name == "default" {
+                name = "`\(name)`"
+            }
+            cases += "case \(name)\n"
         }
         
         return """

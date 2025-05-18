@@ -331,6 +331,7 @@ final class ComponentConfiguration {
     
     func extractFunctionsFromBlock(_ content: String) -> [StyleConfig] {
         var functions: [StyleConfig] = []
+        var content = content.replacingOccurrences(of: "`", with: "")
         
         // Padrão para encontrar funções estáticas que retornam Self
         // Usamos um padrão mais robusto que consegue lidar com parênteses aninhados nos valores padrão
@@ -670,12 +671,6 @@ final class ComponentConfiguration {
                         Log.log("Erro ao listar arquivos em \(path): \(error)", level: .error)
                     }
                 }
-            }
-            
-            // Se não encontrou style cases ou funções, definir valores padrão
-            if componentInfo.styleCases.isEmpty && componentInfo.styleFunctions.isEmpty {
-                componentInfo.styleCases = [nativeInfo.defaultStyleCase]
-                Log.log("Usando caso de estilo padrão: \(componentInfo.styleCases)")
             }
             
             return componentInfo
