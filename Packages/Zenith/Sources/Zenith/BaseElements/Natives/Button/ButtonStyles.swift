@@ -264,7 +264,7 @@ public enum ButtonShape: Sendable, CaseIterable, Identifiable, Hashable {
     
     public typealias RawValue = String
     
-    public static let allCases: [ButtonShape] = [.circle, .rounded(cornerRadius: 24)]
+    public static let allCases: [ButtonShape] = [.circle, .rounded(cornerRadius: .infinity)]
     
     public var id: String {
         rawValue
@@ -273,7 +273,10 @@ public enum ButtonShape: Sendable, CaseIterable, Identifiable, Hashable {
     public var rawValue: RawValue {
         switch self {
         case .rounded(let cornerRadius):
-            return "rounded(\(cornerRadius))"
+            if cornerRadius == .infinity {
+                return "rounded(cornerRadius: .infinity)"
+            }
+            return "rounded(cornerRadius: \(cornerRadius))"
         case .circle:
             return "circle"
         }

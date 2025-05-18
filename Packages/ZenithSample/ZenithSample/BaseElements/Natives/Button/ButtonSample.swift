@@ -8,11 +8,11 @@ struct ButtonSample: View, @preconcurrency BaseThemeDependencies {
 
     @State private var style: GenerateButtonSampleEnum = .contentA
 
-    @State private var type: CardType = .fill
+    @State private var state: DSState = .enabled
 
     @State private var shape: ButtonShape = .rounded(cornerRadius: .infinity)
 
-    @State private var state: DSState = .enabled
+    @State private var type: CardType = .fill
     @State private var showAllStyles = false
     @State private var useContrastBackground = true
     @State private var showFixedHeader = false
@@ -114,9 +114,9 @@ struct ButtonSample: View, @preconcurrency BaseThemeDependencies {
                 height: 120
             )
             .padding(.horizontal)
-            EnumSelector<CardType>(
-                title: "CardType",
-                selection: $type,
+            EnumSelector<DSState>(
+                title: "DSState",
+                selection: $state,
                 columnsCount: 3,
                 height: 120
             )
@@ -128,9 +128,9 @@ struct ButtonSample: View, @preconcurrency BaseThemeDependencies {
                 height: 120
             )
             .padding(.horizontal)
-            EnumSelector<DSState>(
-                title: "DSState",
-                selection: $state,
+            EnumSelector<CardType>(
+                title: "CardType",
+                selection: $type,
                 columnsCount: 3,
                 height: 120
             )
@@ -142,6 +142,19 @@ struct ButtonSample: View, @preconcurrency BaseThemeDependencies {
 
                 Toggle("Mostrar Todos os Estilos", isOn: $showAllStyles)
                     .toggleStyle(.default(.highlightA))
+                // Código gerado automaticamente
+                Button("Exe") {
+                    // Ação do botão
+                }
+                .buttonStyle(.cardAppearance(.fill, state: .enabled))
+                // Código gerado automaticamente
+                Button("Exe") {
+                    // Ação do botão
+                }
+                .buttonStyle(.cardAppearance(.bordered, state: .enabled))
+                // Código gerado automaticamente
+                TextField("", text: .constant("Exemplo de texto"))
+                .textFieldStyle(.contentA(.enabled), placeholder: "4343535353535353535", hasError: false, errorMessage: .constant("423423423423423"))
             }
             .padding(.horizontal)
         }
@@ -153,7 +166,7 @@ struct ButtonSample: View, @preconcurrency BaseThemeDependencies {
         let styleFunctionsCases = [".contentA(shape: .\(shape.rawValue), state: .\(state.rawValue))", ".highlightA(shape: .\(shape.rawValue), state: .\(state.rawValue))", ".backgroundD(shape: .\(shape.rawValue), state: .\(state.rawValue))", ".cardAppearance(.\(type.rawValue), state: .\(state.rawValue))"]
         let selectedStyle = styleFunctionsCases.first(where: { $0.contains(style.rawValue) }) ?? ".\(style.rawValue)()"
         code += """
-        Button(sampleText) {
+        Button("\(sampleText)") {
             // Ação do botão
         }
         .buttonStyle(\(selectedStyle))

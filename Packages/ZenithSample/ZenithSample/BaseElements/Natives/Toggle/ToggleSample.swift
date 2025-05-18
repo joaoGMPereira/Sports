@@ -136,7 +136,7 @@ struct ToggleSample: View, @preconcurrency BaseThemeDependencies {
         let styleFunctionsCases = [".small(.\(color.rawValue))", ".default(.\(color.rawValue))"]
         let selectedStyle = styleFunctionsCases.first(where: { $0.contains(style.rawValue) }) ?? ".\(style.rawValue)()"
         code += """
-        Toggle(sampleText, isOn: $isOn)
+        Toggle("\(sampleText)", isOn: $isOn)
         .toggleStyle(\(selectedStyle))
         """
         return code

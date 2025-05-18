@@ -350,7 +350,7 @@ final class GenerateComponent {
         let styleFunctionsCases = [\(styleFunctionsCases.joined(separator: ", "))]
         let selectedStyle = styleFunctionsCases.first(where: { $0.contains(style.rawValue) }) ?? \".\\(style.rawValue)()\"
         code += \"\"\"
-        \(componentInfo.exampleCode)
+        \(componentInfo.generateCode)
         .\(componentInfo.name.firstLowerCased)Style(\\(selectedStyle)\(styleParametersCases))
         \"\"\"\n
         """

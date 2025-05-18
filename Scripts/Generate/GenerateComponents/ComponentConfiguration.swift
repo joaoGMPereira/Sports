@@ -55,6 +55,8 @@ class ComponentInfo {
     var hasActionParam: Bool = false
     var isNative: Bool = false
     var exampleCode: String = ""
+    var generateCode: String = ""
+    
     var contextualModule: Bool = false
     
     init(name: String, typePath: String) {
@@ -626,6 +628,7 @@ final class ComponentConfiguration {
             }
             
             componentInfo.exampleCode = nativeInfo.exampleCode
+            componentInfo.generateCode = nativeInfo.generateCode
             
             // Verificar se o componente tem parâmetro de ação
             for param in componentInfo.publicInitParams where param.isAction {

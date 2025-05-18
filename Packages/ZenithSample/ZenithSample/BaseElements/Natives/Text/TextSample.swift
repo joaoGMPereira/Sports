@@ -131,7 +131,7 @@ struct TextSample: View, @preconcurrency BaseThemeDependencies {
         let styleFunctionsCases = [".small(.\(color.rawValue))", ".smallBold(.\(color.rawValue))", ".medium(.\(color.rawValue))", ".mediumBold(.\(color.rawValue))", ".large(.\(color.rawValue))", ".largeBold(.\(color.rawValue))", ".bigBold(.\(color.rawValue))"]
         let selectedStyle = styleFunctionsCases.first(where: { $0.contains(style.rawValue) }) ?? ".\(style.rawValue)()"
         code += """
-        Text(sampleText)
+        Text("\(sampleText)")
         .textStyle(\(selectedStyle))
         """
         return code

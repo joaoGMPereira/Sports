@@ -10,11 +10,11 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
 
     @State private var state: DSState = .enabled
 
-    @State private var errorMessage: String = ""
-
     @State private var placeholder: String = ""
 
     @State private var hasError: Bool = false
+
+    @State private var errorMessage: String = ""
     @State private var showAllStyles = false
     @State private var useContrastBackground = true
     @State private var showFixedHeader = false
@@ -67,7 +67,7 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], spacing: 8) {
                     ForEach(TextFieldStyleCase.allCases, id: \.self) { style in
                         VStack {
-                            TextField(placeholder, text: $sampleText)
+                            TextField("", text: $sampleText)
                                 .textFieldStyle(style.style(), placeholder: placeholder, hasError: hasError, errorMessage: $errorMessage)
                                 .padding(8)
                                 .frame(maxWidth: .infinity)
@@ -87,7 +87,7 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
     private var previewComponent: some View {
         VStack {
             // Preview do componente com as configurações atuais
-            TextField(placeholder, text: $sampleText)
+            TextField("", text: $sampleText)
                 .textFieldStyle(getTextFieldStyle(style.rawValue), placeholder: placeholder, hasError: hasError, errorMessage: $errorMessage)
                 .padding()
                 .frame(maxWidth: .infinity)
@@ -119,14 +119,14 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
                 height: 120
             )
             .padding(.horizontal)
-            TextField("", text: $errorMessage)
-                .textFieldStyle(.contentA(), placeholder: "errorMessage")
-                .padding(.horizontal)
             TextField("", text: $placeholder)
                 .textFieldStyle(.contentA(), placeholder: "placeholder")
                 .padding(.horizontal)
             Toggle("hasError", isOn: $hasError)
                 .toggleStyle(.default(.highlightA))
+                .padding(.horizontal)
+            TextField("", text: $errorMessage)
+                .textFieldStyle(.contentA(), placeholder: "errorMessage")
                 .padding(.horizontal)
             // Toggles para opções
             VStack {
@@ -146,7 +146,7 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
         let styleFunctionsCases = [".contentA(.\(state.rawValue))", ".contentC(.\(state.rawValue))", ".highlightA(.\(state.rawValue))"]
         let selectedStyle = styleFunctionsCases.first(where: { $0.contains(style.rawValue) }) ?? ".\(style.rawValue)()"
         code += """
-        TextField(placeholder, text: $sampleText)
+        TextField("", text: .constant("\(sampleText)"))
         .textFieldStyle(\(selectedStyle), placeholder: "\(placeholder)", hasError: \(hasError), errorMessage: .constant("\(errorMessage)"))
         """
         return code

@@ -16,6 +16,7 @@ struct NativeComponent {
     let contextualModule: Bool
     let initParams: [NativeComponentParameter]
     let exampleCode: String
+    let generateCode: String
 }
 
 let NATIVE_COMPONENTS: [String: NativeComponent] = [
@@ -29,6 +30,11 @@ let NATIVE_COMPONENTS: [String: NativeComponent] = [
         Button(sampleText) {
             // Ação do botão
         }
+        """,
+        generateCode: """
+        Button("\\(sampleText)") {
+            // Ação do botão
+        }
         """
     ),
     "Text": NativeComponent(
@@ -39,6 +45,9 @@ let NATIVE_COMPONENTS: [String: NativeComponent] = [
         initParams: [],
         exampleCode: """
         Text(sampleText)
+        """,
+        generateCode: """
+        Text("\\(sampleText)")
         """
     ),
     "Divider": NativeComponent(
@@ -48,6 +57,9 @@ let NATIVE_COMPONENTS: [String: NativeComponent] = [
         contextualModule: false,
         initParams: [],
         exampleCode: """
+        Divider()
+        """,
+        generateCode: """
         Divider()
         """
     ),
@@ -61,6 +73,9 @@ let NATIVE_COMPONENTS: [String: NativeComponent] = [
         ],
         exampleCode: """
         Toggle(sampleText, isOn: $isOn)
+        """,
+        generateCode: """
+        Toggle("\\(sampleText)", isOn: $isOn)
         """
     ),
     "TextField": NativeComponent(
@@ -70,8 +85,10 @@ let NATIVE_COMPONENTS: [String: NativeComponent] = [
         contextualModule: true,
         initParams: [],
         exampleCode: """
-        TextField(placeholder, text: $sampleText)
+        TextField("", text: $sampleText)
+        """,
+        generateCode: """
+        TextField("", text: .constant("\\(sampleText)"))
         """
     )
 ]
-

@@ -11,7 +11,7 @@ import Foundation
 
 let homeDir = FileManager.default.homeDirectoryForCurrentUser.path
 let CLEAN_PACKAGES_DIR = false // Define se deve limpar mudanças no diretório de pacotes
-let CHECKOUT_REPO = true // Define se deve fazer checkout do repositório antes de executar
+let CHECKOUT_REPO = false // Define se deve fazer checkout do repositório antes de executar
 let ZENITH_PATH = "\(homeDir)/KettleGym/Packages/Zenith"
 let ZENITH_SAMPLE_PATH = "\(homeDir)/KettleGym/Packages/ZenithSample"
 let COMPONENTS_PATH = "\(ZENITH_PATH)/Sources/Zenith"
