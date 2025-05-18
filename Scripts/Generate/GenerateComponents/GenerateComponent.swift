@@ -31,13 +31,13 @@ final class GenerateComponent {
         // Estados específicos para tipo de componente
         states.append("\n    @State private var style = \"\(componentInfo.styleFunctions.first!.name)\"")
         
-        var uniqueParameters = Set<StyleParameter>()
+        var styleFunctions = Set<StyleParameter>()
         componentInfo.styleFunctions.forEach { function in
             function.parameters.forEach { parameter in
-                uniqueParameters.insert(parameter)
+                styleFunctions.insert(parameter)
             }
         }
-        uniqueParameters.forEach { parameter in
+        styleFunctions.forEach { parameter in
             if let defaultValue = parameter.defaultValue {
                 states.append("\n    @State private var \(parameter.name): \(parameter.type) = \(defaultValue)")
             } else {
@@ -45,9 +45,23 @@ final class GenerateComponent {
             }
         }
         
-        let uniqueInitParams = componentInfo.publicInitParams
+        var styleParameters = Set<StyleParameter>()
+        componentInfo.styleParameters.forEach { function in
+            function.parameters.forEach { parameter in
+                styleParameters.insert(parameter)
+            }
+        }
+        styleParameters.forEach { parameter in
+            if let defaultValue = parameter.defaultValue {
+                states.append("\n    @State private var \(parameter.name): \(parameter.type) = \(defaultValue)")
+            } else {
+                states.append("\n    @State private var \(parameter.name): (\(parameter.type))?")
+            }
+        }
+        
+        let initParams = componentInfo.publicInitParams
 
-        uniqueInitParams.forEach { initParam in
+        initParams.forEach { initParam in
             if let defaultValue = initParam.defaultValue {
                 states.append("\n    @State private var \(initParam.name): \(initParam.type) = \(defaultValue)")
             } else {
@@ -107,6 +121,9 @@ final class GenerateComponent {
             }
         """
         
+        var styleParams = "\(styleParameters.isEmpty ? "" : ",")"
+        styleParams += Array(styleParameters).joined()
+        
         // ScrollView com todos os estilos baseado no tipo de componente
         var scrollView = "\n\n"
         scrollView += """
@@ -118,7 +135,7 @@ final class GenerateComponent {
                             ForEach(\(componentInfo.name)StyleCase.allCases, id: \\.self) { style in
                                 VStack {
                                     \(componentInfo.exampleCode)
-                                    .\(componentInfo.name.firstLowerCased)Style(style.style())
+                                    .\(componentInfo.name.firstLowerCased)Style(style.style()\(styleParams))
                                     .padding(8)
                                     .frame(maxWidth: .infinity)
                                     .background(
@@ -142,11 +159,11 @@ final class GenerateComponent {
                 VStack {
                     // Preview do componente com as configurações atuais
         """
-        
+
         previewComponent += """
         
                 \(componentInfo.exampleCode)
-                .\(componentInfo.name.firstLowerCased)Style(get\(componentInfo.name)Style(style))
+                .\(componentInfo.name.firstLowerCased)Style(get\(componentInfo.name)Style(style)\(styleParams))
         """
         previewComponent += """
                     \n .padding()
@@ -171,7 +188,7 @@ final class GenerateComponent {
                         .padding(.horizontal)\n
         """
         
-        uniqueParameters.forEach { parameter in
+        styleFunctions.forEach { parameter in
             let parameterComponent = switch parameter.type {
             case "String":
                 """
@@ -206,7 +223,42 @@ final class GenerateComponent {
             configurationSection += parameterComponent
         }
         
-        uniqueInitParams.forEach { parameter in
+        styleParameters.forEach { parameter in
+            let parameterComponent = switch parameter.type {
+            case "String":
+                """
+                TextField("\(parameter.name)", text: $\(parameter.name))
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .padding(.horizontal)\n
+                """
+            case "Bool":
+                """
+                Toggle("\(parameter.name)", isOn: $\(parameter.name))
+                    .toggleStyle(.default(.highlightA))\n
+                """
+            case "Int", "Double", "CGFloat":
+                """
+                Slider(value: $\(parameter.name), in: 0...100, step: 1)
+                    .accentColor(colors.highlightA)\n
+                """
+            default:
+                if parameter.type.contains("->") {
+                    ""
+                } else {
+                    """
+                    EnumSelector<\(parameter.type)>(
+                        title: "\(parameter.type)",
+                        selection: $\(parameter.name),
+                        columnsCount: 3,
+                        height: 120
+                    )\n
+                    """
+                }
+            }
+            configurationSection += parameterComponent
+        }
+        
+        initParams.forEach { parameter in
             let parameterComponent = switch parameter.type {
             case "String":
                 """
@@ -264,10 +316,26 @@ final class GenerateComponent {
                 var code = "// Código gerado automaticamente\\n"
                 
         """
+        var styleFunctionsCases: [String] = []
+        componentInfo.styleFunctions.forEach { styleFunction in
+            var parameters = ""
+            parameters += styleFunction.parameters.sampleJoined()
+            styleFunctionsCases.append("\".\(styleFunction.name)(\(parameters))\"")
+        }
+        
+        var styleParametersCases: [String] = []
+        componentInfo.styleParameters.forEach { styleParameter in
+            var parameters = ", "
+            parameters += styleParameter.parameters.sampleJoined()
+            styleParametersCases.append(parameters)
+        }
+        
         generateCode += """
+        let styleFunctionsCases = [\(styleFunctionsCases.joined(separator: ", "))]
+        let selectedStyle = styleFunctionsCases.first(where: { $0.contains(style) }) ?? \".\\(style)()\"
         code += \"\"\"
         \(componentInfo.exampleCode)
-        .\(componentInfo.name.firstLowerCased)Style(.\\(style)())
+        .\(componentInfo.name.firstLowerCased)Style(\\(selectedStyle)\(styleParametersCases))
         \"\"\"\n
         """
         generateCode += """
@@ -432,10 +500,45 @@ extension String {
 
 extension Array where Element == StyleParameter {
     func joined() -> String {
-        enumerated().map { index, item in
+        sorted(by: {$0.order < $1.order }).enumerated().map { index, item in
             var parameterString = "\(item.name): \(item.name)"
             if item.hasObfuscatedArgument {
                 parameterString = item.name
+            }
+            if item.isUsedAsBinding {
+                parameterString = "\(item.name): $\(item.name)"
+            }
+            return index < count - 1 ? "\(parameterString)," : parameterString
+        }.joined(separator: " ")
+    }
+    
+    func sampleJoined() -> String {
+        sorted(by: {$0.order < $1.order }).enumerated().map { index, item in
+
+            var parameterType = "\(item.name): "
+            var parameterValue = switch item.type {
+                
+            case "String":
+                "\\(\(item.name))"
+            case "Bool":
+                "\\(\(item.name))"
+            case "Int", "Double", "CGFloat":
+                "\(item.name)"
+            default:
+                if item.type.contains("->") {
+                    "{}"
+                } else {
+                    ".\\(\(item.name).rawValue)"
+                }
+            }
+            
+            if item.isUsedAsBinding {
+                parameterValue = ".constant(\(parameterValue))"
+            }
+            
+            var parameterString = "\(parameterType)\(parameterValue)"
+            if item.hasObfuscatedArgument {
+                parameterString = parameterValue
             }
             return index < count - 1 ? "\(parameterString)," : parameterString
         }.joined(separator: " ")

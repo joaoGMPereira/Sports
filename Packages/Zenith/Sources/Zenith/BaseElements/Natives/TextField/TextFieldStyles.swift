@@ -5,7 +5,7 @@ import Combine
 public extension TextField where Label == Text {
     func textFieldStyle(
         _ style: some TextFieldStyle,
-        placeholder: String? = nil,
+        placeholder: String = "",
         hasError: Bool = false,
         errorMessage: Binding<String> = .constant("")
     ) -> some View {

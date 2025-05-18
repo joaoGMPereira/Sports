@@ -70,9 +70,7 @@ let NATIVE_COMPONENTS: [String: NativeComponent] = [
         defaultContent: "TextField",
         defaultStyleCase: "contentA",
         contextualModule: true,
-        initParams: [
-            NativeComponentParameter(label: nil, name: "placeholder", type: "String", defaultValue: "\"\"", isAction: false)
-        ],
+        initParams: [],
         exampleCode: """
         TextField(placeholder, text: $sampleText)
         """
