@@ -127,8 +127,24 @@ final class InteractionMenu {
                 }
             }
             
+            if let entries = try? FileManager.default.contentsOfDirectory(atPath: "\(COMPONENTS_PATH)/BaseElements/Customs") {
+                for entry in entries {
+                    if !entry.hasPrefix(".") && !components.contains(entry) {
+                        components.append(entry)
+                    }
+                }
+            }
+            
             // Components/Customs
             if let entries = try? FileManager.default.contentsOfDirectory(atPath: "\(COMPONENTS_PATH)/Components/Customs") {
+                for entry in entries {
+                    if !entry.hasPrefix(".") && !components.contains(entry) {
+                        components.append(entry)
+                    }
+                }
+            }
+            
+            if let entries = try? FileManager.default.contentsOfDirectory(atPath: "\(COMPONENTS_PATH)/Templates") {
                 for entry in entries {
                     if !entry.hasPrefix(".") && !components.contains(entry) {
                         components.append(entry)

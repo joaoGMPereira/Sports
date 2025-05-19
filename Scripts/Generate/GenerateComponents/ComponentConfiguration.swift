@@ -651,7 +651,9 @@ final class ComponentConfiguration {
             // Se for componente nativo, procurar apenas pelo arquivo de estilos
             let possiblePaths = [
                 "\(COMPONENTS_PATH)/BaseElements/Natives/\(componentName)",
-                "\(COMPONENTS_PATH)/BaseElements/Natives/\(componentName)"
+                "\(COMPONENTS_PATH)/BaseElements/Customs/\(componentName)",
+                "\(COMPONENTS_PATH)/Components/Custom/\(componentName)",
+                "\(COMPONENTS_PATH)/Templates/\(componentName)"
             ]
             
             for path in possiblePaths {
@@ -690,9 +692,9 @@ final class ComponentConfiguration {
         // Determinar o tipo de componente (BaseElements/Natives ou Components/Customs)
         let possiblePaths = [
             "\(COMPONENTS_PATH)/BaseElements/Natives/\(componentName)",
+            "\(COMPONENTS_PATH)/BaseElements/Customs/\(componentName)",
             "\(COMPONENTS_PATH)/Components/Customs/\(componentName)",
-            "\(COMPONENTS_PATH)/BaseElements/Natives/\(componentName)",
-            "\(COMPONENTS_PATH)/Components/Customs/\(componentName)"
+            "\(COMPONENTS_PATH)/Templates/\(componentName)",
         ]
         
         // Verificar se algum dos caminhos possíveis existe
@@ -701,7 +703,16 @@ final class ComponentConfiguration {
             if FileManager.default.fileExists(atPath: basePath) {
                 Log.log("Componente encontrado em: \(basePath)")
                 foundPath = basePath
-                let typePath = basePath.contains("BaseElements") ? "BaseElements/Natives" : "Components/Customs"
+                var typePath = "BaseElements/Natives"
+                if basePath.contains("BaseElements/Natives") {
+                    typePath = "BaseElements/Natives"
+                }
+                if basePath.contains("BaseElements/Customs") {
+                    typePath = "BaseElements/Customs"
+                }
+                if basePath.contains("Components/Customs") {
+                    typePath = "Components/Customs"
+                }
                 componentInfo = ComponentInfo(name: componentName, typePath: typePath)
                 break
             }
