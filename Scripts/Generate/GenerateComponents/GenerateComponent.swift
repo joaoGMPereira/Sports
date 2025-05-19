@@ -28,12 +28,145 @@ struct GenerateComponentConfiguration {
 }
 
 final class GenerateComponent {
+    let componentInfo: ComponentInfo
+    let config: GenerateComponentConfiguration
+    init(_ componentInfo: ComponentInfo) {
+        self.componentInfo = componentInfo
+        self.config = .init(componentInfo)
+    }
     
     // MARK: - Geração de arquivos
-    func generateNativeComponentSample(_ componentInfo: ComponentInfo) -> String {
-        let config = GenerateComponentConfiguration(componentInfo)
+    func generateNativeComponentSample() -> String {
+        var fullContent = startOfFile()
+        fullContent += stateVarsGenerated()
+        fullContent += sampleDefaultOptions()
+        fullContent += body()
+        fullContent += preview()
+        fullContent += configurationSection()
+        fullContent += allStyles()
+        fullContent += generateCode()
+        fullContent += generateGetStyle()
+        fullContent += generateEnumStyle()
         
-        // Criando a seção de preview do componente
+        return fullContent
+    }
+    
+    func startOfFile() -> String {
+        let componentName = componentInfo.name
+        let sampleName = "\(componentName)Sample"
+        // Importações básicas
+        let imports = """
+        import SwiftUI
+        import Zenith
+        import ZenithCoreInterface
+        """
+        
+        // Início da estrutura
+        let structStart = """
+        
+        struct \(sampleName): View, @preconcurrency BaseThemeDependencies {
+            @Dependency(\\.themeConfigurator) var themeConfigurator
+        """
+        
+        var content = imports
+        content += structStart
+        return content
+    }
+    
+    func stateVarsGenerated() -> String {
+        // Estados básicos padronizados
+        var states: [String] = []
+        
+        // Estado para texto de exemplo padronizado para todos os componentes
+        states.append("\n    @State private var sampleText = \"Exemplo de texto\"")
+        
+        // Estados específicos para tipo de componente
+        states.append("\n    @State private var style: Generate\(componentInfo.name)SampleEnum = .\(componentInfo.styleFunctions.first!.name)")
+        
+        config.styleFunctions.forEach { parameter in
+            if let defaultValue = parameter.defaultValue {
+                states.append("\n    @State private var \(parameter.name): \(parameter.type) = \(defaultValue)")
+            } else {
+                states.append("\n    @State private var \(parameter.name): (\(parameter.type))?")
+            }
+        }
+        
+        config.styleParameters.forEach { parameter in
+            if let defaultValue = parameter.defaultValue {
+                states.append("\n    @State private var \(parameter.name): \(parameter.type) = \(defaultValue)")
+            } else {
+                states.append("\n    @State private var \(parameter.name): (\(parameter.type))?")
+            }
+        }
+        
+        config.initParams.forEach { initParam in
+            if let defaultValue = initParam.defaultValue {
+                states.append("\n    @State private var \(initParam.name): \(initParam.type) = \(defaultValue)")
+            } else {
+                states.append("\n    @State private var \(initParam.name): (\(initParam.type))?")
+            }
+        }
+        
+        return states.joined(separator: "\n")
+    }
+    
+    func sampleDefaultOptions() -> String {
+        // Toggles para opções de visualização´
+        return """
+        
+            @State private var showAllStyles = false
+            @State private var useContrastBackground = true
+            @State private var showFixedHeader = false\n
+        """
+    }
+    
+    func body() -> String {
+        """
+            
+            var body: some View {
+                SampleWithFixedHeader(
+                    showFixedHeader: $showFixedHeader,
+                    content: {
+                        Card(action: {
+                            showFixedHeader.toggle()
+                        }) {
+                            VStack(spacing: 16) {
+                                // Preview do componente com configurações atuais
+                                previewComponent
+                            }
+                            .padding()
+                        }
+                        .padding()
+                    },
+                    config: {
+                        VStack(spacing: 16) {
+                            // Área de configuração
+                            configurationSection
+                            
+                            // Preview do código gerado
+                            CodePreviewSection(generateCode: generateSwiftCode)
+                            
+                            // Exibição de todos os estilos (opcional)
+                            if showAllStyles {
+                                Divider().padding(.vertical, 4)
+                                
+                                VStack(alignment: .leading, spacing: 12) {
+                                    Text("Todos os Estilos")
+                                        .font(fonts.mediumBold)
+                                        .foregroundColor(colors.contentA)
+                                    
+                                    allStyles
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                )
+            }
+        """
+    }
+    
+    func preview() -> String {
         var previewComponent = """
             
             // Preview do componente com as configurações selecionadas
@@ -57,8 +190,10 @@ final class GenerateComponent {
                 }
             }
         """
-        
-        // Configuração específica para cada componente
+        return previewComponent
+    }
+    
+    func configurationSection() -> String {
         var configurationSection = """
             
             // Área de configuração
@@ -205,8 +340,39 @@ final class GenerateComponent {
                 }
             }
         """
-        
-        // Geração de código Swift com base no componente
+        return configurationSection
+    }
+    
+    func allStyles() -> String {
+        var allStyles = "\n\n"
+        allStyles += """
+            private var allStyles: some View {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 8) {
+                        // Mostrar todas as funções de estilo disponíveis
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], spacing: 8) {
+                            ForEach(\(componentInfo.name)StyleCase.allCases, id: \\.self) { style in
+                                VStack {
+                                    \(componentInfo.exampleCode)
+                                    .\(componentInfo.name.firstLowerCased)Style(style.style()\(config.styleParams))
+                                    .padding(8)
+                                    .frame(maxWidth: .infinity)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 4)
+                                            .fill(colors.backgroundB.opacity(0.2))
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                .frame(maxHeight: 200)
+            }
+            """
+        return allStyles
+    }
+    
+    func generateCode() -> String {
         var generateCode = """
             
             // Gera o código Swift para o componente configurado
@@ -241,174 +407,10 @@ final class GenerateComponent {
             }
         """
         
-        // Substituir helpers específicos por um helper genérico
-        let styleHelpers = """
-        
-            \(generateGetStyle(with: componentInfo))
-        """
-        
-        // Combinar tudo
-        var fullContent = startOfFile(componentInfo)
-        fullContent += stateVarsGenerated(componentInfo, config: config)
-        fullContent += sampleDefaultOptions()
-        fullContent += body()
-        fullContent += allStyles(componentInfo, config: config)
-        fullContent += previewComponent
-        fullContent += configurationSection
-        fullContent += generateCode
-        fullContent += styleHelpers
-        
-        fullContent += "\n}\n"
-        fullContent += generateEnumStyle(with: componentInfo)
-        
-        return fullContent
+        return generateCode
     }
     
-    func startOfFile(_ componentInfo: ComponentInfo) -> String {
-        let componentName = componentInfo.name
-        let sampleName = "\(componentName)Sample"
-        // Importações básicas
-        let imports = """
-        import SwiftUI
-        import Zenith
-        import ZenithCoreInterface
-        """
-        
-        // Início da estrutura
-        let structStart = """
-        
-        struct \(sampleName): View, @preconcurrency BaseThemeDependencies {
-            @Dependency(\\.themeConfigurator) var themeConfigurator
-        """
-        
-        var content = imports
-        content += structStart
-        return content
-    }
-    
-    func stateVarsGenerated(_ componentInfo: ComponentInfo, config: GenerateComponentConfiguration) -> String {
-        // Estados básicos padronizados
-        var states: [String] = []
-        
-        // Estado para texto de exemplo padronizado para todos os componentes
-        states.append("\n    @State private var sampleText = \"Exemplo de texto\"")
-        
-        // Estados específicos para tipo de componente
-        states.append("\n    @State private var style: Generate\(componentInfo.name)SampleEnum = .\(componentInfo.styleFunctions.first!.name)")
-        
-        config.styleFunctions.forEach { parameter in
-            if let defaultValue = parameter.defaultValue {
-                states.append("\n    @State private var \(parameter.name): \(parameter.type) = \(defaultValue)")
-            } else {
-                states.append("\n    @State private var \(parameter.name): (\(parameter.type))?")
-            }
-        }
-        
-        config.styleParameters.forEach { parameter in
-            if let defaultValue = parameter.defaultValue {
-                states.append("\n    @State private var \(parameter.name): \(parameter.type) = \(defaultValue)")
-            } else {
-                states.append("\n    @State private var \(parameter.name): (\(parameter.type))?")
-            }
-        }
-        
-        config.initParams.forEach { initParam in
-            if let defaultValue = initParam.defaultValue {
-                states.append("\n    @State private var \(initParam.name): \(initParam.type) = \(defaultValue)")
-            } else {
-                states.append("\n    @State private var \(initParam.name): (\(initParam.type))?")
-            }
-        }
-        
-        return states.joined(separator: "\n")
-    }
-    
-    func sampleDefaultOptions() -> String {
-        // Toggles para opções de visualização´
-        return """
-        
-            @State private var showAllStyles = false
-            @State private var useContrastBackground = true
-            @State private var showFixedHeader = false\n
-        """
-    }
-    
-    func body() -> String {
-        """
-            
-            var body: some View {
-                SampleWithFixedHeader(
-                    showFixedHeader: $showFixedHeader,
-                    content: {
-                        Card(action: {
-                            showFixedHeader.toggle()
-                        }) {
-                            VStack(spacing: 16) {
-                                // Preview do componente com configurações atuais
-                                previewComponent
-                            }
-                            .padding()
-                        }
-                        .padding()
-                    },
-                    config: {
-                        VStack(spacing: 16) {
-                            // Área de configuração
-                            configurationSection
-                            
-                            // Preview do código gerado
-                            CodePreviewSection(generateCode: generateSwiftCode)
-                            
-                            // Exibição de todos os estilos (opcional)
-                            if showAllStyles {
-                                Divider().padding(.vertical, 4)
-                                
-                                VStack(alignment: .leading, spacing: 12) {
-                                    Text("Todos os Estilos")
-                                        .font(fonts.mediumBold)
-                                        .foregroundColor(colors.contentA)
-                                    
-                                    scrollViewWithStyles
-                                }
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
-                )
-            }
-        """
-    }
-    
-    func allStyles(_ componentInfo: ComponentInfo, config: GenerateComponentConfiguration) -> String {
-        var allStyles = "\n\n"
-        allStyles += """
-            private var scrollViewWithStyles: some View {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 8) {
-                        // Mostrar todas as funções de estilo disponíveis
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], spacing: 8) {
-                            ForEach(\(componentInfo.name)StyleCase.allCases, id: \\.self) { style in
-                                VStack {
-                                    \(componentInfo.exampleCode)
-                                    .\(componentInfo.name.firstLowerCased)Style(style.style()\(config.styleParams))
-                                    .padding(8)
-                                    .frame(maxWidth: .infinity)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 4)
-                                            .fill(colors.backgroundB.opacity(0.2))
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-                .frame(maxHeight: 200)
-            }
-            """
-        return allStyles
-    }
-    
-    func generateGetStyle(with componentInfo: ComponentInfo) -> String {
+    func generateGetStyle() -> String {
         let name = componentInfo.name
         var cases = ""
         componentInfo.styleFunctions.forEach { styleFunction in
@@ -427,6 +429,7 @@ final class GenerateComponent {
                 .\(firstStyle.name)(\(defaultParameters))
         """
         return """
+        
             private func get\(name)Style(_ style: String) -> Any\(name)Style {
                 let style: any \(prefix)\(componentInfo.name)Style = switch style {
                 \(cases)
@@ -437,7 +440,7 @@ final class GenerateComponent {
         """
     }
     
-    func generateEnumStyle(with componentInfo: ComponentInfo) -> String {
+    func generateEnumStyle() -> String {
         var cases = ""
         componentInfo.styleFunctions.forEach { styleFunction in
             var parameters = ""
@@ -450,6 +453,8 @@ final class GenerateComponent {
         }
         
         return """
+        
+        
             enum Generate\(componentInfo.name)SampleEnum: String, CaseIterable, Identifiable {
                 public var id: Self { self }
         

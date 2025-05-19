@@ -45,36 +45,13 @@ struct TextSample: View, @preconcurrency BaseThemeDependencies {
                                 .font(fonts.mediumBold)
                                 .foregroundColor(colors.contentA)
 
-                            scrollViewWithStyles
+                            allStyles
                         }
                     }
                 }
                 .padding(.horizontal)
             }
         )
-    }
-
-    private var scrollViewWithStyles: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 8) {
-                // Mostrar todas as funções de estilo disponíveis
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], spacing: 8) {
-                    ForEach(TextStyleCase.allCases, id: \.self) { style in
-                        VStack {
-                            Text(sampleText)
-                                .textStyle(style.style())
-                                .padding(8)
-                                .frame(maxWidth: .infinity)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 4)
-                                        .fill(colors.backgroundB.opacity(0.2))
-                                )
-                        }
-                    }
-                }
-            }
-        }
-        .frame(maxHeight: 200)
     }
 
     // Preview do componente com as configurações selecionadas
@@ -123,6 +100,29 @@ struct TextSample: View, @preconcurrency BaseThemeDependencies {
             }
             .padding(.horizontal)
         }
+    }
+
+    private var allStyles: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 8) {
+                // Mostrar todas as funções de estilo disponíveis
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], spacing: 8) {
+                    ForEach(TextStyleCase.allCases, id: \.self) { style in
+                        VStack {
+                            Text(sampleText)
+                                .textStyle(style.style())
+                                .padding(8)
+                                .frame(maxWidth: .infinity)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 4)
+                                        .fill(colors.backgroundB.opacity(0.2))
+                                )
+                        }
+                    }
+                }
+            }
+        }
+        .frame(maxHeight: 200)
     }
 
     // Gera o código Swift para o componente configurado

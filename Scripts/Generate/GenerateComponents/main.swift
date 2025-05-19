@@ -5,7 +5,6 @@ import Foundation
 // MARK: - Descoberta de componentes disponíveis
 
 let componentConfiguration = ComponentConfiguration()
-let generateComponent = GenerateComponent()
 let interactionMenu = InteractionMenu()
 
 // Se executado com argumentos, usar modo de linha de comando

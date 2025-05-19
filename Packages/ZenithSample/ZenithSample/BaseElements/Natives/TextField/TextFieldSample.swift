@@ -10,11 +10,11 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
 
     @State private var state: DSState = .enabled
 
-    @State private var errorMessage: String = ""
-
     @State private var placeholder: String = ""
 
     @State private var hasError: Bool = false
+
+    @State private var errorMessage: String = ""
     @State private var showAllStyles = false
     @State private var useContrastBackground = true
     @State private var showFixedHeader = false
@@ -51,36 +51,13 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
                                 .font(fonts.mediumBold)
                                 .foregroundColor(colors.contentA)
 
-                            scrollViewWithStyles
+                            allStyles
                         }
                     }
                 }
                 .padding(.horizontal)
             }
         )
-    }
-
-    private var scrollViewWithStyles: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 8) {
-                // Mostrar todas as funções de estilo disponíveis
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], spacing: 8) {
-                    ForEach(TextFieldStyleCase.allCases, id: \.self) { style in
-                        VStack {
-                            TextField("", text: $sampleText)
-                                .textFieldStyle(style.style(), placeholder: placeholder, hasError: hasError, errorMessage: $errorMessage)
-                                .padding(8)
-                                .frame(maxWidth: .infinity)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 4)
-                                        .fill(colors.backgroundB.opacity(0.2))
-                                )
-                        }
-                    }
-                }
-            }
-        }
-        .frame(maxHeight: 200)
     }
 
     // Preview do componente com as configurações selecionadas
@@ -119,14 +96,14 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
                 height: 120
             )
             .padding(.horizontal)
-            TextField("", text: $errorMessage)
-                .textFieldStyle(.contentA(), placeholder: "errorMessage")
-                .padding(.horizontal)
             TextField("", text: $placeholder)
                 .textFieldStyle(.contentA(), placeholder: "placeholder")
                 .padding(.horizontal)
             Toggle("hasError", isOn: $hasError)
                 .toggleStyle(.default(.highlightA))
+                .padding(.horizontal)
+            TextField("", text: $errorMessage)
+                .textFieldStyle(.contentA(), placeholder: "errorMessage")
                 .padding(.horizontal)
             // Toggles para opções
             VStack {
@@ -138,6 +115,29 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
             }
             .padding(.horizontal)
         }
+    }
+
+    private var allStyles: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 8) {
+                // Mostrar todas as funções de estilo disponíveis
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], spacing: 8) {
+                    ForEach(TextFieldStyleCase.allCases, id: \.self) { style in
+                        VStack {
+                            TextField("", text: $sampleText)
+                                .textFieldStyle(style.style(), placeholder: placeholder, hasError: hasError, errorMessage: $errorMessage)
+                                .padding(8)
+                                .frame(maxWidth: .infinity)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 4)
+                                        .fill(colors.backgroundB.opacity(0.2))
+                                )
+                        }
+                    }
+                }
+            }
+        }
+        .frame(maxHeight: 200)
     }
 
     // Gera o código Swift para o componente configurado

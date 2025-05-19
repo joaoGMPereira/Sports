@@ -1,5 +1,5 @@
 {
-  "originHash" : "e3e625b6a23c40bca17030d16888a1560b3d4cbf865af8ecebaac335565444b5",
+  "originHash" : "15708f3fd9010be68ce5b9636cbbd5aa64022aa3274e894c92a86940a39230e0",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -8,6 +8,24 @@
       "state" : {
         "revision" : "5928286acce13def418ec36d05a001a9641086f2",
         "version" : "1.0.3"
+      }
+    },
+    {
+      "identity" : "debugswift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/DebugSwift/DebugSwift.git",
+      "state" : {
+        "revision" : "a5cdece2984da5c26cb9a7c57f9c9533b8eea0d3",
+        "version" : "0.3.9"
+      }
+    },
+    {
+      "identity" : "hotswiftui",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/johnno1962/HotSwiftUI.git",
+      "state" : {
+        "revision" : "0539ebfa37114156fc726fc88902981db2ecbec0",
+        "version" : "1.2.0"
       }
     },
     {

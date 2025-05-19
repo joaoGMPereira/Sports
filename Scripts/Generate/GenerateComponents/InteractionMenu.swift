@@ -235,13 +235,13 @@ final class InteractionMenu {
         
         // Gerar o conteúdo do arquivo Sample
         var sampleContent: String
-        
+        let generateComponent = GenerateComponent(componentInfo)
         if componentInfo.isNative {
-            sampleContent = generateComponent.generateNativeComponentSample(componentInfo)
+            sampleContent = generateComponent.generateNativeComponentSample()
         } else {
             // Esta parte implementaria o método generateSampleFile, que é mais complexo
             // Para simplificar, podemos usar o mesmo método para componentes nativos por enquanto
-            sampleContent = generateComponent.generateNativeComponentSample(componentInfo)
+            sampleContent = generateComponent.generateNativeComponentSample()
         }
         
         // Salvar o arquivo
