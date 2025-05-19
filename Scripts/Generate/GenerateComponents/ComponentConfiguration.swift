@@ -9,7 +9,13 @@ struct SwiftProperty {
     let defaultValue: String?
 }
 
-struct StyleParameter: Hashable {
+protocol ParameterProtocol {
+    var name: String { get }
+    var type: String { get }
+    var defaultValue: String? { get }
+}
+
+struct StyleParameter: Hashable, ParameterProtocol {
     let order: Int
     let hasObfuscatedArgument: Bool
     let isUsedAsBinding: Bool
@@ -23,7 +29,7 @@ struct StyleConfig {
     let parameters: [StyleParameter]
 }
 
-struct InitParameter: Hashable {
+struct InitParameter: Hashable, ParameterProtocol {
     let label: String?
     let name: String
     let type: String

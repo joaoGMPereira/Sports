@@ -77,6 +77,7 @@ struct EnumSelector<T: Hashable>: View, @preconcurrency BaseThemeDependencies {
                 )
         }
         .buttonStyle(PlainButtonStyle())
+        .padding(.vertical, 2)
     }
 }
 

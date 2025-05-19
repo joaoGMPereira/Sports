@@ -83,31 +83,23 @@ final class GenerateComponent {
         // Estados específicos para tipo de componente
         states.append("\n    @State private var style: Generate\(componentInfo.name)SampleEnum = .\(componentInfo.styleFunctions.first!.name)")
         
-        config.styleFunctions.forEach { parameter in
-            if let defaultValue = parameter.defaultValue {
-                states.append("\n    @State private var \(parameter.name): \(parameter.type) = \(defaultValue)")
-            } else {
-                states.append("\n    @State private var \(parameter.name): (\(parameter.type))?")
-            }
-        }
+        states.append(contentsOf: stateVars(Array(config.styleFunctions)))
+        states.append(contentsOf: stateVars(Array(config.styleParameters)))
+        states.append(contentsOf: stateVars(config.initParams))
         
-        config.styleParameters.forEach { parameter in
-            if let defaultValue = parameter.defaultValue {
-                states.append("\n    @State private var \(parameter.name): \(parameter.type) = \(defaultValue)")
-            } else {
-                states.append("\n    @State private var \(parameter.name): (\(parameter.type))?")
-            }
-        }
-        
-        config.initParams.forEach { initParam in
+        return "\(states.joined(separator: "\n"))\n"
+    }
+    
+    func stateVars(_ parameters: [ParameterProtocol]) -> [String] {
+        var states: [String] = []
+        parameters.forEach { initParam in
             if let defaultValue = initParam.defaultValue {
                 states.append("\n    @State private var \(initParam.name): \(initParam.type) = \(defaultValue)")
             } else {
                 states.append("\n    @State private var \(initParam.name): (\(initParam.type))?")
             }
         }
-        
-        return "\(states.joined(separator: "\n"))\n"
+        return states
     }
     
     func sampleDefaultOptions() -> String {
@@ -211,120 +203,10 @@ final class GenerateComponent {
                     )
                     .padding(.horizontal)\n
         """
-        
-        config.styleFunctions.forEach { parameter in
-            let parameterComponent = switch parameter.type {
-            case "String":
-                """
-                TextField("", text: $\(parameter.name))
-                    .textFieldStyle(.contentA(), placeholder: "\(parameter.name)")
-                    .padding(.horizontal)\n
-                """
-            case "Bool":
-                """
-                Toggle("\(parameter.name)", isOn: $\(parameter.name))
-                    .toggleStyle(.default(.highlightA))
-                    .padding(.horizontal)\n
-                """
-            case "Int", "Double", "CGFloat":
-                """
-                Slider(value: $\(parameter.name), in: 0...100, step: 1)
-                    .accentColor(colors.highlightA)
-                    .padding(.horizontal)\n
-                """
-            default:
-                if parameter.type.contains("->") {
-                    ""
-                } else {
-                    """
-                    EnumSelector<\(parameter.type)>(
-                        title: "\(parameter.type)",
-                        selection: $\(parameter.name),
-                        columnsCount: 3,
-                        height: 120
-                    )
-                    .padding(.horizontal)\n
-                    """
-                }
-            }
-            configurationSection += parameterComponent
-        }
-        
-        config.styleParameters.forEach { parameter in
-            let parameterComponent = switch parameter.type {
-            case "String":
-                """
-                TextField("", text: $\(parameter.name))
-                    .textFieldStyle(.contentA(), placeholder: "\(parameter.name)")
-                    .padding(.horizontal)\n
-                """
-            case "Bool":
-                """
-                Toggle("\(parameter.name)", isOn: $\(parameter.name))
-                    .toggleStyle(.default(.highlightA))
-                    .padding(.horizontal)\n
-                """
-            case "Int", "Double", "CGFloat":
-                """
-                Slider(value: $\(parameter.name), in: 0...100, step: 1)
-                    .accentColor(colors.highlightA)
-                    .padding(.horizontal)\n
-                """
-            default:
-                if parameter.type.contains("->") {
-                    ""
-                } else {
-                    """
-                    EnumSelector<\(parameter.type)>(
-                        title: "\(parameter.type)",
-                        selection: $\(parameter.name),
-                        columnsCount: 3,
-                        height: 120
-                    )
-                    .padding(.horizontal)\n
-                    """
-                }
-            }
-            configurationSection += parameterComponent
-        }
-        
-        config.initParams.forEach { parameter in
-            let parameterComponent = switch parameter.type {
-            case "String":
-                """
-                TextField("", text: $\(parameter.name))
-                    .textFieldStyle(.contentA(), placeholder: "\(parameter.name)")
-                    .padding(.horizontal)\n
-                """
-            case "Bool":
-                """
-                Toggle("\(parameter.name)", isOn: $\(parameter.name))
-                    .toggleStyle(.default(.highlightA))
-                    .padding(.horizontal)\n
-                """
-            case "Int", "Double", "CGFloat":
-                """
-                Slider(value: $\(parameter.name), in: 0...100, step: 1)
-                    .accentColor(colors.highlightA)
-                    .padding(.horizontal)\n
-                """
-            default:
-                if parameter.type.contains("->") {
-                    ""
-                } else {
-                    """
-                    EnumSelector<\(parameter.type)>(
-                        title: "\(parameter.type)",
-                        selection: $\(parameter.name),
-                        columnsCount: 3,
-                        height: 120
-                    )
-                    .padding(.horizontal)\n
-                    """
-                }
-            }
-            configurationSection += parameterComponent
-        }
+
+        configurationSection += interactiveComponents(Array(config.styleFunctions))
+        configurationSection += interactiveComponents(Array(config.styleParameters))
+        configurationSection += interactiveComponents(config.initParams)
         
         // Adicionar toggles para opções de visualização para todos os componentes
         configurationSection += """
@@ -341,6 +223,48 @@ final class GenerateComponent {
             }
         """
         return configurationSection
+    }
+    
+    func interactiveComponents(_ parameters: [ParameterProtocol]) -> String {
+        var interactiveComponents = ""
+        parameters.forEach { parameter in
+            let parameterComponent = switch parameter.type {
+            case "String":
+                """
+                TextField("", text: $\(parameter.name))
+                    .textFieldStyle(.contentA(), placeholder: "\(parameter.name)")
+                    .padding(.horizontal)\n
+                """
+            case "Bool":
+                """
+                Toggle("\(parameter.name)", isOn: $\(parameter.name))
+                    .toggleStyle(.default(.highlightA))
+                    .padding(.horizontal)\n
+                """
+            case "Int", "Double", "CGFloat":
+                """
+                Slider(value: $\(parameter.name), in: 0...100, step: 1)
+                    .accentColor(colors.highlightA)
+                    .padding(.horizontal)\n
+                """
+            default:
+                if parameter.type.contains("->") {
+                    ""
+                } else {
+                    """
+                    EnumSelector<\(parameter.type)>(
+                        title: "\(parameter.type)",
+                        selection: $\(parameter.name),
+                        columnsCount: 3,
+                        height: 120
+                    )
+                    .padding(.horizontal)\n
+                    """
+                }
+            }
+            interactiveComponents += parameterComponent
+        }
+        return interactiveComponents
     }
     
     func allStyles() -> String {
