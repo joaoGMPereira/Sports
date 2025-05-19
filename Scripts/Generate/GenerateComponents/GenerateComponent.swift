@@ -107,7 +107,7 @@ final class GenerateComponent {
             }
         }
         
-        return states.joined(separator: "\n")
+        return "\(states.joined(separator: "\n"))\n"
     }
     
     func sampleDefaultOptions() -> String {

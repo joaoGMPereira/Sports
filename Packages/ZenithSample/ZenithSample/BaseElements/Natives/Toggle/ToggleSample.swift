@@ -11,6 +11,7 @@ struct ToggleSample: View, @preconcurrency BaseThemeDependencies {
     @State private var color: ColorName = .highlightA
 
     @State private var isOn: Bool = false
+
     @State private var showAllStyles = false
     @State private var useContrastBackground = true
     @State private var showFixedHeader = false

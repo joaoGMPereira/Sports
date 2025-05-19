@@ -7,6 +7,7 @@ struct DividerSample: View, @preconcurrency BaseThemeDependencies {
     @State private var sampleText = "Exemplo de texto"
 
     @State private var style: GenerateDividerSampleEnum = .contentA
+
     @State private var showAllStyles = false
     @State private var useContrastBackground = true
     @State private var showFixedHeader = false

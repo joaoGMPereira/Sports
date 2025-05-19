@@ -9,6 +9,7 @@ struct TextSample: View, @preconcurrency BaseThemeDependencies {
     @State private var style: GenerateTextSampleEnum = .small
 
     @State private var color: ColorName = .contentA
+
     @State private var showAllStyles = false
     @State private var useContrastBackground = true
     @State private var showFixedHeader = false

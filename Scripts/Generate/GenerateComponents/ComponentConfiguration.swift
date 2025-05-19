@@ -232,7 +232,6 @@ final class ComponentConfiguration {
             
             for match in matches {
                 guard let extensionRange = Range(match.range, in: content) else { continue }
-                let extensionType = String(content[extensionRange])
                 
                 // Encontrar o bloco de código da extensão
                 guard let openBraceIndex = content[extensionRange.upperBound...].firstIndex(of: "{") else { continue }
@@ -333,7 +332,7 @@ final class ComponentConfiguration {
     
     func extractFunctionsFromBlock(_ content: String) -> [StyleConfig] {
         var functions: [StyleConfig] = []
-        var content = content.replacingOccurrences(of: "`", with: "")
+        let content = content.replacingOccurrences(of: "`", with: "")
         
         // Padrão para encontrar funções estáticas que retornam Self
         // Usamos um padrão mais robusto que consegue lidar com parênteses aninhados nos valores padrão
@@ -778,15 +777,12 @@ final class ComponentConfiguration {
         let enumMatches = enumRegex.matches(in: content, options: [], range: NSRange(content.startIndex..., in: content))
         
         for enumMatch in enumMatches {
-            guard let enumNameRange = Range(enumMatch.range(at: 1), in: content),
-                  let enumStartRange = Range(enumMatch.range, in: content) else {
+            guard let enumStartRange = Range(enumMatch.range, in: content) else {
                 continue
             }
             
-            let enumName = String(content[enumNameRange])
-            
             // Encontrar o fim do bloco do enum contando chaves
-            var blockStart = content.index(after: content.index(enumStartRange.upperBound, offsetBy: -1))
+            let blockStart = content.index(after: content.index(enumStartRange.upperBound, offsetBy: -1))
             var braceCount = 1
             var blockEnd = blockStart
             

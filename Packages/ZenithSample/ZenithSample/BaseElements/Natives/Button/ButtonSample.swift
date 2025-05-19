@@ -8,11 +8,12 @@ struct ButtonSample: View, @preconcurrency BaseThemeDependencies {
 
     @State private var style: GenerateButtonSampleEnum = .contentA
 
-    @State private var state: DSState = .enabled
-
     @State private var type: CardType = .fill
 
+    @State private var state: DSState = .enabled
+
     @State private var shape: ButtonShape = .rounded(cornerRadius: .infinity)
+
     @State private var showAllStyles = false
     @State private var useContrastBackground = true
     @State private var showFixedHeader = false
@@ -89,16 +90,16 @@ struct ButtonSample: View, @preconcurrency BaseThemeDependencies {
                 height: 120
             )
             .padding(.horizontal)
-            EnumSelector<DSState>(
-                title: "DSState",
-                selection: $state,
+            EnumSelector<CardType>(
+                title: "CardType",
+                selection: $type,
                 columnsCount: 3,
                 height: 120
             )
             .padding(.horizontal)
-            EnumSelector<CardType>(
-                title: "CardType",
-                selection: $type,
+            EnumSelector<DSState>(
+                title: "DSState",
+                selection: $state,
                 columnsCount: 3,
                 height: 120
             )
