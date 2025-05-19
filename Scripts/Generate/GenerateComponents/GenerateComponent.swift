@@ -1,73 +1,37 @@
 import Foundation
 
-final class GenerateComponent {
+struct GenerateComponentConfiguration {
+    var styleFunctions = Set<StyleParameter>()
+    var styleParameters = Set<StyleParameter>()
+    var styleParams = String()
+    let initParams: [InitParameter]
     
-    // MARK: - Geração de arquivos
-    
-    func generateNativeComponentSample(_ componentInfo: ComponentInfo) -> String {
-        let componentName = componentInfo.name
-        let sampleName = "\(componentName)Sample"
-        
-        // Importações básicas
-        let imports = """
-        import SwiftUI
-        import Zenith
-        import ZenithCoreInterface
-        """
-        
-        // Início da estrutura
-        let structStart = """
-        
-        struct \(sampleName): View, @preconcurrency BaseThemeDependencies {
-            @Dependency(\\.themeConfigurator) var themeConfigurator
-        """
-        
-        // Estados básicos padronizados
-        var states: [String] = []
-        
-        // Estado para texto de exemplo padronizado para todos os componentes
-        states.append("\n    @State private var sampleText = \"Exemplo de texto\"")
-        
-        // Estados específicos para tipo de componente
-        states.append("\n    @State private var style: Generate\(componentInfo.name)SampleEnum = .\(componentInfo.styleFunctions.first!.name)")
-        
+    init(_ componentInfo: ComponentInfo) {
         var styleFunctions = Set<StyleParameter>()
         componentInfo.styleFunctions.forEach { function in
             function.parameters.forEach { parameter in
                 styleFunctions.insert(parameter)
             }
         }
-        styleFunctions.forEach { parameter in
-            if let defaultValue = parameter.defaultValue {
-                states.append("\n    @State private var \(parameter.name): \(parameter.type) = \(defaultValue)")
-            } else {
-                states.append("\n    @State private var \(parameter.name): (\(parameter.type))?")
-            }
-        }
-        
         var styleParameters = Set<StyleParameter>()
         componentInfo.styleParameters.forEach { function in
             function.parameters.forEach { parameter in
                 styleParameters.insert(parameter)
             }
         }
-        styleParameters.forEach { parameter in
-            if let defaultValue = parameter.defaultValue {
-                states.append("\n    @State private var \(parameter.name): \(parameter.type) = \(defaultValue)")
-            } else {
-                states.append("\n    @State private var \(parameter.name): (\(parameter.type))?")
-            }
-        }
-        
-        let initParams = componentInfo.publicInitParams
+        self.styleFunctions = styleFunctions
+        self.styleParameters = styleParameters
+        styleParams = "\(styleParameters.isEmpty ? "" : ",")"
+        styleParams += Array(styleParameters).joined()
+        initParams = componentInfo.publicInitParams
+    }
+}
 
-        initParams.forEach { initParam in
-            if let defaultValue = initParam.defaultValue {
-                states.append("\n    @State private var \(initParam.name): \(initParam.type) = \(defaultValue)")
-            } else {
-                states.append("\n    @State private var \(initParam.name): (\(initParam.type))?")
-            }
-        }
+final class GenerateComponent {
+    
+    // MARK: - Geração de arquivos
+    func generateNativeComponentSample(_ componentInfo: ComponentInfo) -> String {
+        let config = GenerateComponentConfiguration(componentInfo)
         
         // Toggles para opções de visualização´
         let viewOptions = """
@@ -121,9 +85,6 @@ final class GenerateComponent {
             }
         """
         
-        var styleParams = "\(styleParameters.isEmpty ? "" : ",")"
-        styleParams += Array(styleParameters).joined()
-        
         // ScrollView com todos os estilos baseado no tipo de componente
         var scrollView = "\n\n"
         scrollView += """
@@ -135,7 +96,7 @@ final class GenerateComponent {
                             ForEach(\(componentInfo.name)StyleCase.allCases, id: \\.self) { style in
                                 VStack {
                                     \(componentInfo.exampleCode)
-                                    .\(componentInfo.name.firstLowerCased)Style(style.style()\(styleParams))
+                                    .\(componentInfo.name.firstLowerCased)Style(style.style()\(config.styleParams))
                                     .padding(8)
                                     .frame(maxWidth: .infinity)
                                     .background(
@@ -163,7 +124,7 @@ final class GenerateComponent {
         previewComponent += """
         
                 \(componentInfo.exampleCode)
-                .\(componentInfo.name.firstLowerCased)Style(get\(componentInfo.name)Style(style.rawValue)\(styleParams))
+                .\(componentInfo.name.firstLowerCased)Style(get\(componentInfo.name)Style(style.rawValue)\(config.styleParams))
         """
         previewComponent += """
                     \n .padding()
@@ -195,7 +156,7 @@ final class GenerateComponent {
                     .padding(.horizontal)\n
         """
         
-        styleFunctions.forEach { parameter in
+        config.styleFunctions.forEach { parameter in
             let parameterComponent = switch parameter.type {
             case "String":
                 """
@@ -233,7 +194,7 @@ final class GenerateComponent {
             configurationSection += parameterComponent
         }
         
-        styleParameters.forEach { parameter in
+        config.styleParameters.forEach { parameter in
             let parameterComponent = switch parameter.type {
             case "String":
                 """
@@ -271,7 +232,7 @@ final class GenerateComponent {
             configurationSection += parameterComponent
         }
         
-        initParams.forEach { parameter in
+        config.initParams.forEach { parameter in
             let parameterComponent = switch parameter.type {
             case "String":
                 """
@@ -366,9 +327,8 @@ final class GenerateComponent {
         """
         
         // Combinar tudo
-        var fullContent = imports
-        fullContent += structStart
-        fullContent += states.joined(separator: "\n")
+        var fullContent = startOfFile(componentInfo)
+        fullContent += stateVarsGenerated(componentInfo, config: config)
         fullContent += "\n" + viewOptions
         fullContent += bodyContent
         fullContent += scrollView
@@ -381,6 +341,65 @@ final class GenerateComponent {
         fullContent += generateEnumStyle(with: componentInfo)
         
         return fullContent
+    }
+    
+    func startOfFile(_ componentInfo: ComponentInfo) -> String {
+        let componentName = componentInfo.name
+        let sampleName = "\(componentName)Sample"
+        // Importações básicas
+        let imports = """
+        import SwiftUI
+        import Zenith
+        import ZenithCoreInterface
+        """
+        
+        // Início da estrutura
+        let structStart = """
+        
+        struct \(sampleName): View, @preconcurrency BaseThemeDependencies {
+            @Dependency(\\.themeConfigurator) var themeConfigurator
+        """
+        
+        var content = imports
+        content += structStart
+        return content
+    }
+    
+    func stateVarsGenerated(_ componentInfo: ComponentInfo, config: GenerateComponentConfiguration) -> String {
+        // Estados básicos padronizados
+        var states: [String] = []
+        
+        // Estado para texto de exemplo padronizado para todos os componentes
+        states.append("\n    @State private var sampleText = \"Exemplo de texto\"")
+        
+        // Estados específicos para tipo de componente
+        states.append("\n    @State private var style: Generate\(componentInfo.name)SampleEnum = .\(componentInfo.styleFunctions.first!.name)")
+        
+        config.styleFunctions.forEach { parameter in
+            if let defaultValue = parameter.defaultValue {
+                states.append("\n    @State private var \(parameter.name): \(parameter.type) = \(defaultValue)")
+            } else {
+                states.append("\n    @State private var \(parameter.name): (\(parameter.type))?")
+            }
+        }
+        
+        config.styleParameters.forEach { parameter in
+            if let defaultValue = parameter.defaultValue {
+                states.append("\n    @State private var \(parameter.name): \(parameter.type) = \(defaultValue)")
+            } else {
+                states.append("\n    @State private var \(parameter.name): (\(parameter.type))?")
+            }
+        }
+        
+        config.initParams.forEach { initParam in
+            if let defaultValue = initParam.defaultValue {
+                states.append("\n    @State private var \(initParam.name): \(initParam.type) = \(defaultValue)")
+            } else {
+                states.append("\n    @State private var \(initParam.name): (\(initParam.type))?")
+            }
+        }
+        
+        return states.joined(separator: "\n")
     }
     
     func generateGetStyle(with componentInfo: ComponentInfo) -> String {
@@ -472,7 +491,7 @@ extension Array where Element == StyleParameter {
     func sampleJoined() -> String {
         sorted(by: {$0.order < $1.order }).enumerated().map { index, item in
 
-            var parameterType = "\(item.name): "
+            let parameterType = "\(item.name): "
             var parameterValue = switch item.type {
                 
             case "String":

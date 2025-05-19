@@ -10,11 +10,11 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
 
     @State private var state: DSState = .enabled
 
+    @State private var errorMessage: String = ""
+
     @State private var placeholder: String = ""
 
     @State private var hasError: Bool = false
-
-    @State private var errorMessage: String = ""
     @State private var showAllStyles = false
     @State private var useContrastBackground = true
     @State private var showFixedHeader = false
@@ -119,14 +119,14 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
                 height: 120
             )
             .padding(.horizontal)
+            TextField("", text: $errorMessage)
+                .textFieldStyle(.contentA(), placeholder: "errorMessage")
+                .padding(.horizontal)
             TextField("", text: $placeholder)
                 .textFieldStyle(.contentA(), placeholder: "placeholder")
                 .padding(.horizontal)
             Toggle("hasError", isOn: $hasError)
                 .toggleStyle(.default(.highlightA))
-                .padding(.horizontal)
-            TextField("", text: $errorMessage)
-                .textFieldStyle(.contentA(), placeholder: "errorMessage")
                 .padding(.horizontal)
             // Toggles para opções
             VStack {
