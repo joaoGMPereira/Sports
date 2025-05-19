@@ -437,6 +437,7 @@ final class GenerateComponent {
                 }
                 return Any\(name)Style(style)
             }
+        \n}
         """
     }
     
@@ -453,7 +454,6 @@ final class GenerateComponent {
         }
         
         return """
-        
         
             enum Generate\(componentInfo.name)SampleEnum: String, CaseIterable, Identifiable {
                 public var id: Self { self }
