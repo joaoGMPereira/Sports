@@ -33,85 +33,6 @@ final class GenerateComponent {
     func generateNativeComponentSample(_ componentInfo: ComponentInfo) -> String {
         let config = GenerateComponentConfiguration(componentInfo)
         
-        // Toggles para opções de visualização´
-        let viewOptions = """
-            @State private var showAllStyles = false
-            @State private var useContrastBackground = true
-            @State private var showFixedHeader = false\n
-        """
-        
-        // Implementação do body com preview e configuração
-        let bodyContent = """
-            
-            var body: some View {
-                SampleWithFixedHeader(
-                    showFixedHeader: $showFixedHeader,
-                    content: {
-                        Card(action: {
-                            showFixedHeader.toggle()
-                        }) {
-                            VStack(spacing: 16) {
-                                // Preview do componente com configurações atuais
-                                previewComponent
-                            }
-                            .padding()
-                        }
-                        .padding()
-                    },
-                    config: {
-                        VStack(spacing: 16) {
-                            // Área de configuração
-                            configurationSection
-                            
-                            // Preview do código gerado
-                            CodePreviewSection(generateCode: generateSwiftCode)
-                            
-                            // Exibição de todos os estilos (opcional)
-                            if showAllStyles {
-                                Divider().padding(.vertical, 4)
-                                
-                                VStack(alignment: .leading, spacing: 12) {
-                                    Text("Todos os Estilos")
-                                        .font(fonts.mediumBold)
-                                        .foregroundColor(colors.contentA)
-                                    
-                                    scrollViewWithStyles
-                                }
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
-                )
-            }
-        """
-        
-        // ScrollView com todos os estilos baseado no tipo de componente
-        var scrollView = "\n\n"
-        scrollView += """
-            private var scrollViewWithStyles: some View {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 8) {
-                        // Mostrar todas as funções de estilo disponíveis
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], spacing: 8) {
-                            ForEach(\(componentInfo.name)StyleCase.allCases, id: \\.self) { style in
-                                VStack {
-                                    \(componentInfo.exampleCode)
-                                    .\(componentInfo.name.firstLowerCased)Style(style.style()\(config.styleParams))
-                                    .padding(8)
-                                    .frame(maxWidth: .infinity)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 4)
-                                            .fill(colors.backgroundB.opacity(0.2))
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-                .frame(maxHeight: 200)
-            }
-            """
-        
         // Criando a seção de preview do componente
         var previewComponent = """
             
@@ -120,7 +41,7 @@ final class GenerateComponent {
                 VStack {
                     // Preview do componente com as configurações atuais
         """
-
+        
         previewComponent += """
         
                 \(componentInfo.exampleCode)
@@ -329,14 +250,14 @@ final class GenerateComponent {
         // Combinar tudo
         var fullContent = startOfFile(componentInfo)
         fullContent += stateVarsGenerated(componentInfo, config: config)
-        fullContent += "\n" + viewOptions
-        fullContent += bodyContent
-        fullContent += scrollView
+        fullContent += sampleDefaultOptions()
+        fullContent += body()
+        fullContent += allStyles(componentInfo, config: config)
         fullContent += previewComponent
         fullContent += configurationSection
         fullContent += generateCode
         fullContent += styleHelpers
-
+        
         fullContent += "\n}\n"
         fullContent += generateEnumStyle(with: componentInfo)
         
@@ -402,6 +323,91 @@ final class GenerateComponent {
         return states.joined(separator: "\n")
     }
     
+    func sampleDefaultOptions() -> String {
+        // Toggles para opções de visualização´
+        return """
+        
+            @State private var showAllStyles = false
+            @State private var useContrastBackground = true
+            @State private var showFixedHeader = false\n
+        """
+    }
+    
+    func body() -> String {
+        """
+            
+            var body: some View {
+                SampleWithFixedHeader(
+                    showFixedHeader: $showFixedHeader,
+                    content: {
+                        Card(action: {
+                            showFixedHeader.toggle()
+                        }) {
+                            VStack(spacing: 16) {
+                                // Preview do componente com configurações atuais
+                                previewComponent
+                            }
+                            .padding()
+                        }
+                        .padding()
+                    },
+                    config: {
+                        VStack(spacing: 16) {
+                            // Área de configuração
+                            configurationSection
+                            
+                            // Preview do código gerado
+                            CodePreviewSection(generateCode: generateSwiftCode)
+                            
+                            // Exibição de todos os estilos (opcional)
+                            if showAllStyles {
+                                Divider().padding(.vertical, 4)
+                                
+                                VStack(alignment: .leading, spacing: 12) {
+                                    Text("Todos os Estilos")
+                                        .font(fonts.mediumBold)
+                                        .foregroundColor(colors.contentA)
+                                    
+                                    scrollViewWithStyles
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                )
+            }
+        """
+    }
+    
+    func allStyles(_ componentInfo: ComponentInfo, config: GenerateComponentConfiguration) -> String {
+        var allStyles = "\n\n"
+        allStyles += """
+            private var scrollViewWithStyles: some View {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 8) {
+                        // Mostrar todas as funções de estilo disponíveis
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], spacing: 8) {
+                            ForEach(\(componentInfo.name)StyleCase.allCases, id: \\.self) { style in
+                                VStack {
+                                    \(componentInfo.exampleCode)
+                                    .\(componentInfo.name.firstLowerCased)Style(style.style()\(config.styleParams))
+                                    .padding(8)
+                                    .frame(maxWidth: .infinity)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 4)
+                                            .fill(colors.backgroundB.opacity(0.2))
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                .frame(maxHeight: 200)
+            }
+            """
+        return allStyles
+    }
+    
     func generateGetStyle(with componentInfo: ComponentInfo) -> String {
         let name = componentInfo.name
         var cases = ""
@@ -432,7 +438,6 @@ final class GenerateComponent {
     }
     
     func generateEnumStyle(with componentInfo: ComponentInfo) -> String {
-        let name = componentInfo.name
         var cases = ""
         componentInfo.styleFunctions.forEach { styleFunction in
             var parameters = ""
@@ -490,7 +495,7 @@ extension Array where Element == StyleParameter {
     
     func sampleJoined() -> String {
         sorted(by: {$0.order < $1.order }).enumerated().map { index, item in
-
+            
             let parameterType = "\(item.name): "
             var parameterValue = switch item.type {
                 
