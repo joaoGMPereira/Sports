@@ -114,6 +114,14 @@ struct ZenithSampleElements: View, @preconcurrency BaseThemeDependencies {
             category: .custom,
             tabType: .components,
             elementView: .element(
+                title: "BasicCard",
+                BasicCardSample()
+            )
+        ),
+        ElementType(
+            category: .custom,
+            tabType: .components,
+            elementView: .element(
                 title: "CARD",
                 CardSample()
             )

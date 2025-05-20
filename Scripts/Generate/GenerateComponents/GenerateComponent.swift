@@ -59,6 +59,7 @@ final class GenerateComponent {
         import SwiftUI
         import Zenith
         import ZenithCoreInterface
+        import SFSafeSymbols
         """
         
         // Início da estrutura
@@ -99,7 +100,26 @@ final class GenerateComponent {
                 if parameter.type == "String" && (defaultValue.isEmpty || defaultValue == "\"\"") {
                     states.append("\n    @State private var \(parameter.name): \(parameter.type) = \"Sample text\"")
                 } else {
-                    states.append("\n    @State private var \(parameter.name): \(parameter.type) = \(defaultValue)")
+                    if parameter.type == "StringImageEnum" {
+                        states.append(
+                            """
+                            @State private var \(parameter.name): String = \"figure.run\"
+                            @State private var symbolSearch = ""
+                            var filteredSymbols: [String] {
+                                if symbolSearch.isEmpty {
+                                    return SFSymbol.allSymbols.map{ $0.rawValue }.sorted()
+                                }
+                                return SFSymbol.allSymbols
+                                    .filter { $0.rawValue.lowercased().contains(symbolSearch.lowercased()) }
+                                    .map { $0.rawValue }
+                                    .prefix(100)
+                                    .sorted()
+                            }
+                            """
+                        )
+                    } else {
+                        states.append("\n    @State private var \(parameter.name): \(parameter.type) = \(defaultValue)")
+                    }
                 }
             } else {
                 states.append(defaultUnsetVar(parameter))
@@ -117,6 +137,21 @@ final class GenerateComponent {
         return switch parameter.type {
         case "String":
             "\n    @State private var \(parameter.name): \(parameter.type) = \"Sample text\""
+        case "StringImageEnum":
+            """
+            @State private var \(parameter.name): String = \"figure.run\"
+            @State private var symbolSearch = ""
+            var filteredSymbols: [String] {
+                if symbolSearch.isEmpty {
+                    return SFSymbol.allSymbols.map{ $0.rawValue }.sorted()
+                }
+                return SFSymbol.allSymbols
+                    .filter { $0.rawValue.lowercased().contains(symbolSearch.lowercased()) }
+                    .map { $0.rawValue }
+                    .prefix(100)
+                    .sorted()
+            }
+            """
         case "Bool":
             "\n    @State private var \(parameter.name): \(parameter.type) = false"
         case "Int", "Double", "CGFloat":
@@ -268,6 +303,48 @@ final class GenerateComponent {
                 TextField("", text: $\(parameter.name))
                     .textFieldStyle(.contentA(), placeholder: "\(parameter.name)")
                     .padding(.horizontal)\n
+                """
+            case "StringImageEnum":
+                """
+                Text("Ícone")
+                    .font(fonts.smallBold)
+                    .foregroundColor(colors.contentA)
+                
+                TextField("Buscar símbolo", text: $symbolSearch)
+                    .textFieldStyle(.roundedBorder)
+                
+                ScrollView {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 8) {
+                        ForEach(filteredSymbols, id: \\.self) { symbol in
+                            VStack {
+                                Image(systemName: symbol)
+                                    .font(.system(size: 22))
+                                    .frame(width: 44, height: 44)
+                                    .background(
+                                        Circle()
+                                            .fill(symbol == \(parameter.name) ?
+                                                  colors.highlightA : colors.backgroundB)
+                                    )
+                                    .foregroundColor(symbol == \(parameter.name) ?
+                                                     colors.contentC : colors.contentA)
+                                
+                                Text(symbol)
+                                    .font(fonts.small)
+                                    .foregroundColor(colors.contentA)
+                                    .lineLimit(1)
+                                    .truncationMode(.tail)
+                            }
+                            .frame(width: 80, height: 80)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                \(parameter.name) = symbol
+                            }
+                        }
+                    }
+                }
+                .frame(height: 200)
+                .background(colors.backgroundB.opacity(0.5))
+                .cornerRadius(8)
                 """
             case "Bool":
                 """

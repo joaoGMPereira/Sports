@@ -35,8 +35,8 @@ struct InitParameter: Hashable, ParameterProtocol {
     let isUsedAsBinding: Bool
     let label: String?
     let name: String
-    let type: String
-    let defaultValue: String?
+    var type: String
+    var defaultValue: String?
     let isAction: Bool
 }
 
@@ -462,7 +462,7 @@ final class ComponentConfiguration {
         let initRegex = try! NSRegularExpression(pattern: initPattern, options: [.dotMatchesLineSeparators])
         let initMatches = initRegex.matches(in: content, options: [], range: NSRange(content.startIndex..., in: content))
         
-        if let match = initMatches.first {
+        for match in initMatches {
             guard let paramsRange = Range(match.range(at: 1), in: content) else {
                 return []
             }
@@ -555,8 +555,21 @@ final class ComponentConfiguration {
                 ))
             }
         }
+        var filteredInitParams: [InitParameter] = []
         
-        return initParams
+        initParams.forEach { param in
+            // Tratamento para Imagem em String
+            if filteredInitParams.contains(where: { $0.name == param.name && $0.type == "String" && param.type == "SFSymbol" }), var foundInitParam = filteredInitParams.first(where: { $0.name == param.name && $0.type == "String" }) {
+                filteredInitParams.removeAll(where: { $0.name == param.name && $0.type == "String" })
+                foundInitParam.defaultValue = "\"figure.run\""
+                foundInitParam.type = "StringImageEnum"
+                filteredInitParams.append(foundInitParam)
+            }
+            if filteredInitParams.contains(where: { $0.name == param.name }) == false {
+                filteredInitParams.append(param)
+            }
+        }
+        return filteredInitParams
     }
     
     // Nova função para extrair parâmetros de forma equilibrada, respeitando parênteses aninhados
@@ -756,7 +769,7 @@ final class ComponentConfiguration {
                         \(name)(\(componentInfo.publicInitParams.joined()))
                         """
                         componentInfo.generateCode = """
-                        \(name)(\(componentInfo.publicInitParams.joined()))
+                        \(name)(\(componentInfo.publicInitParams.sampleJoined()))
                         """
                     }
                 }
@@ -1143,6 +1156,38 @@ extension Array where Element == InitParameter {
             }
             if item.isUsedAsBinding {
                 parameterString = "\(item.name): $\(item.name)"
+            }
+            return index < count - 1 ? "\(parameterString)," : parameterString
+        }.joined(separator: " ")
+    }
+    
+    func sampleJoined() -> String {
+        sorted(by: {$0.order < $1.order }).enumerated().map { index, item in
+            
+            let parameterType = "\(item.name): "
+            var parameterValue = switch item.type {
+                
+            case "String", "StringImageEnum":
+                "\"\\(\(item.name))\""
+            case "Bool":
+                "\\(\(item.name))"
+            case "Int", "Double", "CGFloat":
+                "\(item.name)"
+            default:
+                if item.type.contains("->") {
+                    "{}"
+                } else {
+                    ".\\(\(item.name).rawValue)"
+                }
+            }
+            
+            if item.isUsedAsBinding {
+                parameterValue = ".constant(\(parameterValue))"
+            }
+            
+            var parameterString = "\(parameterType)\(parameterValue)"
+            if item.hasObfuscatedArgument {
+                parameterString = parameterValue
             }
             return index < count - 1 ? "\(parameterString)," : parameterString
         }.joined(separator: " ")

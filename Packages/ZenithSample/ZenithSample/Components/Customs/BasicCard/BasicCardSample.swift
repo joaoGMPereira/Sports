@@ -1,3 +1,4 @@
+import SFSafeSymbols
 import SwiftUI
 import Zenith
 import ZenithCoreInterface
@@ -6,8 +7,6 @@ struct BasicCardSample: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) var themeConfigurator
     @State private var style: GenerateBasicCardSampleEnum = .fill
 
-    @State private var image: String = "Sample text"
-
     @State private var title: String = "Sample text"
 
     @State private var arrangement: StackArrangementCase = .verticalCenter
@@ -15,6 +14,18 @@ struct BasicCardSample: View, @preconcurrency BaseThemeDependencies {
     @State private var contentLayout: CardLayoutCase = .imageText
 
     @State private var action: (() -> Void) = {}
+    @State private var image: String = "figure.run"
+    @State private var symbolSearch = ""
+    var filteredSymbols: [String] {
+        if symbolSearch.isEmpty {
+            return SFSymbol.allSymbols.map(\.rawValue).sorted()
+        }
+        return SFSymbol.allSymbols
+            .filter { $0.rawValue.lowercased().contains(symbolSearch.lowercased()) }
+            .map(\.rawValue)
+            .prefix(100)
+            .sorted()
+    }
 
     @State private var showAllStyles = false
     @State private var useContrastBackground = true
@@ -86,9 +97,6 @@ struct BasicCardSample: View, @preconcurrency BaseThemeDependencies {
                 height: 120
             )
             .padding(.horizontal)
-            TextField("", text: $image)
-                .textFieldStyle(.contentA(), placeholder: "image")
-                .padding(.horizontal)
             TextField("", text: $title)
                 .textFieldStyle(.contentA(), placeholder: "title")
                 .padding(.horizontal)
@@ -106,7 +114,45 @@ struct BasicCardSample: View, @preconcurrency BaseThemeDependencies {
                 height: 120
             )
             .padding(.horizontal)
-            // Toggles para opções
+            Text("Ícone")
+                .font(fonts.smallBold)
+                .foregroundColor(colors.contentA)
+
+            TextField("Buscar símbolo", text: $symbolSearch)
+                .textFieldStyle(.roundedBorder)
+
+            ScrollView {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 8) {
+                    ForEach(filteredSymbols, id: \.self) { symbol in
+                        VStack {
+                            Image(systemName: symbol)
+                                .font(.system(size: 22))
+                                .frame(width: 44, height: 44)
+                                .background(
+                                    Circle()
+                                        .fill(symbol == image ?
+                                            colors.highlightA : colors.backgroundB)
+                                )
+                                .foregroundColor(symbol == image ?
+                                    colors.contentC : colors.contentA)
+
+                            Text(symbol)
+                                .font(fonts.small)
+                                .foregroundColor(colors.contentA)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                        }
+                        .frame(width: 80, height: 80)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            image = symbol
+                        }
+                    }
+                }
+            }
+            .frame(height: 200)
+            .background(colors.backgroundB.opacity(0.5))
+            .cornerRadius(8) // Toggles para opções
             VStack {
                 Toggle("Usar fundo contrastante", isOn: $useContrastBackground)
                     .toggleStyle(.default(.highlightA))
@@ -147,7 +193,7 @@ struct BasicCardSample: View, @preconcurrency BaseThemeDependencies {
         let styleFunctionsCases = [".fill()", ".bordered()"]
         let selectedStyle = styleFunctionsCases.first(where: { $0.contains(style.rawValue) }) ?? ".\(style.rawValue)()"
         code += """
-        BasicCard(image: image, title: title, arrangement: arrangement, contentLayout: contentLayout, action: action)
+        BasicCard(image: "\(image)", title: "\(title)", arrangement: .\(arrangement.rawValue), contentLayout: .\(contentLayout.rawValue), action: {})
         .basicCardStyle(\(selectedStyle))
         """
         return code
