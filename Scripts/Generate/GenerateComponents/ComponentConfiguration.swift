@@ -30,6 +30,7 @@ struct StyleConfig {
 }
 
 struct InitParameter: Hashable, ParameterProtocol {
+    let order: Int
     let label: String?
     let name: String
     let type: String
@@ -42,7 +43,6 @@ class ComponentInfo {
     let typePath: String
     
     var viewPath: String = ""
-    var configPath: String = ""
     var stylesPath: String = ""
     
     var properties: [SwiftProperty] = []
@@ -54,7 +54,6 @@ class ComponentInfo {
     var textProperties: [SwiftProperty] = []
     var boolProperties: [SwiftProperty] = []
     var numberProperties: [SwiftProperty] = []
-    var closureProperties: [SwiftProperty] = []
     var complexProperties: [SwiftProperty] = []
     
     var publicInitParams: [InitParameter] = []
@@ -116,36 +115,45 @@ final class ComponentConfiguration {
     
     // MARK: - Análise de código Swift (Parser)
     
-    func extractProperties(from content: String) -> [SwiftProperty] {
-        var properties: [SwiftProperty] = []
+    func extractProperties(from content: String) -> [InitParameter] {
+        var properties: [InitParameter] = []
         
         // Padrão para localizar propriedades
         let pattern = "(var|let)\\s+(\\w+)\\s*:\\s*([^{=\\n]+)(?:\\s*=\\s*([^{\\n]+))?"
         let regex = try! NSRegularExpression(pattern: pattern, options: [])
         let matches = regex.matches(in: content, options: [], range: NSRange(content.startIndex..., in: content))
         
-        for match in matches {
-            guard let propTypeRange = Range(match.range(at: 1), in: content),
+        for (index, match) in matches.enumerated() {
+            guard let propLabelRange = Range(match.range(at: 1), in: content),
                   let propNameRange = Range(match.range(at: 2), in: content),
-                  let propDataTypeRange = Range(match.range(at: 3), in: content) else {
+                  let propTypeRange = Range(match.range(at: 3), in: content) else {
                 continue
             }
             
-            let propType = String(content[propTypeRange])
+            let propLabel = String(content[propLabelRange])
             let propName = String(content[propNameRange])
-            let propDataType = String(content[propDataTypeRange]).trimmingCharacters(in: .whitespaces)
+            let propType = String(content[propTypeRange]).trimmingCharacters(in: .whitespaces)
             
             var defaultValue: String? = nil
             if match.numberOfRanges > 4, let defaultValueRange = Range(match.range(at: 4), in: content) {
                 defaultValue = String(content[defaultValueRange]).trimmingCharacters(in: .whitespaces)
             }
             
-            properties.append(SwiftProperty(
-                type: propType,
-                name: propName,
-                dataType: propDataType,
-                defaultValue: defaultValue
-            ))
+            if propName == "body" && propType == "some View" {
+                continue
+            }
+            let isAction = propType.contains("->")
+            
+            properties.append(
+                InitParameter(
+                    order: index,
+                    label: propLabel,
+                    name: propName,
+                    type: propType,
+                    defaultValue: defaultValue,
+                    isAction: isAction
+                )
+            )
         }
         
         return properties
@@ -512,7 +520,7 @@ final class ComponentConfiguration {
             // Implementação simplificada
             let params = splitParameters(paramsStr)
             
-            for param in params {
+            for (index, param) in params.enumerated() {
                 // Padrão para extrair detalhes do parâmetro
                 let paramPattern = "(?:(\\w+)\\s+)?(\\w+)\\s*:\\s*([^=]+)(?:\\s*=\\s*(.+))?"
                 let paramRegex = try! NSRegularExpression(pattern: paramPattern, options: [])
@@ -543,6 +551,7 @@ final class ComponentConfiguration {
                 let isAction = type.contains("->")
                 
                 initParams.append(InitParameter(
+                    order: index,
                     label: label,
                     name: name,
                     type: type,
@@ -568,44 +577,60 @@ final class ComponentConfiguration {
         }
     }
     
-    // MARK: - Funções para análise de componentes
+    func findComponentFiles(_ componentName: String) -> ComponentInfo? {
+        // Verificar primeiro se é um componente nativo
+        if let nativeComponent = NATIVE_COMPONENTS[componentName] {
+            return findNativeComponent(nativeComponent, name: componentName)
+        }
+        
+        return findCustomComponent(componentName)
+    }
     
-    func analyzeComponent(_ componentInfo: ComponentInfo) -> ComponentInfo {
-        // Ler o conteúdo do arquivo View
-        guard let viewContent = readFile(at: componentInfo.viewPath) else {
-            return componentInfo
-        }
+    func findNativeComponent(_ nativeComponent: NativeComponent, name: String) -> ComponentInfo {
+        Log.log("Componente nativo encontrado: \(name)")
+        var componentInfo = ComponentInfo(name: name, typePath: nativeComponent.typePath)
+        componentInfo.isNative = true
+        componentInfo.contextualModule = nativeComponent.contextualModule
         
-        // Extrair parâmetros do inicializador
-        componentInfo.publicInitParams = extractInitParams(from: viewContent, componentName: componentInfo.name)
-        
-        // Verificar se é um componente do tipo Button
-        let isButton = detectButtonComponent(componentInfo.name, componentInfo.publicInitParams)
-        
-        // Para componentes do tipo Button, armazenar informações adicionais
-        if isButton {
-            Log.log("Componente \(componentInfo.name) identificado como tipo Button")
-            for param in componentInfo.publicInitParams where param.isAction {
-                componentInfo.hasActionParam = true
-                // Adicionar o parâmetro à lista de closure properties (convertendo para SwiftProperty)
-                componentInfo.closureProperties.append(SwiftProperty(
-                    type: "var",
+        // Converter init params do formato nativo para o formato interno
+        for (index, param) in nativeComponent.initParams.enumerated() {
+            componentInfo.publicInitParams.append(
+                InitParameter(
+                    order: index,
+                    label: param.label,
                     name: param.name,
-                    dataType: param.type,
-                    defaultValue: param.defaultValue
-                ))
-                Log.log("Parâmetro de ação encontrado: \(param.name)")
-            }
+                    type: param.type,
+                    defaultValue: param.defaultValue,
+                    isAction: param.isAction
+                )
+            )
         }
         
-        // Categorizar propriedades complexas (que não são tipos simples)
-        for prop in componentInfo.properties {
-            if !["String", "Bool", "Int", "Double", "CGFloat", "Float"].contains(where: { prop.dataType.contains($0) }) &&
-                !prop.dataType.contains("Case") && !["FontName", "ColorName"].contains(prop.dataType) {
-                if prop.dataType.contains("->") {  // É uma closure
-                    componentInfo.closureProperties.append(prop)
-                } else {
-                    componentInfo.complexProperties.append(prop)
+        componentInfo.exampleCode = nativeComponent.exampleCode
+        componentInfo.generateCode = nativeComponent.generateCode
+        
+        // Se for componente nativo, procurar apenas pelo arquivo de estilos
+        let possiblePaths = [
+            "\(COMPONENTS_PATH)/BaseElements/Natives/\(name)"
+        ]
+        
+        for path in possiblePaths {
+            if FileManager.default.fileExists(atPath: path) {
+                do {
+                    let files = try FileManager.default.contentsOfDirectory(atPath: path)
+                    for file in files {
+                        if let styledComponentInfo = configStyles(
+                            componentInfo: componentInfo,
+                            name: name,
+                            file: file,
+                            path: path
+                        ) {
+                            componentInfo = styledComponentInfo
+                        }
+                        break
+                    }
+                } catch {
+                    Log.log("Erro ao listar arquivos em \(path): \(error)", level: .error)
                 }
             }
         }
@@ -613,88 +638,14 @@ final class ComponentConfiguration {
         return componentInfo
     }
     
-    func findComponentFiles(_ componentName: String) -> ComponentInfo? {
-        // Verificar primeiro se é um componente nativo
-        if let nativeInfo = NATIVE_COMPONENTS[componentName] {
-            Log.log("Componente nativo encontrado: \(componentName)")
-            let componentInfo = ComponentInfo(name: componentName, typePath: nativeInfo.typePath)
-            componentInfo.isNative = true
-            componentInfo.contextualModule = nativeInfo.contextualModule
-            
-            // Converter init params do formato nativo para o formato interno
-            for param in nativeInfo.initParams {
-                componentInfo.publicInitParams.append(InitParameter(
-                    label: param.label,
-                    name: param.name,
-                    type: param.type,
-                    defaultValue: param.defaultValue,
-                    isAction: param.isAction
-                ))
-            }
-            
-            componentInfo.exampleCode = nativeInfo.exampleCode
-            componentInfo.generateCode = nativeInfo.generateCode
-            
-            // Verificar se o componente tem parâmetro de ação
-            for param in componentInfo.publicInitParams where param.isAction {
-                componentInfo.hasActionParam = true
-                // Adicionar o parâmetro à lista de closure properties
-                componentInfo.closureProperties.append(SwiftProperty(
-                    type: "var",
-                    name: param.name,
-                    dataType: param.type,
-                    defaultValue: param.defaultValue
-                ))
-                Log.log("Parâmetro de ação encontrado: \(param.name)")
-            }
-            
-            // Se for componente nativo, procurar apenas pelo arquivo de estilos
-            let possiblePaths = [
-                "\(COMPONENTS_PATH)/BaseElements/Natives/\(componentName)",
-                "\(COMPONENTS_PATH)/BaseElements/Customs/\(componentName)",
-                "\(COMPONENTS_PATH)/Components/Custom/\(componentName)",
-                "\(COMPONENTS_PATH)/Templates/\(componentName)"
-            ]
-            
-            for path in possiblePaths {
-                if FileManager.default.fileExists(atPath: path) {
-                    do {
-                        let files = try FileManager.default.contentsOfDirectory(atPath: path)
-                        for file in files {
-                            if file.contains("\(componentName)Styles.swift") {
-                                componentInfo.stylesPath = "\(path)/\(file)"
-                                Log.log("Arquivo de estilos encontrado: \(componentInfo.stylesPath)")
-                                
-                                // Extrair casos de estilo do arquivo de estilos
-                                if let content = readFile(at: componentInfo.stylesPath) {
-                                    componentInfo.styleCases = extractStyleCases(from: content)
-                                    componentInfo.styleFunctions = extractStyleFunctions(from: content, componentName: componentName)
-                                    componentInfo.styleParameters = extractStyleParameters(from: content, componentName: componentName)
-                                    Log.log("Parametros da função de estilo encontrados: \(componentInfo.styleParameters.map { $0.name })")
-                                    Log.log("Casos de estilo encontrados: \(componentInfo.styleCases)")
-                                    Log.log("Funções de estilo encontradas: \(componentInfo.styleFunctions.map { $0.name })")
-                                }
-                                break
-                            }
-                        }
-                    } catch {
-                        Log.log("Erro ao listar arquivos em \(path): \(error)", level: .error)
-                    }
-                }
-            }
-            
-            return componentInfo
-        }
-        
+    func findCustomComponent(_ name: String) -> ComponentInfo? {
         // Para componentes não nativos, seguir o fluxo normal
         var componentInfo: ComponentInfo?
-        
-        // Determinar o tipo de componente (BaseElements/Natives ou Components/Customs)
+
         let possiblePaths = [
-            "\(COMPONENTS_PATH)/BaseElements/Natives/\(componentName)",
-            "\(COMPONENTS_PATH)/BaseElements/Customs/\(componentName)",
-            "\(COMPONENTS_PATH)/Components/Customs/\(componentName)",
-            "\(COMPONENTS_PATH)/Templates/\(componentName)",
+            "\(COMPONENTS_PATH)/BaseElements/Customs/\(name)",
+            "\(COMPONENTS_PATH)/Components/Customs/\(name)",
+            "\(COMPONENTS_PATH)/Templates/\(name)",
         ]
         
         // Verificar se algum dos caminhos possíveis existe
@@ -703,23 +654,20 @@ final class ComponentConfiguration {
             if FileManager.default.fileExists(atPath: basePath) {
                 Log.log("Componente encontrado em: \(basePath)")
                 foundPath = basePath
-                var typePath = "BaseElements/Natives"
-                if basePath.contains("BaseElements/Natives") {
-                    typePath = "BaseElements/Natives"
-                }
+                var typePath = "BaseElements/Customs"
                 if basePath.contains("BaseElements/Customs") {
                     typePath = "BaseElements/Customs"
                 }
                 if basePath.contains("Components/Customs") {
                     typePath = "Components/Customs"
                 }
-                componentInfo = ComponentInfo(name: componentName, typePath: typePath)
+                componentInfo = ComponentInfo(name: name, typePath: typePath)
                 break
             }
         }
         
-        guard let componentInfo = componentInfo, let foundPath = foundPath else {
-            Log.log("Componente '\(componentName)' não encontrado. Caminhos verificados: \(possiblePaths)", level: .error)
+        guard var componentInfo = componentInfo, let foundPath = foundPath else {
+            Log.log("Componente '\(name)' não encontrado. Caminhos verificados: \(possiblePaths)", level: .error)
             return nil
         }
         
@@ -732,14 +680,26 @@ final class ComponentConfiguration {
                 let filePath = "\(foundPath)/\(file)"
                 Log.log("Verificando arquivo: \(filePath)")
                 
-                if file.contains("\(componentName)View") {
+                if file.contains("\(name).swift") {
                     componentInfo.viewPath = filePath
                     Log.log("View encontrada: \(filePath)")
-                } else if file.contains("\(componentName)Configuration") {
-                    componentInfo.configPath = filePath
-                    Log.log("Configuration encontrada: \(filePath)")
-                } else if file.contains("\(componentName)Styles") {
-                    componentInfo.stylesPath = filePath
+                    if let content = readFile(at: componentInfo.viewPath) {
+                        componentInfo.publicInitParams = extractProperties(from: content)
+                        componentInfo.exampleCode = """
+                        Tag(sampleText)
+                        """
+                        componentInfo.generateCode = """
+                        Tag(sampleText)
+                        """
+                    }
+                }
+                if let styledComponentInfo = configStyles(
+                    componentInfo: componentInfo,
+                    name: name,
+                    file: file,
+                    path: foundPath
+                ) {
+                    componentInfo = styledComponentInfo
                     Log.log("Styles encontrada: \(filePath)")
                 }
             }
@@ -747,40 +707,26 @@ final class ComponentConfiguration {
             Log.log("Erro ao listar arquivos do componente: \(error)", level: .error)
             return componentInfo
         }
-        
-        // Verificar se encontrou os arquivos necessários
-        if componentInfo.viewPath.isEmpty {
-            Log.log("View não encontrada para o componente \(componentName)", level: .warning)
-        }
-        
-        // Extrair propriedades, funções de estilo e casos de estilo
-        if !componentInfo.viewPath.isEmpty, let content = readFile(at: componentInfo.viewPath) {
-            Log.log("Analisando view: \(componentInfo.viewPath)")
-            componentInfo.properties = extractProperties(from: content)
+
+        return componentInfo
+    }
+    
+    func configStyles(componentInfo: ComponentInfo, name: String, file: String, path: String) -> ComponentInfo? {
+        if file.contains("\(name)Styles.swift") {
+            componentInfo.stylesPath = "\(path)/\(file)"
+            Log.log("Arquivo de estilos encontrado: \(componentInfo.stylesPath)")
             
-            // Categorizar propriedades
-            let (enumProps, textProps, boolProps, numberProps) = categorizeProperties(componentInfo.properties)
-            componentInfo.enumProperties = enumProps
-            componentInfo.textProperties = textProps
-            componentInfo.boolProperties = boolProps
-            componentInfo.numberProperties = numberProps
-            
-            Log.log("Propriedades extraídas: \(componentInfo.properties.map { $0.name })")
-        }
-        
-        if !componentInfo.stylesPath.isEmpty, let content = readFile(at: componentInfo.stylesPath) {
-            Log.log("Analisando arquivo de estilos: \(componentInfo.stylesPath)")
-            componentInfo.styleFunctions = extractStyleFunctions(from: content, componentName: componentName)
-            
-            // Se não encontrou funções de estilo, tenta extrair do StyleCase (para compatibilidade)
-            if componentInfo.styleFunctions.isEmpty {
-                Log.log("Tentando extrair casos de estilo (StyleCase)")
+            // Extrair casos de estilo do arquivo de estilos
+            if let content = readFile(at: componentInfo.stylesPath) {
                 componentInfo.styleCases = extractStyleCases(from: content)
+                componentInfo.styleFunctions = extractStyleFunctions(from: content, componentName: name)
+                componentInfo.styleParameters = extractStyleParameters(from: content, componentName: name)
+                Log.log("Parametros da função de estilo encontrados: \(componentInfo.styleParameters.map { $0.name })")
                 Log.log("Casos de estilo encontrados: \(componentInfo.styleCases)")
+                Log.log("Funções de estilo encontradas: \(componentInfo.styleFunctions.map { $0.name })")
             }
         }
-        
-        return componentInfo
+        return nil
     }
     
     func extractStyleCases(from content: String) -> [String] {
@@ -932,37 +878,4 @@ final class ComponentConfiguration {
         
         return Array(cases).sorted()
     }
-    
-    func categorizeProperties(_ properties: [SwiftProperty]) -> (
-        enumProps: [SwiftProperty],
-        textProps: [SwiftProperty],
-        boolProps: [SwiftProperty],
-        numberProps: [SwiftProperty]
-    ) {
-        var enumProps: [SwiftProperty] = []
-        var textProps: [SwiftProperty] = []
-        var boolProps: [SwiftProperty] = []
-        var numberProps: [SwiftProperty] = []
-        
-        for prop in properties {
-            // Ignorar propriedades específicas
-            if ["body", "colors", "fonts"].contains(prop.name) {
-                continue
-            }
-            
-            // Detectar tipos de propriedades
-            if prop.dataType.contains("Case") || ["FontName", "ColorName"].contains(prop.dataType) {
-                enumProps.append(prop)
-            } else if prop.dataType.contains("String") {
-                textProps.append(prop)
-            } else if prop.dataType.contains("Bool") {
-                boolProps.append(prop)
-            } else if ["Int", "Double", "CGFloat", "Float"].contains(where: { prop.dataType.contains($0) }) {
-                numberProps.append(prop)
-            }
-        }
-        
-        return (enumProps, textProps, boolProps, numberProps)
-    }
-    
 }

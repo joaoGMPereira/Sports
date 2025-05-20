@@ -61,7 +61,7 @@ public extension TagStyle where Self == DefaultTagStyle {
     static func `default`(_ color: TagColor) -> Self { .init(color: color) }
 }
 
-public enum TagColor: CaseIterable, Identifiable, Sendable {
+public enum TagColor: String, CaseIterable, Identifiable, Sendable {
     case highlightA
     case `default`
     
