@@ -24,8 +24,8 @@ public protocol DetailedListItemStyle: StyleProtocol & Identifiable {
 public struct DetailedListItemStyleConfiguration {
     let title: String
     let description: String
-    let leftInfo: DetailedListItem.Info
-    let rightInfo: DetailedListItem.Info
+    let leftInfo: DetailedListItemInfo
+    let rightInfo: DetailedListItemInfo
     let action: (() -> Void)
     let trailingContent: AnyView?
     let progressText: String?
@@ -37,8 +37,8 @@ public struct DetailedListItemStyleConfiguration {
     init(
         title: String,
         description: String,
-        leftInfo: DetailedListItem.Info,
-        rightInfo: DetailedListItem.Info,
+        leftInfo: DetailedListItemInfo,
+        rightInfo: DetailedListItemInfo,
         action: @escaping () -> Void,
         trailingContent: AnyView? = nil,
         progressText: String? = nil,

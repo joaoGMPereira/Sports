@@ -478,105 +478,19 @@ final class ComponentConfiguration {
             // Log de debug para verificar os parâmetros extraídos
             Log.log("Parâmetros extraídos do init: \(params)", level: .info)
             
-            for (index, param) in params.enumerated() {
-                // Padrão melhorado para extrair detalhes do parâmetro incluindo @escaping
-                let paramPattern = "(?:(\\w+)\\s+)?(@?\\w+)?\\s*(\\w+)\\s*:\\s*([^=]+)(?:\\s*=\\s*(.+))?"
-                let paramRegex = try! NSRegularExpression(pattern: paramPattern, options: [])
+            // Processar cada parâmetro individualmente
+            for (index, paramString) in params.enumerated() {
+                let param = paramString.replacingOccurrences(of: "\n", with: " ").trimmingCharacters(in: .whitespaces)
                 
-                guard let paramMatch = paramRegex.firstMatch(in: param, options: [], range: NSRange(param.startIndex..., in: param)) else {
-                    continue
+                // Nova abordagem: análise baseada em tokens em vez de regex
+                let result = parseInitParameter(param, index: index)
+                
+                if let initParam = result {
+                    initParams.append(initParam)
+                    Log.log("Parâmetro processado com sucesso: \(initParam.name): \(initParam.type)", level: .info)
+                } else {
+                    Log.log("Falha ao processar parâmetro: \(param)", level: .warning)
                 }
-                
-                var label: String? = nil
-                if paramMatch.numberOfRanges > 1, let labelRange = Range(paramMatch.range(at: 1), in: param),
-                   paramMatch.range(at: 1).location != NSNotFound {
-                    label = String(param[labelRange])
-                }
-                
-                // Identificar se temos uma anotação como @escaping
-                var annotation: String? = nil
-                if paramMatch.numberOfRanges > 2, let annotationRange = Range(paramMatch.range(at: 2), in: param),
-                   paramMatch.range(at: 2).location != NSNotFound {
-                    annotation = String(param[annotationRange])
-                }
-                
-                var param = param.replacingOccurrences(of: "\n", with: "").trimmingCharacters(in: .whitespaces)
-                guard let nameRange = Range(paramMatch.range(at: 3), in: param),
-                      let typeRange = Range(paramMatch.range(at: 4), in: param) else {
-                    continue
-                }
-                
-                let name = String(param[nameRange])
-                var type = String(param[typeRange]).trimmingCharacters(in: .whitespaces)
-                
-                // Se temos uma anotação, incluí-la no tipo
-                if let annotation = annotation, !annotation.isEmpty {
-                    type = "\(annotation) \(type)"
-                }
-                
-                var defaultValue: String? = nil
-                if paramMatch.numberOfRanges > 5, let defaultValueRange = Range(paramMatch.range(at: 5), in: param),
-                   paramMatch.range(at: 5).location != NSNotFound {
-                    defaultValue = String(param[defaultValueRange]).trimmingCharacters(in: .whitespaces)
-                }
-                
-                // Determinar se é um parâmetro de closure/ação
-                let isAction = type.contains("->")
-                
-                var isUsedAsBinding = false
-                
-                if type.contains("Binding<") {
-                    // Extrair o conteúdo entre Binding< e o fechamento correspondente >
-                    var depth = 0
-                    let startIndex = type.index(type.range(of: "Binding<")!.upperBound, offsetBy: 0)
-                    var endIndex = startIndex
-                    
-                    // Percorrer a string para encontrar o ">" correspondente
-                    for (i, char) in type[startIndex...].enumerated() {
-                        if char == "<" {
-                            depth += 1
-                        } else if char == ">" {
-                            if depth == 0 {
-                                endIndex = type.index(startIndex, offsetBy: i)
-                                break
-                            }
-                            depth -= 1
-                        }
-                    }
-                    
-                    // Extrair o conteúdo interno do Binding
-                    type = String(type[startIndex..<endIndex])
-                    isUsedAsBinding = true
-                }
-                
-                if type.contains("@escaping") {
-                    type = type.replacingOccurrences(of: "@escaping ", with: "").replacingOccurrences(of: "\n", with: "")
-                    type = "(\(type))"
-                    defaultValue = "{}"
-                }
-                
-                // Verificar se o tipo parece ser um enum e tentar encontrar um valor padrão
-                if defaultValue == nil && (type.hasSuffix("Case") || type.hasSuffix("Enum")) {
-                    if let enumDefaultValue = findEnumDefaultValue(type) {
-                        defaultValue = ".\(enumDefaultValue)"
-                        Log.log("Valor padrão para enum \(type) encontrado: \(defaultValue!)", level: .info)
-                    }
-                }
-                
-                if let value = defaultValue, value.contains(".constant(") {
-                    defaultValue = value.replacingOccurrences(of: ".constant(", with: "").replacingOccurrences(of: ")", with: "")
-                }
-                
-                initParams.append(InitParameter(
-                    order: index,
-                    hasObfuscatedArgument: (label ?? "").starts(with: "_"),
-                    isUsedAsBinding: isUsedAsBinding,
-                    label: label,
-                    name: name,
-                    type: type,
-                    defaultValue: defaultValue,
-                    isAction: isAction
-                ))
             }
         }
         var filteredInitParams: [InitParameter] = []
@@ -1168,6 +1082,170 @@ extension ComponentConfiguration {
         }
         
         return String(enumContent[caseRange])
+    }
+}
+
+extension ComponentConfiguration {
+    
+    
+    // Nova função para análise manual de parâmetros de inicialização
+    func parseInitParameter(_ paramString: String, index: Int) -> InitParameter? {
+        let trimmed = paramString.trimmingCharacters(in: .whitespaces)
+        
+        // Verificar se é um parâmetro vazio
+        if trimmed.isEmpty {
+            return nil
+        }
+        
+        // Dividir o parâmetro nas partes principais: label/nome e tipo/valor padrão
+        // Exemplo: "_  configuration: DetailedListItemStyleConfiguration"
+        // Ou: "title: String = "Default""
+        
+        // Primeiro, dividimos pelo caractere ':'
+        guard let colonIndex = trimmed.firstIndex(of: ":") else {
+            Log.log("Formato inválido de parâmetro (sem ':') : \(trimmed)", level: .warning)
+            return nil
+        }
+        
+        // Parte antes do ':' pode conter label e nome (ou apenas nome)
+        let leftSide = String(trimmed[..<colonIndex]).trimmingCharacters(in: .whitespaces)
+        
+        // Parte após o ':' contém o tipo e possivelmente um valor padrão
+        var rightSide = String(trimmed[trimmed.index(after: colonIndex)...]).trimmingCharacters(in: .whitespaces)
+        
+        // Separar tipo e valor padrão se houver um '='
+        var defaultValue: String? = nil
+        if let equalIndex = rightSide.firstIndex(of: "=") {
+            let typeSubstring = rightSide[..<equalIndex].trimmingCharacters(in: .whitespaces)
+            defaultValue = String(rightSide[rightSide.index(after: equalIndex)...]).trimmingCharacters(in: .whitespaces)
+            rightSide = String(typeSubstring)
+        }
+        
+        // Analisar a parte esquerda (label e nome)
+        var label: String? = nil
+        var name: String
+        
+        // Se houver um espaço, pode ter um label e um nome
+        if let spaceIndex = leftSide.firstIndex(of: " ") {
+            let possibleLabel = String(leftSide[..<spaceIndex]).trimmingCharacters(in: .whitespaces)
+            let possibleName = String(leftSide[leftSide.index(after: spaceIndex)...]).trimmingCharacters(in: .whitespaces)
+            
+            // Se ainda houver espaços depois de dividir, significa que temos uma situação mais complexa
+            // Por exemplo: "_ configuration" ou "@escaping completion"
+            if possibleName.contains(" ") {
+                // Dividir em palavras e usar a última como nome
+                let words = leftSide.components(separatedBy: .whitespaces).filter { !$0.isEmpty }
+                if let lastWord = words.last {
+                    name = lastWord
+                    // Verificar se há um label (_) ou anotações (@something)
+                    if words.first == "_" {
+                        label = "_"
+                    } else if words.count > 1 {
+                        // Possível anotação ou outro contexto - ignoramos
+                    }
+                } else {
+                    name = possibleName // Fallback
+                }
+            } else {
+                // Caso simples com label e nome
+                label = possibleLabel
+                name = possibleName
+            }
+        } else {
+            // Sem espaços, deve ser apenas o nome
+            name = leftSide
+        }
+        
+        // Processar o tipo (parte direita)
+        let type = rightSide.trimmingCharacters(in: .whitespaces)
+        
+        // Verificar tipo vazio
+        if type.isEmpty {
+            Log.log("Tipo vazio para parâmetro: \(trimmed)", level: .warning)
+            return nil
+        }
+        
+        // Verificar se é ação (contém "->")
+        let isAction = type.contains("->")
+        
+        // Verificar se é binding
+        var isBinding = false
+        var processedType = type
+        let replacedBinding = getContentInfo(processedType, patternStart: "Binding<")
+        if replacedBinding.success {
+            processedType = replacedBinding.type
+        }
+        
+        let replacedOptional = getContentInfo(processedType, patternStart: "Optional<")
+        if replacedOptional.success {
+            processedType = "\(replacedBinding.type)?"
+        }
+        
+        // Processar @escaping e outros modificadores
+        if processedType.contains("@escaping") {
+            processedType = processedType.replacingOccurrences(of: "@escaping ", with: "")
+            if defaultValue == nil {
+                defaultValue = "{}"
+            }
+        }
+        
+        // Verificação para enums
+        if defaultValue == nil && (processedType.hasSuffix("Case") || processedType.hasSuffix("Enum")) {
+            if let enumValue = findEnumDefaultValue(processedType) {
+                defaultValue = ".\(enumValue)"
+            }
+        }
+        
+        // Tratar valores .constant()
+        if let value = defaultValue, value.contains(".constant(") {
+            defaultValue = value.replacingOccurrences(of: ".constant(", with: "").replacingOccurrences(of: ")", with: "")
+        }
+        
+        Log.log("Analisado: nome=\(name), tipo=\(processedType), default=\(String(describing: defaultValue))", level: .info)
+        
+        return InitParameter(
+            order: index,
+            hasObfuscatedArgument: (label ?? "").starts(with: "_"),
+            isUsedAsBinding: isBinding,
+            label: label,
+            name: name,
+            type: processedType,
+            defaultValue: defaultValue,
+            isAction: isAction
+        )
+    }
+
+    func getContentInfo(_ type: String, patternStart: String) -> (type: String, success: Bool) {
+        // Verificar se é binding
+        var success = false
+        var processedType = type
+        
+        if type.contains(patternStart) {
+            success = true
+            // Extração mais segura do tipo dentro do Binding<>
+            if let startBracket = type.range(of: patternStart)?.upperBound {
+                var depth = 0
+                var endIndex = startBracket
+                
+                for (i, char) in type[startBracket...].enumerated() {
+                    if char == "<" {
+                        depth += 1
+                    } else if char == ">" {
+                        if depth == 0 {
+                            endIndex = type.index(startBracket, offsetBy: i)
+                            break
+                        }
+                        depth -= 1
+                    }
+                }
+                
+                processedType = String(type[startBracket..<endIndex])
+            } else {
+                // Fallback se não conseguirmos extrair o conteúdo do Binding
+                processedType = type.replacingOccurrences(of: patternStart, with: "").replacingOccurrences(of: ">", with: "")
+            }
+        }
+        return(processedType, success)
     }
 }
 

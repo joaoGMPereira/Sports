@@ -16,8 +16,8 @@ public struct DetailedListItem: View {
     public init(
         title: String,
         description: String = String(),
-        leftInfo: Info,
-        rightInfo: Info,
+        leftInfo: DetailedListItemInfo,
+        rightInfo: DetailedListItemInfo,
         blurConfig: BlurConfig = .standard(),
         action: @escaping () -> Void
     ) {
@@ -34,8 +34,8 @@ public struct DetailedListItem: View {
     public init<TrailingContent: View>(
         title: String,
         description: String = String(),
-        leftInfo: Info,
-        rightInfo: Info,
+        leftInfo: DetailedListItemInfo,
+        rightInfo: DetailedListItemInfo,
         blurConfig: BlurConfig = .standard(),
         action: @escaping () -> Void,
         @ViewBuilder trailingContent: () -> TrailingContent
@@ -54,8 +54,8 @@ public struct DetailedListItem: View {
     public init(
         title: String,
         description: String = String(),
-        leftInfo: Info,
-        rightInfo: Info,
+        leftInfo: DetailedListItemInfo,
+        rightInfo: DetailedListItemInfo,
         action: @escaping () -> Void,
         progressText: String,
         blurConfig: BlurConfig = .standard()
@@ -74,8 +74,8 @@ public struct DetailedListItem: View {
     public init(
         title: String,
         description: String = String(),
-        leftInfo: Info,
-        rightInfo: Info,
+        leftInfo: DetailedListItemInfo,
+        rightInfo: DetailedListItemInfo,
         action: @escaping () -> Void,
         progress: Double,
         size: CGFloat = 54,
@@ -105,8 +105,8 @@ public struct DetailedListItem: View {
     public init(
         title: String,
         description: String = String(),
-        leftInfo: Info,
-        rightInfo: Info,
+        leftInfo: DetailedListItemInfo,
+        rightInfo: DetailedListItemInfo,
         action: @escaping () -> Void,
         progressConfig: CircularProgressStyleConfiguration
     ) {
@@ -124,8 +124,8 @@ public struct DetailedListItem: View {
     public init(
         title: String,
         description: String = String(),
-        leftInfo: Info,
-        rightInfo: Info,
+        leftInfo: DetailedListItemInfo,
+        rightInfo: DetailedListItemInfo,
         action: @escaping () -> Void,
         blurConfig: BlurConfig
     ) {
@@ -143,8 +143,8 @@ public struct DetailedListItem: View {
     public init(
         title: String,
         description: String = String(),
-        leftInfo: Info,
-        rightInfo: Info,
+        leftInfo: DetailedListItemInfo,
+        rightInfo: DetailedListItemInfo,
         action: @escaping () -> Void,
         progressConfig: CircularProgressStyleConfiguration,
         blurConfig: BlurConfig
@@ -164,8 +164,8 @@ public struct DetailedListItem: View {
     public init<TrailingContent: View>(
         title: String,
         description: String = String(),
-        leftInfo: Info,
-        rightInfo: Info,
+        leftInfo: DetailedListItemInfo,
+        rightInfo: DetailedListItemInfo,
         action: @escaping () -> Void,
         blurConfig: BlurConfig,
         @ViewBuilder trailingContent: () -> TrailingContent
@@ -190,14 +190,12 @@ public struct DetailedListItem: View {
     }
 }
 
-extension DetailedListItem {
-    public struct Info: Decodable {
-        let title: String
-        let description: String
-        
-        public init(title: String, description: String) {
-            self.title = title
-            self.description = description
-        }
+public struct DetailedListItemInfo: Decodable {
+    let title: String
+    let description: String
+    
+    public init(title: String, description: String) {
+        self.title = title
+        self.description = description
     }
 }
