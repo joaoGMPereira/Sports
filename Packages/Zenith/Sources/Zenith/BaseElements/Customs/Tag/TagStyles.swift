@@ -54,11 +54,11 @@ public struct DefaultTagStyle: @preconcurrency TagStyle, BaseThemeDependencies {
 }
 
 public extension TagStyle where Self == SmallTagStyle {
-    static func small(_ color: TagColor) -> Self { .init(color: color) }
+    static func small(_ color: TagColor = .default) -> Self { .init(color: color) }
 }
 
 public extension TagStyle where Self == DefaultTagStyle {
-    static func `default`(_ color: TagColor) -> Self { .init(color: color) }
+    static func `default`(_ color: TagColor = .default) -> Self { .init(color: color) }
 }
 
 public enum TagColor: String, CaseIterable, Identifiable, Sendable {

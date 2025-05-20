@@ -7,7 +7,7 @@ public struct Tag: View {
     let text: String
     
     public init(
-        _ text: String
+        _ text: String = ""
     ) {
         self.text = text
     }

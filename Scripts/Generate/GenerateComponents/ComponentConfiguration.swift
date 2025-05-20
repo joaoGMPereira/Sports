@@ -31,6 +31,8 @@ struct StyleConfig {
 
 struct InitParameter: Hashable, ParameterProtocol {
     let order: Int
+    let hasObfuscatedArgument: Bool
+    let isUsedAsBinding: Bool
     let label: String?
     let name: String
     let type: String
@@ -44,6 +46,8 @@ class ComponentInfo {
     
     var viewPath: String = ""
     var stylesPath: String = ""
+    
+    var hasDefaultSampleText = true
     
     var properties: [SwiftProperty] = []
     var styleCases: [String] = []
@@ -132,7 +136,7 @@ final class ComponentConfiguration {
             
             let propLabel = String(content[propLabelRange])
             let propName = String(content[propNameRange])
-            let propType = String(content[propTypeRange]).trimmingCharacters(in: .whitespaces)
+            var propType = String(content[propTypeRange]).trimmingCharacters(in: .whitespaces)
             
             var defaultValue: String? = nil
             if match.numberOfRanges > 4, let defaultValueRange = Range(match.range(at: 4), in: content) {
@@ -144,9 +148,18 @@ final class ComponentConfiguration {
             }
             let isAction = propType.contains("->")
             
+            var isUsedAsBinding = false
+            
+            if propType.contains("Binding") {
+                propType = propType.replacingOccurrences(of: "Binding<", with: "").replacingOccurrences(of: ">", with: "")
+                isUsedAsBinding = true
+            }
+            
             properties.append(
                 InitParameter(
                     order: index,
+                    hasObfuscatedArgument: propLabel.starts(with: "_"),
+                    isUsedAsBinding: isUsedAsBinding,
                     label: propLabel,
                     name: propName,
                     type: propType,
@@ -498,7 +511,7 @@ final class ComponentConfiguration {
         return styleFunctions
     }
     
-    func extractInitParams(from content: String, componentName: String) -> [InitParameter] {
+    func extractInitParams(from content: String) -> [InitParameter] {
         var initParams: [InitParameter] = []
         
         // Padrão para localizar inicializadores públicos
@@ -540,7 +553,7 @@ final class ComponentConfiguration {
                 }
                 
                 let name = String(param[nameRange])
-                let type = String(param[typeRange]).trimmingCharacters(in: .whitespaces)
+                var type = String(param[typeRange]).trimmingCharacters(in: .whitespaces)
                 
                 var defaultValue: String? = nil
                 if paramMatch.numberOfRanges > 4, let defaultValueRange = Range(paramMatch.range(at: 4), in: param) {
@@ -550,8 +563,17 @@ final class ComponentConfiguration {
                 // Determinar se é um parâmetro de closure/ação
                 let isAction = type.contains("->")
                 
+                var isUsedAsBinding = false
+                
+                if type.contains("Binding") {
+                    type = type.replacingOccurrences(of: "Binding<", with: "").replacingOccurrences(of: ">", with: "")
+                    isUsedAsBinding = true
+                }
+                
                 initParams.append(InitParameter(
                     order: index,
+                    hasObfuscatedArgument: (label ?? "").starts(with: "_"),
+                    isUsedAsBinding: isUsedAsBinding,
                     label: label,
                     name: name,
                     type: type,
@@ -594,12 +616,20 @@ final class ComponentConfiguration {
         
         // Converter init params do formato nativo para o formato interno
         for (index, param) in nativeComponent.initParams.enumerated() {
+            var isUsedAsBinding = false
+            var type = param.type
+            if param.type.contains("Binding") {
+                type = param.type.replacingOccurrences(of: "Binding<", with: "").replacingOccurrences(of: ">", with: "")
+                isUsedAsBinding = true
+            }
             componentInfo.publicInitParams.append(
                 InitParameter(
                     order: index,
+                    hasObfuscatedArgument: (param.label ?? "").starts(with: "_"),
+                    isUsedAsBinding: isUsedAsBinding,
                     label: param.label,
                     name: param.name,
-                    type: param.type,
+                    type: type,
                     defaultValue: param.defaultValue,
                     isAction: param.isAction
                 )
@@ -626,8 +656,8 @@ final class ComponentConfiguration {
                             path: path
                         ) {
                             componentInfo = styledComponentInfo
+                            break
                         }
-                        break
                     }
                 } catch {
                     Log.log("Erro ao listar arquivos em \(path): \(error)", level: .error)
@@ -682,14 +712,15 @@ final class ComponentConfiguration {
                 
                 if file.contains("\(name).swift") {
                     componentInfo.viewPath = filePath
+                    componentInfo.hasDefaultSampleText = false
                     Log.log("View encontrada: \(filePath)")
                     if let content = readFile(at: componentInfo.viewPath) {
-                        componentInfo.publicInitParams = extractProperties(from: content)
+                        componentInfo.publicInitParams = extractInitParams(from: content)
                         componentInfo.exampleCode = """
-                        Tag(sampleText)
+                        \(name)(\(componentInfo.publicInitParams.joined()))
                         """
                         componentInfo.generateCode = """
-                        Tag(sampleText)
+                        \(name)(\(componentInfo.publicInitParams.joined()))
                         """
                     }
                 }
@@ -877,5 +908,20 @@ final class ComponentConfiguration {
         Log.log("Casos de estilo extraídos: \(Array(cases).sorted())", level: .info)
         
         return Array(cases).sorted()
+    }
+}
+
+extension Array where Element == InitParameter {
+    func joined() -> String {
+        sorted(by: {$0.order < $1.order }).enumerated().map { index, item in
+            var parameterString = "\(item.name): \(item.name)"
+            if item.hasObfuscatedArgument {
+                parameterString = item.name
+            }
+            if item.isUsedAsBinding {
+                parameterString = "\(item.name): $\(item.name)"
+            }
+            return index < count - 1 ? "\(parameterString)," : parameterString
+        }.joined(separator: " ")
     }
 }

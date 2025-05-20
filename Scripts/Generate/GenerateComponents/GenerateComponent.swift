@@ -77,8 +77,10 @@ final class GenerateComponent {
         // Estados básicos padronizados
         var states: [String] = []
         
-        // Estado para texto de exemplo padronizado para todos os componentes
-        states.append("\n    @State private var sampleText = \"Exemplo de texto\"")
+        if componentInfo.hasDefaultSampleText {
+            // Estado para texto de exemplo padronizado para todos os componentes
+            states.append("\n    @State private var sampleText = \"Exemplo de texto\"")
+        }
         
         // Estados específicos para tipo de componente
         states.append("\n    @State private var style: Generate\(componentInfo.name)SampleEnum = .\(componentInfo.styleFunctions.first!.name)")
@@ -94,7 +96,11 @@ final class GenerateComponent {
         var states: [String] = []
         parameters.forEach { initParam in
             if let defaultValue = initParam.defaultValue {
-                states.append("\n    @State private var \(initParam.name): \(initParam.type) = \(defaultValue)")
+                if initParam.type == "String" && (defaultValue.isEmpty || defaultValue == "\"\"") {
+                    states.append("\n    @State private var \(initParam.name): \(initParam.type) = \"Sample text\"")
+                } else {
+                    states.append("\n    @State private var \(initParam.name): \(initParam.type) = \(defaultValue)")
+                }
             } else {
                 states.append("\n    @State private var \(initParam.name): (\(initParam.type))?")
             }
@@ -186,15 +192,21 @@ final class GenerateComponent {
     }
     
     func configurationSection() -> String {
+        var sampleText = ""
+        if componentInfo.hasDefaultSampleText {
+            sampleText = """
+            // Campo para texto de exemplo
+            TextField("", text: $sampleText)
+                .textFieldStyle(.contentA(), placeholder: "Texto de exemplo")
+                .padding(.horizontal)
+            """
+        }
         var configurationSection = """
             
             // Área de configuração
             private var configurationSection: some View {
                 VStack(spacing: 16) {
-                    // Campo para texto de exemplo
-                    TextField("", text: $sampleText)
-                        .textFieldStyle(.contentA(), placeholder: "Texto de exemplo")
-                        .padding(.horizontal)
+                    \(sampleText)
                     EnumSelector<Generate\(componentInfo.name)SampleEnum>(
                         title: "\(componentInfo.name) Estilos",
                         selection: $style,
