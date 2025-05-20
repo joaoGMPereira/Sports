@@ -8,12 +8,6 @@ public struct DetailedListItem: View {
     let configuration: DetailedListItemStyleConfiguration
     
     public init(
-        _ configuration: DetailedListItemStyleConfiguration
-    ) {
-        self.configuration = configuration
-    }
-    
-    public init(
         title: String,
         description: String = String(),
         leftInfo: DetailedListItemInfo,
@@ -29,6 +23,12 @@ public struct DetailedListItem: View {
             action: action,
             blurConfig: blurConfig
         )
+    }
+    
+    public init(
+        _ configuration: DetailedListItemStyleConfiguration
+    ) {
+        self.configuration = configuration
     }
     
     public init<TrailingContent: View>(
@@ -194,7 +194,7 @@ public struct DetailedListItemInfo: Decodable {
     let title: String
     let description: String
     
-    public init(title: String, description: String) {
+    public init(title: String = "", description: String = "") {
         self.title = title
         self.description = description
     }

@@ -1,94 +1,16 @@
 import Foundation
 
-// MARK: - Modelos de dados
-
-struct SwiftProperty {
-    let type: String // var ou let
-    let name: String
-    let dataType: String
-    let defaultValue: String?
-}
-
-protocol ParameterProtocol {
-    var name: String { get }
-    var type: String { get }
-    var defaultValue: String? { get }
-}
-
-struct StyleParameter: Hashable, ParameterProtocol {
-    let order: Int
-    let hasObfuscatedArgument: Bool
-    let isUsedAsBinding: Bool
-    let name: String
-    let type: String
-    let defaultValue: String?
-}
-
-struct StyleConfig {
-    let name: String
-    let parameters: [StyleParameter]
-}
-
-struct InitParameter: Hashable, ParameterProtocol {
-    let order: Int
-    let hasObfuscatedArgument: Bool
-    let isUsedAsBinding: Bool
-    let label: String?
-    let name: String
-    var type: String
-    var defaultValue: String?
-    let isAction: Bool
-}
-
-class ComponentInfo {
-    let name: String
-    let typePath: String
-    
-    var viewPath: String = ""
-    var stylesPath: String = ""
-    
-    var hasDefaultSampleText = true
-    
-    var properties: [SwiftProperty] = []
-    var styleCases: [String] = []
-    var styleParameters: [StyleConfig] = []
-    var styleFunctions: [StyleConfig] = []
-    
-    var enumProperties: [SwiftProperty] = []
-    var textProperties: [SwiftProperty] = []
-    var boolProperties: [SwiftProperty] = []
-    var numberProperties: [SwiftProperty] = []
-    var complexProperties: [SwiftProperty] = []
-    
-    var publicInitParams: [InitParameter] = []
-    var hasActionParam: Bool = false
-    var isNative: Bool = false
-    var exampleCode: String = ""
-    var generateCode: String = ""
-    
-    var contextualModule: Bool = false
-    
-    init(name: String, typePath: String) {
-        self.name = name
-        self.typePath = typePath
-    }
-    
-    func getPropertyByName(_ name: String) -> SwiftProperty? {
-        return properties.first { $0.name == name }
-    }
-}
-
 final class ComponentConfiguration {
     
     // Adicionar funções que estão faltando
-    func readFile(at path: String) -> String? {
-        do {
-            return try String(contentsOfFile: path, encoding: .utf8)
-        } catch {
-            Log.log("Erro ao ler o arquivo \(path): \(error)", level: .error)
-            return nil
-        }
-    }
+//    func readFile(at path: String) -> String? {
+//        do {
+//            return try String(contentsOfFile: path, encoding: .utf8)
+//        } catch {
+//            Log.log("Erro ao ler o arquivo \(path): \(error)", level: .error)
+//            return nil
+//        }
+//    }
     
     func splitParameters(_ paramsStr: String) -> [String] {
         var params: [String] = []
@@ -462,7 +384,7 @@ final class ComponentConfiguration {
         let initRegex = try! NSRegularExpression(pattern: initPattern, options: [.dotMatchesLineSeparators])
         let initMatches = initRegex.matches(in: content, options: [], range: NSRange(content.startIndex..., in: content))
         
-        for match in initMatches {
+        if let match = initMatches.first {
             guard let paramsRange = Range(match.range(at: 1), in: content) else {
                 return []
             }
@@ -701,7 +623,7 @@ final class ComponentConfiguration {
                     componentInfo.viewPath = filePath
                     componentInfo.hasDefaultSampleText = false
                     Log.log("View encontrada: \(filePath)")
-                    if let content = readFile(at: componentInfo.viewPath) {
+                    if let content = componentInfo.viewPath.readFile() {
                         componentInfo.publicInitParams = extractInitParams(from: content)
                         componentInfo.exampleCode = """
                         \(name)(\(componentInfo.publicInitParams.joined()))
@@ -735,7 +657,7 @@ final class ComponentConfiguration {
             Log.log("Arquivo de estilos encontrado: \(componentInfo.stylesPath)")
             
             // Extrair casos de estilo do arquivo de estilos
-            if let content = readFile(at: componentInfo.stylesPath) {
+            if let content = componentInfo.stylesPath.readFile() {
                 componentInfo.styleCases = extractStyleCases(from: content)
                 componentInfo.styleFunctions = extractStyleFunctions(from: content, componentName: name)
                 componentInfo.styleParameters = extractStyleParameters(from: content, componentName: name)
@@ -983,7 +905,7 @@ extension ComponentConfiguration {
                     
                     if file.contains(enumTypeName) {
                         Log.log("Verificando arquivo específico para enum \(enumTypeName): \(filePath)", level: .info)
-                        if let content = readFile(at: filePath), 
+                        if let content = filePath.readFile(),
                            let firstCase = extractFirstEnumCase(from: content, enumTypeName: enumTypeName) {
                             return firstCase
                         }
@@ -993,7 +915,7 @@ extension ComponentConfiguration {
                 // Se não encontrou arquivo específico, busca em todos os arquivos swift
                 for file in files where file.hasSuffix(".swift") {
                     let filePath = "\(basePath)/\(file)"
-                    if let content = readFile(at: filePath), 
+                    if let content = filePath.readFile(),
                        let firstCase = extractFirstEnumCase(from: content, enumTypeName: enumTypeName) {
                         Log.log("Enum \(enumTypeName) encontrado em: \(filePath)", level: .info)
                         return firstCase
@@ -1011,7 +933,7 @@ extension ComponentConfiguration {
                             
                             for subFile in subFiles where subFile.hasSuffix(".swift") {
                                 let subFilePath = "\(dirPath)/\(subFile)"
-                                if let content = readFile(at: subFilePath),
+                                if let content = subFilePath.readFile(),
                                    let firstCase = extractFirstEnumCase(from: content, enumTypeName: enumTypeName) {
                                     Log.log("Enum \(enumTypeName) encontrado em: \(subFilePath)", level: .info)
                                     return firstCase
@@ -1172,6 +1094,7 @@ extension ComponentConfiguration {
         var isBinding = false
         var processedType = type
         let replacedBinding = getContentInfo(processedType, patternStart: "Binding<")
+        isBinding = replacedBinding.success
         if replacedBinding.success {
             processedType = replacedBinding.type
         }
@@ -1193,6 +1116,11 @@ extension ComponentConfiguration {
         if defaultValue == nil && (processedType.hasSuffix("Case") || processedType.hasSuffix("Enum")) {
             if let enumValue = findEnumDefaultValue(processedType) {
                 defaultValue = ".\(enumValue)"
+            }
+        }
+        if defaultValue == nil, processedType.isComplexType {
+            if let complexType = findComplexTypeDefaultInfo(processedType) {
+                defaultValue = complexType
             }
         }
         
@@ -1279,7 +1207,11 @@ extension Array where Element == InitParameter {
                 if item.type.contains("->") {
                     "{}"
                 } else {
-                    ".\\(\(item.name).rawValue)"
+                    if item.type.isComplexType {
+                        ""
+                    } else {
+                        ".\\(\(item.name).rawValue)"
+                    }
                 }
             }
             
@@ -1293,5 +1225,11 @@ extension Array where Element == InitParameter {
             }
             return index < count - 1 ? "\(parameterString)," : parameterString
         }.joined(separator: " ")
+    }
+}
+
+extension String {
+    var isComplexType: Bool {
+        hasSuffix("Case") == false && hasSuffix("Enum") == false && self != "String" && self != "Int" && self != "Double" && self != "CGFloat" && self != "Bool"
     }
 }

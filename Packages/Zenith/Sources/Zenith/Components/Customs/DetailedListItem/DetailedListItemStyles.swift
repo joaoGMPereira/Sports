@@ -45,7 +45,7 @@ public extension DetailedListItemStyle where Self == DefaultDetailedListItemStyl
 }
 
 // Enum para casos de estilo
-public enum DetailedListItemStyleCase: Identifiable {
+public enum DetailedListItemStyleCase: Identifiable, CaseIterable, Hashable {
     case `default`(ColorName)
     
     public var id: String {

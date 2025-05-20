@@ -164,7 +164,11 @@ final class GenerateComponent {
             if parameter.type.contains("->") || parameter.type.contains("escaping") {
                 "\n    @State private var \(parameter.name): \(parameter.type) = {}"
             } else {
-                "\n    @State private var \(parameter.name): \(parameter.type) = \(defaultCase)"
+                if parameter.type.isComplexType {
+                    "\n    @State private var \(parameter.name): \(parameter.type) = .init()"
+                } else {
+                    "\n    @State private var \(parameter.name): \(parameter.type) = \(defaultCase)"
+                }
             }
         }
     }
@@ -378,15 +382,19 @@ final class GenerateComponent {
                 if parameter.type.contains("->") {
                     ""
                 } else {
-                    """
-                    EnumSelector<\(parameter.type)>(
-                        title: "\(parameter.type)",
-                        selection: $\(parameter.name),
-                        columnsCount: 3,
-                        height: 120
-                    )
-                    .padding(.horizontal)\n
-                    """
+                    if parameter.type.isComplexType {
+                        ""
+                    } else {
+                        """
+                        EnumSelector<\(parameter.type)>(
+                            title: "\(parameter.type)",
+                            selection: $\(parameter.name),
+                            columnsCount: 3,
+                            height: 120
+                        )
+                        .padding(.horizontal)\n
+                        """
+                    }
                 }
             }
             interactiveComponents += parameterComponent
@@ -565,7 +573,11 @@ extension Array where Element == StyleParameter {
                 if item.type.contains("->") {
                     "{}"
                 } else {
-                    ".\\(\(item.name).rawValue)"
+                    if item.type.isComplexType {
+                        "\(item.name)()"
+                    } else {
+                        ".\\(\(item.name).rawValue)"
+                    }
                 }
             }
             
