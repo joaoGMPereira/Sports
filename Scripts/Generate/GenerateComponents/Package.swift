@@ -23,13 +23,7 @@ let package = Package(
                 .unsafeFlags(["-enable-bare-slash-regex"]),
                 .define("DEBUG", .when(configuration: .debug))
             ]
-        ),
-        // Opcional: Adicione um target de teste se precisar
-        // .testTarget(
-        //     name: "\(name)Tests",
-        //     dependencies: [.target(name: name)],
-        //     path: "Tests"
-        // ),
+        )
     ],
     swiftLanguageVersions: [.v5]
 )

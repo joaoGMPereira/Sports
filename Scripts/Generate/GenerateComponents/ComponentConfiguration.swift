@@ -456,28 +456,31 @@ final class ComponentConfiguration {
     func extractInitParams(from content: String) -> [InitParameter] {
         var initParams: [InitParameter] = []
         
-        // Padrão para localizar inicializadores públicos
-        let initPattern = "public\\s+init\\s*\\((.*?)\\)"
+        // Padrão aprimorado para localizar inicializadores públicos
+        // Usa uma estratégia diferente para capturar todos os parâmetros, incluindo @escaping closures
+        let initPattern = "public\\s+init\\s*\\(([^\\{]*)\\)"
         let initRegex = try! NSRegularExpression(pattern: initPattern, options: [.dotMatchesLineSeparators])
         let initMatches = initRegex.matches(in: content, options: [], range: NSRange(content.startIndex..., in: content))
         
-        for match in initMatches {
+        if let match = initMatches.first {
             guard let paramsRange = Range(match.range(at: 1), in: content) else {
-                continue
+                return []
             }
             
             let paramsStr = String(content[paramsRange]).trimmingCharacters(in: .whitespaces)
             if paramsStr.isEmpty {
-                continue
+                return []
             }
             
-            // Dividir pelos parâmetros individuais (isso é complexo devido a possíveis closures aninhadas)
-            // Implementação simplificada
-            let params = splitParameters(paramsStr)
+            // Extrair os parâmetros usando uma função melhorada para lidar com closures
+            let params = extractBalancedParameters(from: paramsStr)
+            
+            // Log de debug para verificar os parâmetros extraídos
+            Log.log("Parâmetros extraídos do init: \(params)", level: .info)
             
             for (index, param) in params.enumerated() {
-                // Padrão para extrair detalhes do parâmetro
-                let paramPattern = "(?:(\\w+)\\s+)?(\\w+)\\s*:\\s*([^=]+)(?:\\s*=\\s*(.+))?"
+                // Padrão melhorado para extrair detalhes do parâmetro incluindo @escaping
+                let paramPattern = "(?:(\\w+)\\s+)?(@?\\w+)?\\s*(\\w+)\\s*:\\s*([^=]+)(?:\\s*=\\s*(.+))?"
                 let paramRegex = try! NSRegularExpression(pattern: paramPattern, options: [])
                 
                 guard let paramMatch = paramRegex.firstMatch(in: param, options: [], range: NSRange(param.startIndex..., in: param)) else {
@@ -485,20 +488,34 @@ final class ComponentConfiguration {
                 }
                 
                 var label: String? = nil
-                if paramMatch.numberOfRanges > 1, let labelRange = Range(paramMatch.range(at: 1), in: param) {
+                if paramMatch.numberOfRanges > 1, let labelRange = Range(paramMatch.range(at: 1), in: param),
+                   paramMatch.range(at: 1).location != NSNotFound {
                     label = String(param[labelRange])
                 }
                 
-                guard let nameRange = Range(paramMatch.range(at: 2), in: param),
-                      let typeRange = Range(paramMatch.range(at: 3), in: param) else {
+                // Identificar se temos uma anotação como @escaping
+                var annotation: String? = nil
+                if paramMatch.numberOfRanges > 2, let annotationRange = Range(paramMatch.range(at: 2), in: param),
+                   paramMatch.range(at: 2).location != NSNotFound {
+                    annotation = String(param[annotationRange])
+                }
+                
+                guard let nameRange = Range(paramMatch.range(at: 3), in: param),
+                      let typeRange = Range(paramMatch.range(at: 4), in: param) else {
                     continue
                 }
                 
                 let name = String(param[nameRange])
                 var type = String(param[typeRange]).trimmingCharacters(in: .whitespaces)
                 
+                // Se temos uma anotação, incluí-la no tipo
+                if let annotation = annotation, !annotation.isEmpty {
+                    type = "\(annotation) \(type)"
+                }
+                
                 var defaultValue: String? = nil
-                if paramMatch.numberOfRanges > 4, let defaultValueRange = Range(paramMatch.range(at: 4), in: param) {
+                if paramMatch.numberOfRanges > 5, let defaultValueRange = Range(paramMatch.range(at: 5), in: param),
+                   paramMatch.range(at: 5).location != NSNotFound {
                     defaultValue = String(param[defaultValueRange]).trimmingCharacters(in: .whitespaces)
                 }
                 
@@ -510,6 +527,20 @@ final class ComponentConfiguration {
                 if type.contains("Binding") {
                     type = type.replacingOccurrences(of: "Binding<", with: "").replacingOccurrences(of: ">", with: "")
                     isUsedAsBinding = true
+                }
+                
+                if type.contains("@escaping") {
+                    type = type.replacingOccurrences(of: "@escaping ", with: "").replacingOccurrences(of: "\n", with: "")
+                    type = "(\(type))"
+                    defaultValue = "{}"
+                }
+                
+                // Verificar se o tipo parece ser um enum e tentar encontrar um valor padrão
+                if defaultValue == nil && (type.hasSuffix("Case") || type.hasSuffix("Enum")) {
+                    if let enumDefaultValue = findEnumDefaultValue(type) {
+                        defaultValue = ".\(enumDefaultValue)"
+                        Log.log("Valor padrão para enum \(type) encontrado: \(defaultValue!)", level: .info)
+                    }
                 }
                 
                 initParams.append(InitParameter(
@@ -528,6 +559,69 @@ final class ComponentConfiguration {
         return initParams
     }
     
+    // Nova função para extrair parâmetros de forma equilibrada, respeitando parênteses aninhados
+    func extractBalancedParameters(from string: String) -> [String] {
+        var parameters: [String] = []
+        var currentParam = ""
+        var parenLevel = 0
+        var bracketLevel = 0
+        var braceLevel = 0
+        var inString = false
+        
+        for char in string {
+            // Gerenciar strings para evitar confusão com caracteres dentro de strings
+            if char == "\"" {
+                inString = !inString
+                currentParam.append(char)
+                continue
+            }
+            
+            // Se estamos dentro de uma string, apenas adicione o caractere
+            if inString {
+                currentParam.append(char)
+                continue
+            }
+            
+            // Gerenciar níveis de aninhamento
+            switch char {
+            case "(":
+                parenLevel += 1
+                currentParam.append(char)
+            case ")":
+                parenLevel -= 1
+                currentParam.append(char)
+            case "[":
+                bracketLevel += 1
+                currentParam.append(char)
+            case "]":
+                bracketLevel -= 1
+                currentParam.append(char)
+            case "{":
+                braceLevel += 1
+                currentParam.append(char)
+            case "}":
+                braceLevel -= 1
+                currentParam.append(char)
+            case ",":
+                // Separar apenas se estamos no nível superior (não dentro de parênteses, colchetes ou chaves)
+                if parenLevel == 0 && bracketLevel == 0 && braceLevel == 0 {
+                    parameters.append(currentParam.trimmingCharacters(in: .whitespaces))
+                    currentParam = ""
+                } else {
+                    currentParam.append(char)
+                }
+            default:
+                currentParam.append(char)
+            }
+        }
+        
+        // Adicionar o último parâmetro se houver um
+        if !currentParam.trimmingCharacters(in: .whitespaces).isEmpty {
+            parameters.append(currentParam.trimmingCharacters(in: .whitespaces))
+        }
+        
+        return parameters
+    }
     
     func detectButtonComponent(_ componentName: String, _ initParams: [InitParameter]) -> Bool {
         // Verifica se é um Button pelo nome
@@ -909,6 +1003,134 @@ final class ComponentConfiguration {
         }
         
         return properties
+    }
+}
+
+// MARK: - Funções para buscar enums
+
+extension ComponentConfiguration {
+    func findEnumDefaultValue(_ enumTypeName: String) -> String? {
+        // Locais comuns onde os enums podem estar definidos
+        let searchPaths = [
+            "\(COMPONENTS_PATH)/BaseElements/Customs",
+            "\(COMPONENTS_PATH)/Components/Customs",
+            "\(COMPONENTS_PATH)/Templates",
+            "\(COMPONENTS_PATH)/BaseElements/Natives",
+            "\(COMPONENTS_PATH)/Enums",
+            "\(COMPONENTS_PATH)/Utils",
+            "\(COMPONENTS_PATH)/Styles"
+        ]
+        
+        // Primeiro tenta encontrar um arquivo específico para o enum
+        for basePath in searchPaths {
+            do {
+                let files = try FileManager.default.contentsOfDirectory(atPath: basePath)
+                
+                // Tenta encontrar um arquivo que contenha o nome do enum
+                for file in files {
+                    let filePath = "\(basePath)/\(file)"
+                    
+                    if file.contains(enumTypeName) {
+                        Log.log("Verificando arquivo específico para enum \(enumTypeName): \(filePath)", level: .info)
+                        if let content = readFile(at: filePath), 
+                           let firstCase = extractFirstEnumCase(from: content, enumTypeName: enumTypeName) {
+                            return firstCase
+                        }
+                    }
+                }
+                
+                // Se não encontrou arquivo específico, busca em todos os arquivos swift
+                for file in files where file.hasSuffix(".swift") {
+                    let filePath = "\(basePath)/\(file)"
+                    if let content = readFile(at: filePath), 
+                       let firstCase = extractFirstEnumCase(from: content, enumTypeName: enumTypeName) {
+                        Log.log("Enum \(enumTypeName) encontrado em: \(filePath)", level: .info)
+                        return firstCase
+                    }
+                }
+                
+                // Buscar em subdiretórios de um nível
+                for dir in files {
+                    let dirPath = "\(basePath)/\(dir)"
+                    var isDirectory: ObjCBool = false
+                    
+                    if FileManager.default.fileExists(atPath: dirPath, isDirectory: &isDirectory) && isDirectory.boolValue {
+                        do {
+                            let subFiles = try FileManager.default.contentsOfDirectory(atPath: dirPath)
+                            
+                            for subFile in subFiles where subFile.hasSuffix(".swift") {
+                                let subFilePath = "\(dirPath)/\(subFile)"
+                                if let content = readFile(at: subFilePath),
+                                   let firstCase = extractFirstEnumCase(from: content, enumTypeName: enumTypeName) {
+                                    Log.log("Enum \(enumTypeName) encontrado em: \(subFilePath)", level: .info)
+                                    return firstCase
+                                }
+                            }
+                        } catch {
+                            Log.log("Erro ao listar subdiretório \(dirPath): \(error)", level: .error)
+                        }
+                    }
+                }
+            } catch {
+                Log.log("Erro ao listar diretório \(basePath): \(error)", level: .error)
+            }
+        }
+        
+        Log.log("Não foi encontrado valor padrão para o enum \(enumTypeName)", level: .warning)
+        return nil
+    }
+    
+    func extractFirstEnumCase(from content: String, enumTypeName: String) -> String? {
+        // Padrão melhorado para encontrar declaração do enum - agora inclui modificadores de acesso e atributos
+        let enumPattern = "(?:public|private|internal|fileprivate|open)?\\s*(?:@\\w+\\s+)*enum\\s+\(enumTypeName)\\s*(?::|,|\\{)"
+        let enumRegex = try! NSRegularExpression(pattern: enumPattern, options: [])
+        
+        guard let enumMatch = enumRegex.firstMatch(in: content, options: [], range: NSRange(content.startIndex..., in: content)),
+              let enumRange = Range(enumMatch.range, in: content) else {
+            return nil
+        }
+        
+        // Encontra o início do bloco do enum
+        let blockStart = content.index(after: content[enumRange].lastIndex(of: "{") ?? enumRange.upperBound)
+        var braceCount = 1
+        var blockEnd = blockStart
+        
+        // Encontra o fim do bloco do enum
+        while braceCount > 0 && blockEnd < content.endIndex {
+            let char = content[blockEnd]
+            if char == "{" {
+                braceCount += 1
+            } else if char == "}" {
+                braceCount -= 1
+            }
+            
+            if braceCount > 0 {
+                blockEnd = content.index(after: blockEnd)
+            }
+        }
+        
+        let enumContent = String(content[blockStart..<blockEnd])
+        
+        // Procura pelo primeiro caso do enum
+        let casePattern = "case\\s+(\\w+)"
+        let caseRegex = try! NSRegularExpression(pattern: casePattern, options: [])
+        
+        guard let caseMatch = caseRegex.firstMatch(in: enumContent, options: [], range: NSRange(enumContent.startIndex..., in: enumContent)),
+              let caseRange = Range(caseMatch.range(at: 1), in: enumContent) else {
+            
+            // Tenta um padrão alternativo para casos em uma única linha
+            let multiCasePattern = "case\\s+([^,\\s]+)"
+            let multiCaseRegex = try! NSRegularExpression(pattern: multiCasePattern, options: [])
+            
+            guard let multiCaseMatch = multiCaseRegex.firstMatch(in: enumContent, options: [], range: NSRange(enumContent.startIndex..., in: enumContent)),
+                  let multiCaseRange = Range(multiCaseMatch.range(at: 1), in: enumContent) else {
+                return nil
+            }
+            
+            return String(enumContent[multiCaseRange])
+        }
+        
+        return String(enumContent[caseRange])
     }
 }
 

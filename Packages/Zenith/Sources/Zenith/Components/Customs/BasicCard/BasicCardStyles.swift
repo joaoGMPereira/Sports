@@ -2,7 +2,7 @@ import SwiftUI
 import ZenithCoreInterface
 
 public extension View {
-    func cardStyle(_ style: some BasicCardStyle) -> some View {
+    func basicCardStyle(_ style: some BasicCardStyle) -> some View {
         environment(\.cardStyle, style)
     }
 }

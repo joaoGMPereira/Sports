@@ -34,7 +34,7 @@ struct CardSample: View, @preconcurrency BaseThemeDependencies {
                     ) {
                         showFixedHeader.toggle()
                     }
-                    .cardStyle(selectedStyle.style())
+                    .basicCardStyle(selectedStyle.style())
                     .listRowSeparator(.hidden)
                     .frame(maxHeight: 80)
                     .padding()

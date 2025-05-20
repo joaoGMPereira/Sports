@@ -109,18 +109,23 @@ final class GenerateComponent {
     }
     
     func defaultUnsetVar(_ parameter: ParameterProtocol) -> String {
+        let firstStyle = componentInfo.styleFunctions.first!
+        var defaultParameters = ""
+        defaultParameters += firstStyle.parameters.joined()
+        let defaultCase = ".\(firstStyle.name)(\(defaultParameters))"
+        
         return switch parameter.type {
         case "String":
-            "\n    @State private var \(parameter.name): (\(parameter.type)) = \"Sample text\""
+            "\n    @State private var \(parameter.name): \(parameter.type) = \"Sample text\""
         case "Bool":
-            "\n    @State private var \(parameter.name): (\(parameter.type)) = false"
+            "\n    @State private var \(parameter.name): \(parameter.type) = false"
         case "Int", "Double", "CGFloat":
-            "\n    @State private var \(parameter.name): (\(parameter.type)) = 1"
+            "\n    @State private var \(parameter.name): \(parameter.type) = 1"
         default:
-            if parameter.type.contains("->") {
-                "\n    @State private var \(parameter.name): (\(parameter.type)) = {}"
+            if parameter.type.contains("->") || parameter.type.contains("escaping") {
+                "\n    @State private var \(parameter.name): \(parameter.type) = {}"
             } else {
-                "\n    @State private var \(parameter.name): (\(parameter.type)) = .\(componentInfo.styleFunctions.first!)"
+                "\n    @State private var \(parameter.name): \(parameter.type) = \(defaultCase)"
             }
         }
     }
