@@ -524,8 +524,27 @@ final class ComponentConfiguration {
                 
                 var isUsedAsBinding = false
                 
-                if type.contains("Binding") {
-                    type = type.replacingOccurrences(of: "Binding<", with: "").replacingOccurrences(of: ">", with: "")
+                if type.contains("Binding<") {
+                    // Extrair o conteúdo entre Binding< e o fechamento correspondente >
+                    var depth = 0
+                    let startIndex = type.index(type.range(of: "Binding<")!.upperBound, offsetBy: 0)
+                    var endIndex = startIndex
+                    
+                    // Percorrer a string para encontrar o ">" correspondente
+                    for (i, char) in type[startIndex...].enumerated() {
+                        if char == "<" {
+                            depth += 1
+                        } else if char == ">" {
+                            if depth == 0 {
+                                endIndex = type.index(startIndex, offsetBy: i)
+                                break
+                            }
+                            depth -= 1
+                        }
+                    }
+                    
+                    // Extrair o conteúdo interno do Binding
+                    type = String(type[startIndex..<endIndex])
                     isUsedAsBinding = true
                 }
                 
@@ -541,6 +560,10 @@ final class ComponentConfiguration {
                         defaultValue = ".\(enumDefaultValue)"
                         Log.log("Valor padrão para enum \(type) encontrado: \(defaultValue!)", level: .info)
                     }
+                }
+                
+                if let value = defaultValue, value.contains(".constant(") {
+                    defaultValue = value.replacingOccurrences(of: ".constant(", with: "").replacingOccurrences(of: ")", with: "")
                 }
                 
                 initParams.append(InitParameter(
@@ -565,7 +588,7 @@ final class ComponentConfiguration {
                 foundInitParam.type = "StringImageEnum"
                 filteredInitParams.append(foundInitParam)
             }
-            if filteredInitParams.contains(where: { $0.name == param.name }) == false {
+            if filteredInitParams.contains(where: { $0.name == param.name }) == false && param.type.contains("StyleConfiguration") == false {
                 filteredInitParams.append(param)
             }
         }

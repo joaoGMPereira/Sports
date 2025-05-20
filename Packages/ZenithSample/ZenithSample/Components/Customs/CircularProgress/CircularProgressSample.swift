@@ -1,21 +1,26 @@
+import SFSafeSymbols
 import SwiftUI
 import Zenith
 import ZenithCoreInterface
 
 struct CircularProgressSample: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) var themeConfigurator
-    @State var isExpanded = false
-    @State private var progress: Double = 0.25
-    @State private var size: Double = 54
+    @State private var style: GenerateCircularProgressSampleEnum = .contentA
+
+    @State private var text: String = "Sample text"
+
+    @State private var progress: Double = 0.01
+
+    @State private var size: CGFloat = 54
+
     @State private var showText: Bool = true
-    @State private var animated: Bool = true
+
+    @State private var animated: Bool = false
+
+    @State private var showAllStyles = false
+    @State private var useContrastBackground = true
     @State private var showFixedHeader = false
-    
-    // Estados para exemplos de transição
-    @State private var progress1: Double = 0.0
-    @State private var progress2: Double = 0.75
-    @State private var progress3: Double = 0.20
-    
+
     var body: some View {
         SampleWithFixedHeader(
             showFixedHeader: $showFixedHeader,
@@ -23,154 +28,146 @@ struct CircularProgressSample: View, @preconcurrency BaseThemeDependencies {
                 Card(action: {
                     showFixedHeader.toggle()
                 }) {
-                    VStack(spacing: 20) {
-                        CircularProgress(
-                            progress: progress,
-                            size: size,
-                            showText: showText,
-                            animated: animated
-                        )
-                        .circularProgressStyle(.contentA())
+                    VStack(spacing: 16) {
+                        // Preview do componente com configurações atuais
+                        previewComponent
                     }
                     .padding()
                 }
                 .padding()
             },
             config: {
-                VStack(spacing: 20) {
-                    // Configurações interativas
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Configurações")
-                            .font(fonts.mediumBold)
-                            .foregroundColor(colors.contentA)
-                        
-                        HStack {
-                            Text("Progresso: \(Int(progress * 100))%")
-                                .font(fonts.small)
+                VStack(spacing: 16) {
+                    // Área de configuração
+                    configurationSection
+
+                    // Preview do código gerado
+                    CodePreviewSection(generateCode: generateSwiftCode)
+
+                    // Exibição de todos os estilos (opcional)
+                    if showAllStyles {
+                        Divider().padding(.vertical, 4)
+
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Todos os Estilos")
+                                .font(fonts.mediumBold)
                                 .foregroundColor(colors.contentA)
-                            Spacer()
+
+                            allStyles
                         }
-                        
-                        Slider(value: $progress, in: 0...1, step: 0.01)
-                            .accentColor(colors.highlightA)
-                        
-                        HStack {
-                            Text("Tamanho: \(Int(size))px")
-                                .font(fonts.small)
-                                .foregroundColor(colors.contentA)
-                            Spacer()
-                        }
-                        
-                        Slider(value: $size, in: 30...150, step: 1)
-                            .accentColor(colors.highlightA)
-                        
-                        Toggle("Mostrar texto", isOn: $showText)
-                            .toggleStyle(.default(.highlightA))
-                            .foregroundColor(colors.contentA)
-                        
-                        Toggle("Animado", isOn: $animated)
-                            .toggleStyle(.default(.highlightA))
-                            .foregroundColor(colors.contentA)
                     }
-                    .padding()
-                    .background(colors.backgroundB.opacity(0.5))
-                    .cornerRadius(10)
-                    
-                    // Usando o componente reutilizável para visualização e cópia de código
-                    CodePreviewSection(generateCode: generateCode)
                 }
+                .padding(.horizontal)
+            }
+        )
+    }
+
+    // Preview do componente com as configurações selecionadas
+    private var previewComponent: some View {
+        VStack {
+            // Preview do componente com as configurações atuais
+            CircularProgress(text: text, progress: progress, size: size, showText: showText, animated: animated)
+                .circularProgressStyle(getCircularProgressStyle(style.rawValue))
                 .padding()
-                .onAppear {
-                    // Reset para valores iniciais, caso tenha sido alterado
-                    progress1 = 0.0
-                    progress2 = 0.75
-                    progress3 = 0.20
+                .frame(maxWidth: .infinity)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(useContrastBackground ? colors.backgroundA : colors.backgroundB.opacity(0.2))
+                )
+        }
+    }
+
+    // Área de configuração
+    private var configurationSection: some View {
+        VStack(spacing: 16) {
+            EnumSelector<GenerateCircularProgressSampleEnum>(
+                title: "CircularProgress Estilos",
+                selection: $style,
+                columnsCount: 3,
+                height: 120
+            )
+            .padding(.horizontal)
+            TextField("", text: $text)
+                .textFieldStyle(.contentA(), placeholder: "text")
+                .padding(.horizontal)
+            Slider(value: $progress, in: 0 ... 1, step: 0.01)
+                .accentColor(colors.highlightA)
+                .padding(.horizontal)
+            Slider(value: $size, in: 0 ... 100, step: 0.1)
+                .accentColor(colors.highlightA)
+                .padding(.horizontal)
+            Toggle("showText", isOn: $showText)
+                .toggleStyle(.default(.highlightA))
+                .padding(.horizontal)
+            Toggle("animated", isOn: $animated)
+                .toggleStyle(.default(.highlightA))
+                .padding(.horizontal)
+            // Toggles para opções
+            VStack {
+                Toggle("Usar fundo contrastante", isOn: $useContrastBackground)
+                    .toggleStyle(.default(.highlightA))
+
+                Toggle("Mostrar Todos os Estilos", isOn: $showAllStyles)
+                    .toggleStyle(.default(.highlightA))
+            }
+            .padding(.horizontal)
+        }
+    }
+
+    private var allStyles: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 8) {
+                // Mostrar todas as funções de estilo disponíveis
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], spacing: 8) {
+                    ForEach(CircularProgressStyleCase.allCases, id: \.self) { style in
+                        VStack {
+                            CircularProgress(text: text, progress: progress, size: size, showText: showText, animated: animated)
+                                .circularProgressStyle(style.style())
+                                .padding(8)
+                                .frame(maxWidth: .infinity)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 4)
+                                        .fill(colors.backgroundB.opacity(0.2))
+                                )
+                        }
+                    }
                 }
             }
-        )
+        }
+        .frame(maxHeight: 200)
     }
-    
-    private func generateCode() -> String {
-        let styleCase = CircularProgressStyleCase.allCases.first!
-        let styleName = String(describing: styleCase)
-        let showTextString = showText ? "true" : "false"
-        let animatedString = animated ? "true" : "false"
-        
-        return """
-        CircularProgress(
-            progress: \(String(format: "%.2f", progress)),
-            size: \(Int(size)),
-            showText: \(showTextString),
-            animated: \(animatedString)
-        )
-        .circularProgressStyle(.\(styleName)())
+
+    // Gera o código Swift para o componente configurado
+    private func generateSwiftCode() -> String {
+        var code = "// Código gerado automaticamente\n"
+        let styleFunctionsCases = [".contentA()", ".contentB()", ".highlightA()"]
+        let selectedStyle = styleFunctionsCases.first(where: { $0.contains(style.rawValue) }) ?? ".\(style.rawValue)()"
+        code += """
+        CircularProgress(text: "\(text)", progress: progress, size: size, showText: \(showText), animated: \(animated))
+        .circularProgressStyle(\(selectedStyle))
         """
+        return code
     }
-    
-    private func exampleCard(title: String, value: String, style: CircularProgressStyleCase, progress: Double) -> some View {
-        VStack(spacing: 8) {
-            Text(title)
-                .font(fonts.smallBold)
-                .foregroundColor(colors.contentA)
-            
-            CircularProgress(
-                progress: progress,
-                size: 50,
-                showText: false
-            )
-            .circularProgressStyle(style.style())
-            
-            Text(value)
-                .font(fonts.small)
-                .foregroundColor(colors.contentA)
+
+    private func getCircularProgressStyle(_ style: String) -> AnyCircularProgressStyle {
+        let style: any CircularProgressStyle = switch style {
+        case "contentA":
+            .contentA()
+        case "contentB":
+            .contentB()
+        case "highlightA":
+            .highlightA()
+        default:
+            .contentA()
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 10)
-        .background(colors.backgroundC.opacity(0.5))
-        .cornerRadius(8)
-    }
-    
-    private func animatedTransitionCard(
-        title: String,
-        progress: Binding<Double>,
-        initialValue: Double,
-        targetValue: Double,
-        style: CircularProgressStyleCase
-    ) -> some View {
-        VStack(spacing: 8) {
-            Text(title)
-                .font(fonts.smallBold)
-                .foregroundColor(colors.contentA)
-            
-            CircularProgress(
-                progress: progress.wrappedValue,
-                size: size,
-                showText: showText,
-                animated: animated
-            )
-            .circularProgressStyle(style.style())
-            
-            Button(action: {
-                if progress.wrappedValue == initialValue {
-                    progress.wrappedValue = targetValue
-                } else {
-                    progress.wrappedValue = initialValue
-                }
-            }) {
-                Text("Alternar")
-                    .font(fonts.small)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-            }
-            .buttonStyle(.highlightA())
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 10)
-        .background(colors.backgroundC.opacity(0.5))
-        .cornerRadius(8)
+        return AnyCircularProgressStyle(style)
     }
 }
 
-#Preview {
-    CircularProgressSample()
+enum GenerateCircularProgressSampleEnum: String, CaseIterable, Identifiable {
+    public var id: Self { self }
+
+    case contentA
+    case contentB
+    case highlightA
 }

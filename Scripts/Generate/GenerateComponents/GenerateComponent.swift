@@ -154,7 +154,11 @@ final class GenerateComponent {
             """
         case "Bool":
             "\n    @State private var \(parameter.name): \(parameter.type) = false"
-        case "Int", "Double", "CGFloat":
+        case "Int":
+            "\n    @State private var \(parameter.name): \(parameter.type) = 1"
+        case "Double":
+            "\n    @State private var \(parameter.name): \(parameter.type) = 0.01"
+        case "CGFloat":
             "\n    @State private var \(parameter.name): \(parameter.type) = 1"
         default:
             if parameter.type.contains("->") || parameter.type.contains("escaping") {
@@ -352,12 +356,24 @@ final class GenerateComponent {
                     .toggleStyle(.default(.highlightA))
                     .padding(.horizontal)\n
                 """
-            case "Int", "Double", "CGFloat":
-                """
-                Slider(value: $\(parameter.name), in: 0...100, step: 1)
-                    .accentColor(colors.highlightA)
-                    .padding(.horizontal)\n
-                """
+            case "Int":
+                    """
+                    Slider(value: $\(parameter.name), in: 0...100, step: 1)
+                        .accentColor(colors.highlightA)
+                        .padding(.horizontal)\n
+                    """
+            case "Double":
+                    """
+                    Slider(value: $\(parameter.name), in: 0...1, step: 0.01)
+                        .accentColor(colors.highlightA)
+                        .padding(.horizontal)\n
+                    """
+            case "CGFloat":
+                    """
+                    Slider(value: $\(parameter.name), in: 0...100, step: 0.1)
+                        .accentColor(colors.highlightA)
+                        .padding(.horizontal)\n
+                    """
             default:
                 if parameter.type.contains("->") {
                     ""
