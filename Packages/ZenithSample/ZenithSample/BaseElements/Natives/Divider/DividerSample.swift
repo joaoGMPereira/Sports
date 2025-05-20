@@ -1,3 +1,4 @@
+import SFSafeSymbols
 import SwiftUI
 import Zenith
 import ZenithCoreInterface

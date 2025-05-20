@@ -1,3 +1,4 @@
+import SFSafeSymbols
 import SwiftUI
 import Zenith
 import ZenithCoreInterface
@@ -8,9 +9,9 @@ struct ButtonSample: View, @preconcurrency BaseThemeDependencies {
 
     @State private var style: GenerateButtonSampleEnum = .contentA
 
-    @State private var shape: ButtonShape = .rounded(cornerRadius: .infinity)
-
     @State private var state: DSState = .enabled
+
+    @State private var shape: ButtonShape = .rounded(cornerRadius: .infinity)
 
     @State private var type: CardType = .fill
 
@@ -90,16 +91,16 @@ struct ButtonSample: View, @preconcurrency BaseThemeDependencies {
                 height: 120
             )
             .padding(.horizontal)
-            EnumSelector<ButtonShape>(
-                title: "ButtonShape",
-                selection: $shape,
+            EnumSelector<DSState>(
+                title: "DSState",
+                selection: $state,
                 columnsCount: 3,
                 height: 120
             )
             .padding(.horizontal)
-            EnumSelector<DSState>(
-                title: "DSState",
-                selection: $state,
+            EnumSelector<ButtonShape>(
+                title: "ButtonShape",
+                selection: $shape,
                 columnsCount: 3,
                 height: 120
             )

@@ -500,6 +500,7 @@ final class ComponentConfiguration {
                     annotation = String(param[annotationRange])
                 }
                 
+                var param = param.replacingOccurrences(of: "\n", with: "").trimmingCharacters(in: .whitespaces)
                 guard let nameRange = Range(paramMatch.range(at: 3), in: param),
                       let typeRange = Range(paramMatch.range(at: 4), in: param) else {
                     continue
