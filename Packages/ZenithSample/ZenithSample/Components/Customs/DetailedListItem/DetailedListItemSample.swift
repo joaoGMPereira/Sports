@@ -1,234 +1,515 @@
-import SFSafeSymbols
 import SwiftUI
 import Zenith
 import ZenithCoreInterface
+import Combine
 
 struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) var themeConfigurator
-    @State private var style: GenerateDetailedListItemSampleEnum = .default
-
-    @State private var colorName: ColorName = .highlightA
-
-    @State private var title: String = "Sample text"
-
-    @State private var description: String = .init()
-
-    @State private var leftInfo: Info = .default(colorName: colorName)
-
-    @State private var rightInfo: Info = .default(colorName: colorName)
-
-    @State private var blurConfig: BlurConfig = .standard()
-
-    @State private var action: (() -> Void) = {}
-
-    @State private var progressText: String = "Sample text"
-
-    @State private var progress: Double = 0.01
-
-    @State private var size: CGFloat = 54
-
+    
+    // Estado local
+    @State var isExpanded = false
+    @State private var progressValue: Double = 0.75
     @State private var showText: Bool = true
-
     @State private var animated: Bool = true
-
-    @State private var e: titl String = .default(colorName: colorName)
-
-    @State private var n: descriptio String = .default(colorName: colorName)
-
-    @State private var showAllStyles = false
-    @State private var useContrastBackground = true
+    @State private var size: Double = 30
+    
+    // Valores para configuração avançada do blur
+    @State private var blur1Width: Double = 42
+    @State private var blur1Height: Double = 24
+    @State private var blur1Radius: Double = 20
+    @State private var blur1OffsetX: Double = -25
+    @State private var blur1OffsetY: Double = 25
+    @State private var blur1Opacity: Double = 0.9
+    
+    @State private var blur2Width: Double = 80
+    @State private var blur2Height: Double = 40
+    @State private var blur2Radius: Double = 40
+    @State private var blur2OffsetX: Double = -20
+    @State private var blur2OffsetY: Double = 20
+    @State private var blur2Opacity: Double = 1.0
+    
+    @State private var blur3Width: Double = 100
+    @State private var blur3Height: Double = 50
+    @State private var blur3Radius: Double = 50
+    @State private var blur3OffsetX: Double = -20
+    @State private var blur3OffsetY: Double = 20
+    @State private var blur3Opacity: Double = 1.0
     @State private var showFixedHeader = false
-
+    
+    // Options to control the display
+    enum ProgressDisplayMode: String, CaseIterable, Identifiable {
+        case text = "Texto"
+        case simpleProgress = "Progresso Simples"
+        case detailedProgress = "Progresso Detalhado"
+        case customProgress = "Progresso Customizado"
+        case customContent = "Conteúdo Personalizado"
+        
+        var id: String { self.rawValue }
+    }
+    
+    // Selected color for the component style
+    @State private var selectedColor: ColorName = .highlightA
+    @State private var selectedMode: ProgressDisplayMode = .text
+    @State private var customText: String = "Feito hoje"
+    @State private var descriptionText: String = "Frequência: 5 vezes na semana"
+    @State private var showDescription: Bool = true
+    
+    // Um publisher para atualizar o componente flutuante sempre que qualquer estado relevante mudar
+    @State private var updatePublisher = PassthroughSubject<Void, Never>()
+    @State private var cancellables = Set<AnyCancellable>()
+    
     var body: some View {
         SampleWithFixedHeader(
             showFixedHeader: $showFixedHeader,
             content: {
-                Card(action: {
-                    showFixedHeader.toggle()
-                }) {
-                    VStack(spacing: 16) {
-                        // Preview do componente com configurações atuais
-                        previewComponent
-                    }
-                    .padding()
-                }
-                .padding()
+                currentDetailedListItem
+                    .padding(.horizontal, spacings.small)
             },
             config: {
-                VStack(spacing: 16) {
-                    // Área de configuração
-                    configurationSection
-
-                    // Preview do código gerado
-                    CodePreviewSection(generateCode: generateSwiftCode)
-
-                    // Exibição de todos os estilos (opcional)
-                    if showAllStyles {
-                        Divider().padding(.vertical, 4)
-
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Todos os Estilos")
-                                .font(fonts.mediumBold)
-                                .foregroundColor(colors.contentA)
-
-                            allStyles
+                VStack(alignment: .leading) {
+                    Text("Configurações do Componente")
+                        .font(fonts.mediumBold)
+                        .foregroundColor(colors.contentA)
+                        .padding(spacings.small)
+                    
+                    // Color selector for the style usando EnumSelector diretamente
+                    EnumSelector<ColorName>(
+                        title: "Cor do Estilo",
+                        selection: $selectedColor,
+                        columnsCount: 4,
+                        height: 120
+                    )
+                    .padding(.bottom, spacings.small)
+                    
+                    // Display mode selector using GridSelector
+                    GridSelector(
+                        title: "Display Mode",
+                        selection: $selectedMode,
+                        columnsCount: 2,
+                        height: 140
+                    )
+                    .padding(.bottom, spacings.small)
+                    
+                    // Description settings
+                    VStack(alignment: .leading, spacing: spacings.small) {
+                        Text("Description")
+                            .font(fonts.smallBold)
+                            .foregroundColor(colors.contentA)
+                        
+                        Toggle("Show Description", isOn: $showDescription)
+                            .toggleStyle(.default(.highlightA))
+                            .foregroundColor(colors.contentA)
+                        
+                        if showDescription {
+                            TextField("Description text", text: $descriptionText)
+                                .textFieldStyle(.roundedBorder)
                         }
                     }
+                    .padding(.bottom, spacings.medium)
+                    
+                    // Settings based on the selected mode
+                    if selectedMode == .text {
+                        Text("Progress Text")
+                            .font(fonts.smallBold)
+                            .foregroundColor(colors.contentA)
+                            .padding(.bottom, 4)
+                        
+                        TextField("Progress text", text: $customText)
+                            .textFieldStyle(.roundedBorder)
+                            .padding(.bottom, spacings.small)
+                    }
+                    
+                    if selectedMode == .simpleProgress ||
+                        selectedMode == .detailedProgress ||
+                        selectedMode == .customProgress {
+                        
+                        VStack(spacing: spacings.small) {
+                            HStack {
+                                Text("Progress: \(Int(progressValue * 100))%")
+                                    .font(fonts.small)
+                                    .foregroundColor(colors.contentA)
+                                Spacer()
+                            }
+                            
+                            Slider(value: $progressValue, in: 0...1, step: 0.01)
+                                .accentColor(colors.highlightA)
+                            
+                            if selectedMode == .detailedProgress || selectedMode == .customProgress {
+                                HStack {
+                                    Text("Size: \(Int(size))px")
+                                        .font(fonts.small)
+                                        .foregroundColor(colors.contentA)
+                                    Spacer()
+                                }
+                                
+                                Slider(value: $size, in: 20...60, step: 1)
+                                    .accentColor(colors.highlightA)
+                                
+                                Toggle("Show text", isOn: $showText)
+                                    .toggleStyle(.default(.highlightA))
+                                    .foregroundColor(colors.contentA)
+                                
+                                Toggle("Animated", isOn: $animated)
+                                    .toggleStyle(.default(.highlightA))
+                                    .foregroundColor(colors.contentA)
+                            }
+                        }
+                        .padding(.bottom, spacings.small)
+                    }
+                    
+                    // Editor avançado de blur
+                    BlurConfigEditor(
+                        blur1Width: $blur1Width,
+                        blur1Height: $blur1Height,
+                        blur1Radius: $blur1Radius,
+                        blur1OffsetX: $blur1OffsetX,
+                        blur1OffsetY: $blur1OffsetY,
+                        blur1Opacity: $blur1Opacity,
+                        
+                        blur2Width: $blur2Width,
+                        blur2Height: $blur2Height,
+                        blur2Radius: $blur2Radius,
+                        blur2OffsetX: $blur2OffsetX,
+                        blur2OffsetY: $blur2OffsetY,
+                        blur2Opacity: $blur2Opacity,
+                        
+                        blur3Width: $blur3Width,
+                        blur3Height: $blur3Height,
+                        blur3Radius: $blur3Radius,
+                        blur3OffsetX: $blur3OffsetX,
+                        blur3OffsetY: $blur3OffsetY,
+                        blur3Opacity: $blur3Opacity
+                    )
+                    .padding(.bottom, spacings.small)
+                    
+                    // Using the reusable component for code preview
+                    CodePreviewSection(generateCode: generateCode)
+                        .padding(.top, spacings.medium)
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, spacings.small)
             }
         )
     }
 
-    // Preview do componente com as configurações selecionadas
-    private var previewComponent: some View {
-        VStack {
-            // Preview do componente com as configurações atuais
-            DetailedListItem(title: title, e: e, description: description, n: n, leftInfo: leftInfo, rightInfo: rightInfo, blurConfig: blurConfig, action: action, progressText: progressText, progress: progress, size: size, showText: showText, animated: animated)
-                .detailedListItemStyle(getDetailedListItemStyle(style.rawValue))
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(useContrastBackground ? colors.backgroundA : colors.backgroundB.opacity(0.2))
+    // View que retorna o DetailedListItem atual com base nas configurações
+    private var currentDetailedListItem: some View {
+        Group {
+            switch selectedMode {
+            case .text:
+                DetailedListItem(
+                    title: "Treino de Adaptação",
+                    description: showDescription ? descriptionText : "",
+                    leftInfo: .init(
+                        title: "Dias",
+                        description: "3x"
+                    ),
+                    rightInfo: .init(
+                        title: "Exercícios",
+                        description: "5x"
+                    ),
+                    action: cardAction,
+                    progressText: customText,
+                    blurConfig: createCurrentBlurConfig()
                 )
-        }
-    }
-
-    // Área de configuração
-    private var configurationSection: some View {
-        VStack(spacing: 16) {
-            EnumSelector<GenerateDetailedListItemSampleEnum>(
-                title: "DetailedListItem Estilos",
-                selection: $style,
-                columnsCount: 3,
-                height: 120
-            )
-            .padding(.horizontal)
-            EnumSelector<ColorName>(
-                title: "ColorName",
-                selection: $colorName,
-                columnsCount: 3,
-                height: 120
-            )
-            .padding(.horizontal)
-            TextField("", text: $title)
-                .textFieldStyle(.contentA(), placeholder: "title")
-                .padding(.horizontal)
-            TextField("", text: $description)
-                .textFieldStyle(.contentA(), placeholder: "description")
-                .padding(.horizontal)
-            EnumSelector<Info>(
-                title: "Info",
-                selection: $leftInfo,
-                columnsCount: 3,
-                height: 120
-            )
-            .padding(.horizontal)
-            EnumSelector<Info>(
-                title: "Info",
-                selection: $rightInfo,
-                columnsCount: 3,
-                height: 120
-            )
-            .padding(.horizontal)
-            EnumSelector<BlurConfig>(
-                title: "BlurConfig",
-                selection: $blurConfig,
-                columnsCount: 3,
-                height: 120
-            )
-            .padding(.horizontal)
-            TextField("", text: $progressText)
-                .textFieldStyle(.contentA(), placeholder: "progressText")
-                .padding(.horizontal)
-            Slider(value: $progress, in: 0 ... 1, step: 0.01)
-                .accentColor(colors.highlightA)
-                .padding(.horizontal)
-            Slider(value: $size, in: 0 ... 100, step: 0.1)
-                .accentColor(colors.highlightA)
-                .padding(.horizontal)
-            Toggle("showText", isOn: $showText)
-                .toggleStyle(.default(.highlightA))
-                .padding(.horizontal)
-            Toggle("animated", isOn: $animated)
-                .toggleStyle(.default(.highlightA))
-                .padding(.horizontal)
-            EnumSelector<titl String>(
-                title: "titl String",
-                selection: $e,
-                columnsCount: 3,
-                height: 120
-            )
-            .padding(.horizontal)
-            EnumSelector<descriptio String>(
-                title: "descriptio String",
-                selection: $n,
-                columnsCount: 3,
-                height: 120
-            )
-            .padding(.horizontal)
-            // Toggles para opções
-            VStack {
-                Toggle("Usar fundo contrastante", isOn: $useContrastBackground)
-                    .toggleStyle(.default(.highlightA))
-
-                Toggle("Mostrar Todos os Estilos", isOn: $showAllStyles)
-                    .toggleStyle(.default(.highlightA))
-            }
-            .padding(.horizontal)
-        }
-    }
-
-    private var allStyles: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 8) {
-                // Mostrar todas as funções de estilo disponíveis
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], spacing: 8) {
-                    ForEach(DetailedListItemStyleCase.allCases, id: \.self) { style in
-                        VStack {
-                            DetailedListItem(title: title, e: e, description: description, n: n, leftInfo: leftInfo, rightInfo: rightInfo, blurConfig: blurConfig, action: action, progressText: progressText, progress: progress, size: size, showText: showText, animated: animated)
-                                .detailedListItemStyle(style.style())
-                                .padding(8)
-                                .frame(maxWidth: .infinity)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 4)
-                                        .fill(colors.backgroundB.opacity(0.2))
-                                )
-                        }
+                .detailedListItemStyle(.default(selectedColor))
+                
+            case .simpleProgress:
+                DetailedListItem(
+                    title: "Treino de Força",
+                    description: showDescription ? descriptionText : "",
+                    leftInfo: .init(
+                        title: "Dias",
+                        description: "4x"
+                    ),
+                    rightInfo: .init(
+                        title: "Exercícios",
+                        description: "8x"
+                    ),
+                    action: cardAction,
+                    progress: progressValue,
+                    blurConfig: createCurrentBlurConfig()
+                )
+                .detailedListItemStyle(.default(selectedColor))
+                
+            case .detailedProgress:
+                DetailedListItem(
+                    title: "Treino Avançado",
+                    description: showDescription ? descriptionText : "",
+                    leftInfo: .init(
+                        title: "Dias",
+                        description: "6x"
+                    ),
+                    rightInfo: .init(
+                        title: "Exercícios",
+                        description: "12x"
+                    ),
+                    action: cardAction,
+                    progress: progressValue,
+                    size: size,
+                    showText: showText,
+                    animated: animated,
+                    blurConfig: createCurrentBlurConfig()
+                )
+                .detailedListItemStyle(.default(selectedColor))
+                
+            case .customProgress:
+                DetailedListItem(
+                    title: "Treino Customizado",
+                    description: showDescription ? descriptionText : "",
+                    leftInfo: .init(
+                        title: "Dias",
+                        description: "5x"
+                    ),
+                    rightInfo: .init(
+                        title: "Exercícios",
+                        description: "10x"
+                    ),
+                    action: cardAction,
+                    progressConfig: CircularProgressStyleConfiguration(
+                        text: "\(Int(progressValue * 100))%",
+                        progress: progressValue,
+                        size: size,
+                        showText: showText,
+                        isAnimating: false,
+                        animated: animated
+                    ),
+                    blurConfig: createCurrentBlurConfig()
+                )
+                .detailedListItemStyle(.default(selectedColor))
+                
+            case .customContent:
+                DetailedListItem(
+                    title: "Treino Cardiovascular",
+                    description: showDescription ? descriptionText : "",
+                    leftInfo: .init(
+                        title: "Dias",
+                        description: "2x"
+                    ),
+                    rightInfo: .init(
+                        title: "Exercícios",
+                        description: "6x"
+                    ),
+                    action: cardAction,
+                    blurConfig: createCurrentBlurConfig()
+                ) {
+                    VStack(alignment: .trailing) {
+                        Text("Conteúdo")
+                            .textStyle(.medium(.attention))
+                        Text("Personalizado")
+                            .textStyle(.smallBold(.danger))
                     }
                 }
+                .detailedListItemStyle(.default(selectedColor))
             }
         }
-        .frame(maxHeight: 200)
     }
-
-    // Gera o código Swift para o componente configurado
-    private func generateSwiftCode() -> String {
-        var code = "// Código gerado automaticamente\n"
-        let styleFunctionsCases = [".default(colorName: .\(colorName.rawValue))"]
-        let selectedStyle = styleFunctionsCases.first(where: { $0.contains(style.rawValue) }) ?? ".\(style.rawValue)()"
-        code += """
-        DetailedListItem(title: "\(title)", e: .\(e.rawValue), description: "\(description)", n: .\(n.rawValue), leftInfo: .\(leftInfo.rawValue), rightInfo: .\(rightInfo.rawValue), blurConfig: .\(blurConfig.rawValue), action: {}, progressText: "\(progressText)", progress: progress, size: size, showText: \(showText), animated: \(animated))
-        .detailedListItemStyle(\(selectedStyle))
+    
+    // Ação do card para mostrar o componente flutuante
+    func cardAction() {
+        showFixedHeader.toggle()
+    }
+    
+    // Cria um BlurConfig com os valores atuais definidos nos sliders
+    private func createCurrentBlurConfig() -> BlurConfig {
+        return BlurConfig(
+            blur1Width: blur1Width,
+            blur1Height: blur1Height,
+            blur1Radius: blur1Radius,
+            blur1OffsetX: blur1OffsetX,
+            blur1OffsetY: blur1OffsetY,
+            blur1Opacity: blur1Opacity,
+            
+            blur2Width: blur2Width,
+            blur2Height: blur2Height,
+            blur2Radius: blur2Radius,
+            blur2OffsetX: blur2OffsetX,
+            blur2OffsetY: blur2OffsetY,
+            blur2Opacity: blur2Opacity,
+            
+            blur3Width: blur3Width,
+            blur3Height: blur3Height,
+            blur3Radius: blur3Radius,
+            blur3OffsetX: blur3OffsetX,
+            blur3OffsetY: blur3OffsetY,
+            blur3Opacity: blur3Opacity
+        )
+    }
+    
+    private func generateCode() -> String {
+        let progressValueString = String(format: "%.2f", progressValue)
+        let sizeInt = Int(size)
+        let showTextString = showText ? "true" : "false"
+        let animatedString = animated ? "true" : "false"
+        let descriptionParam = showDescription ? "\"\(descriptionText)\"" : "\"\""
+        
+        // Configuração de blur comum a todos os exemplos
+        let blurConfigCode = """
+        // Configuração do blur personalizado
+        let blurConfig = BlurConfig(
+            blur1Width: \(Int(blur1Width)),
+            blur1Height: \(Int(blur1Height)),
+            blur1Radius: \(Int(blur1Radius)),
+            blur1OffsetX: \(Int(blur1OffsetX)),
+            blur1OffsetY: \(Int(blur1OffsetY)),
+            blur1Opacity: \(String(format: "%.2f", blur1Opacity)),
+            
+            blur2Width: \(Int(blur2Width)),
+            blur2Height: \(Int(blur2Height)),
+            blur2Radius: \(Int(blur2Radius)),
+            blur2OffsetX: \(Int(blur2OffsetX)),
+            blur2OffsetY: \(Int(blur2OffsetY)),
+            blur2Opacity: \(String(format: "%.2f", blur2Opacity)),
+            
+            blur3Width: \(Int(blur3Width)),
+            blur3Height: \(Int(blur3Height)),
+            blur3Radius: \(Int(blur3Radius)),
+            blur3OffsetX: \(Int(blur3OffsetX)),
+            blur3OffsetY: \(Int(blur3OffsetY)),
+            blur3Opacity: \(String(format: "%.2f", blur3Opacity))
+        )
         """
-        return code
-    }
-
-    private func getDetailedListItemStyle(_ style: String) -> AnyDetailedListItemStyle {
-        let style: any DetailedListItemStyle = switch style {
-        case "default":
-            .default(colorName: colorName)
-
-        default:
-            .default(colorName: colorName)
+        
+        switch selectedMode {
+        case .text:
+            return """
+            \(blurConfigCode)
+            
+            // DetailedListItem com texto de progresso
+            DetailedListItem(
+                title: "Treino de Adaptação",
+                description: \(descriptionParam),
+                leftInfo: .init(
+                    title: "Dias",
+                    description: "3x"
+                ),
+                rightInfo: .init(
+                    title: "Exercícios",
+                    description: "5x"
+                ),
+                action: {
+                    // Ação ao tocar no card
+                },
+                progressText: "\(customText)",
+                blurConfig: blurConfig
+            )
+            .detailedListItemStyle(.default(.\(selectedColor.rawValue)))
+            """
+            
+        case .simpleProgress:
+            return """
+            \(blurConfigCode)
+            
+            // DetailedListItem com progresso simples
+            DetailedListItem(
+                title: "Treino de Força",
+                description: \(descriptionParam),
+                leftInfo: .init(
+                    title: "Dias",
+                    description: "4x"
+                ),
+                rightInfo: .init(
+                    title: "Exercícios",
+                    description: "8x"
+                ),
+                action: {
+                    // Ação ao tocar no card
+                },
+                progress: \(progressValueString), // \(Int(progressValue * 100))% de progresso
+                blurConfig: blurConfig
+            )
+            .detailedListItemStyle(.default(.\(selectedColor.rawValue)))
+            """
+            
+        case .detailedProgress:
+            return """
+            \(blurConfigCode)
+            
+            // DetailedListItem com progresso detalhado
+            DetailedListItem(
+                title: "Treino Avançado",
+                description: \(descriptionParam),
+                leftInfo: .init(
+                    title: "Dias",
+                    description: "6x"
+                ),
+                rightInfo: .init(
+                    title: "Exercícios",
+                    description: "12x"
+                ),
+                action: {
+                    // Ação ao tocar no card
+                },
+                progress: \(progressValueString),
+                size: \(sizeInt),
+                showText: \(showTextString),
+                animated: \(animatedString),
+                blurConfig: blurConfig
+            )
+            .detailedListItemStyle(.default(.\(selectedColor.rawValue)))
+            """
+            
+        case .customProgress:
+            return """
+            \(blurConfigCode)
+            
+            // DetailedListItem com progresso personalizado
+            DetailedListItem(
+                title: "Treino Customizado",
+                description: \(descriptionParam),
+                leftInfo: .init(
+                    title: "Dias",
+                    description: "5x"
+                ),
+                rightInfo: .init(
+                    title: "Exercícios",
+                    description: "10x"
+                ),
+                action: {
+                    // Ação ao tocar no card
+                },
+                progressConfig: CircularProgressStyleConfiguration(
+                    text: "\(Int(progressValue * 100))%",
+                    progress: \(progressValueString),
+                    size: \(sizeInt),
+                    showText: \(showTextString),
+                    isAnimating: false,
+                    animated: \(animatedString)
+                ),
+                blurConfig: blurConfig
+            )
+            .detailedListItemStyle(.default(.\(selectedColor.rawValue)))
+            """
+            
+        case .customContent:
+            return """
+            \(blurConfigCode)
+            
+            // DetailedListItem com conteúdo personalizado
+            DetailedListItem(
+                title: "Treino Cardiovascular",
+                description: \(descriptionParam),
+                leftInfo: .init(
+                    title: "Dias",
+                    description: "2x"
+                ),
+                rightInfo: .init(
+                    title: "Exercícios",
+                    description: "6x"
+                ),
+                action: {
+                    // Ação ao tocar no card
+                },
+                blurConfig: blurConfig
+            ) {
+                VStack(alignment: .trailing) {
+                    Text("Conteúdo Personalizado")
+                        .textStyle(.medium(.attention))
+                    Text("O que precisar")
+                        .textStyle(.smallBold(.danger))
+                }
+            }
+            .detailedListItemStyle(.default(.\(selectedColor.rawValue)))
+            """
         }
-        return AnyDetailedListItemStyle(style)
     }
-}
-
-enum GenerateDetailedListItemSampleEnum: String, CaseIterable, Identifiable {
-    public var id: Self { self }
-
-    case `default`
 }
