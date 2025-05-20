@@ -164,7 +164,7 @@ final class GenerateComponent {
             if parameter.type.contains("->") || parameter.type.contains("escaping") {
                 "\n    @State private var \(parameter.name): \(parameter.type) = {}"
             } else {
-                if parameter.type.isComplexType {
+                if parameter.componentType.complexType {
                     "\n    @State private var \(parameter.name): \(parameter.type) = .init()"
                 } else {
                     "\n    @State private var \(parameter.name): \(parameter.type) = \(defaultCase)"
@@ -382,7 +382,7 @@ final class GenerateComponent {
                 if parameter.type.contains("->") {
                     ""
                 } else {
-                    if parameter.type.isComplexType {
+                    if parameter.componentType.complexType {
                         ""
                     } else {
                         """
@@ -573,7 +573,7 @@ extension Array where Element == StyleParameter {
                 if item.type.contains("->") {
                     "{}"
                 } else {
-                    if item.type.isComplexType {
+                    if item.componentType.complexType {
                         "\(item.name)()"
                     } else {
                         ".\\(\(item.name).rawValue)"

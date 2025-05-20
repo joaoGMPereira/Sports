@@ -1,17 +1,11 @@
 import Foundation
 // MARK: - Modelos de dados
 
-struct SwiftProperty {
-    let type: String // var ou let
-    let name: String
-    let dataType: String
-    let defaultValue: String?
-}
-
 protocol ParameterProtocol {
     var name: String { get }
     var type: String { get }
     var defaultValue: String? { get }
+    var componentType: ComponentType { get }
 }
 
 struct StyleParameter: Hashable, ParameterProtocol {
@@ -20,6 +14,7 @@ struct StyleParameter: Hashable, ParameterProtocol {
     let isUsedAsBinding: Bool
     let name: String
     let type: String
+    let componentType: ComponentType
     let defaultValue: String?
 }
 
@@ -35,6 +30,7 @@ struct InitParameter: Hashable, ParameterProtocol {
     let label: String?
     let name: String
     var type: String
+    let componentType: ComponentType
     var defaultValue: String?
     let isAction: Bool
 }

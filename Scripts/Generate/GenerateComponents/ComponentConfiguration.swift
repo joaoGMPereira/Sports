@@ -1,17 +1,6 @@
 import Foundation
 
 final class ComponentConfiguration {
-    
-    // Adicionar funções que estão faltando
-//    func readFile(at path: String) -> String? {
-//        do {
-//            return try String(contentsOfFile: path, encoding: .utf8)
-//        } catch {
-//            Log.log("Erro ao ler o arquivo \(path): \(error)", level: .error)
-//            return nil
-//        }
-//    }
-    
     func splitParameters(_ paramsStr: String) -> [String] {
         var params: [String] = []
         var currentParam = ""
@@ -230,13 +219,13 @@ final class ComponentConfiguration {
         if defaultValue?.contains(".constant") == true {
             defaultValue = defaultValue?.replacingOccurrences(of: ".constant(", with: "").replacingOccurrences(of: ")", with: "")
         }
-        
         return StyleParameter(
             order: index,
             hasObfuscatedArgument: paramString.starts(with: "_"),
             isUsedAsBinding: isUsedAsBinding,
             name: name,
             type: type,
+            componentType: ComponentFinder().findComponentType(named: type),
             defaultValue: defaultValue
         )
     }
@@ -531,6 +520,7 @@ final class ComponentConfiguration {
                 type = param.type.replacingOccurrences(of: "Binding<", with: "").replacingOccurrences(of: ">", with: "")
                 isUsedAsBinding = true
             }
+            
             componentInfo.publicInitParams.append(
                 InitParameter(
                     order: index,
@@ -539,6 +529,7 @@ final class ComponentConfiguration {
                     label: param.label,
                     name: param.name,
                     type: type,
+                    componentType: ComponentFinder().findComponentType(named: type),
                     defaultValue: param.defaultValue,
                     isAction: param.isAction
                 )
@@ -860,7 +851,6 @@ final class ComponentConfiguration {
                 propType = propType.replacingOccurrences(of: "Binding<", with: "").replacingOccurrences(of: ">", with: "")
                 isUsedAsBinding = true
             }
-            
             properties.append(
                 InitParameter(
                     order: index,
@@ -869,6 +859,7 @@ final class ComponentConfiguration {
                     label: propLabel,
                     name: propName,
                     type: propType,
+                    componentType: ComponentFinder().findComponentType(named: propType),
                     defaultValue: defaultValue,
                     isAction: isAction
                 )
@@ -1093,6 +1084,7 @@ extension ComponentConfiguration {
         // Verificar se é binding
         var isBinding = false
         var processedType = type
+        let componentType = ComponentFinder().findComponentType(named: type)
         let replacedBinding = getContentInfo(processedType, patternStart: "Binding<")
         isBinding = replacedBinding.success
         if replacedBinding.success {
@@ -1118,7 +1110,7 @@ extension ComponentConfiguration {
                 defaultValue = ".\(enumValue)"
             }
         }
-        if defaultValue == nil, processedType.isComplexType {
+        if defaultValue == nil, componentType.complexType {
             if let complexType = findComplexTypeDefaultInfo(processedType) {
                 defaultValue = complexType
             }
@@ -1138,6 +1130,7 @@ extension ComponentConfiguration {
             label: label,
             name: name,
             type: processedType,
+            componentType: ComponentFinder().findComponentType(named: type),
             defaultValue: defaultValue,
             isAction: isAction
         )
@@ -1207,7 +1200,7 @@ extension Array where Element == InitParameter {
                 if item.type.contains("->") {
                     "{}"
                 } else {
-                    if item.type.isComplexType {
+                    if item.componentType.complexType {
                         ""
                     } else {
                         ".\\(\(item.name).rawValue)"
@@ -1225,11 +1218,5 @@ extension Array where Element == InitParameter {
             }
             return index < count - 1 ? "\(parameterString)," : parameterString
         }.joined(separator: " ")
-    }
-}
-
-extension String {
-    var isComplexType: Bool {
-        hasSuffix("Case") == false && hasSuffix("Enum") == false && self != "String" && self != "Int" && self != "Double" && self != "CGFloat" && self != "Bool"
     }
 }

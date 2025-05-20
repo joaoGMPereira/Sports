@@ -9,7 +9,6 @@ struct ComplexTypeProperty {
 
 /// Extension para ComponentConfiguration com métodos para buscar struct/class
 extension ComponentConfiguration {
-    
     /// Encontra informações padrão para instanciar um tipo complexo (struct ou classe)
     func findComplexTypeDefaultInfo(_ typeName: String) -> String? {
         // Locais comuns onde os tipos complexos podem estar definidos
@@ -25,7 +24,7 @@ extension ComponentConfiguration {
         
         // Buscar o tipo complexo em todos os caminhos possíveis
         for basePath in searchPaths {
-            if let foundInfo = searchForComplexType(typeName, in: basePath) {
+            if let foundInfo = searchForComplexTypeValue(typeName, in: basePath) {
                 return foundInfo
             }
         }
@@ -35,7 +34,7 @@ extension ComponentConfiguration {
         return "\(typeName)()"
     }
     
-    /// Busca um tipo complexo em um caminho específico
+    
     func searchForComplexType(_ typeName: String, in basePath: String) -> String? {
         do {
             let files = try FileManager.default.contentsOfDirectory(atPath: basePath)
@@ -44,19 +43,17 @@ extension ComponentConfiguration {
             for file in files where file.contains(typeName) && file.hasSuffix(".swift") {
                 let filePath = "\(basePath)/\(file)"
                 Log.log("Verificando arquivo específico para tipo \(typeName): \(filePath)", level: .info)
-                if let content = filePath.readFile(),
-                   let typeInfo = extractComplexTypeInfo(from: content, typeName: typeName) {
-                    return generateDefaultInitialization(typeName, from: typeInfo)
+                if let content = filePath.readFile() {
+                    return content
                 }
             }
             
             // Se não encontrar, procurar em todos os arquivos Swift
             for file in files where file.hasSuffix(".swift") {
                 let filePath = "\(basePath)/\(file)"
-                if let content = filePath.readFile(),
-                   let typeInfo = extractComplexTypeInfo(from: content, typeName: typeName) {
+                if let content = filePath.readFile() {
                     Log.log("Tipo \(typeName) encontrado em: \(filePath)", level: .info)
-                    return generateDefaultInitialization(typeName, from: typeInfo)
+                    return content
                 }
             }
             
@@ -72,20 +69,18 @@ extension ComponentConfiguration {
                         // Primeiro procura arquivos com nome correspondente
                         for subFile in subFiles where subFile.contains(typeName) && subFile.hasSuffix(".swift") {
                             let subFilePath = "\(dirPath)/\(subFile)"
-                            if let content = subFilePath.readFile(),
-                               let typeInfo = extractComplexTypeInfo(from: content, typeName: typeName) {
+                            if let content = subFilePath.readFile() {
                                 Log.log("Tipo \(typeName) encontrado em: \(subFilePath)", level: .info)
-                                return generateDefaultInitialization(typeName, from: typeInfo)
+                                return content
                             }
                         }
                         
                         // Depois procura em todos os arquivos Swift
                         for subFile in subFiles where subFile.hasSuffix(".swift") {
                             let subFilePath = "\(dirPath)/\(subFile)"
-                            if let content = subFilePath.readFile(),
-                               let typeInfo = extractComplexTypeInfo(from: content, typeName: typeName) {
+                            if let content = subFilePath.readFile() {
                                 Log.log("Tipo \(typeName) encontrado em: \(subFilePath)", level: .info)
-                                return generateDefaultInitialization(typeName, from: typeInfo)
+                                return content
                             }
                         }
                     } catch {
@@ -98,6 +93,15 @@ extension ComponentConfiguration {
         }
         
         return nil
+    }
+    
+    /// Busca um tipo complexo em um caminho específico
+    func searchForComplexTypeValue(_ typeName: String, in basePath: String) -> String? {
+        if let content = searchForComplexType(typeName, in: basePath), let typeInfo = extractComplexTypeInfo(from: content, typeName: typeName) {
+            return generateDefaultInitialization(typeName, from: typeInfo)
+        }
+        return nil
+        
     }
     
     /// Extrai informações sobre um tipo complexo de um arquivo
@@ -207,9 +211,9 @@ extension ComponentConfiguration {
             return "[:]"
         default:
             // Se for um tipo personalizado
-            if trimmedType.first?.isUppercase == true && 
-               !trimmedType.contains("->") && 
-               !trimmedType.contains("<") {
+            if trimmedType.first?.isUppercase == true &&
+                !trimmedType.contains("->") &&
+                !trimmedType.contains("<") {
                 return "\(trimmedType)()"
             }
             return "nil"
@@ -266,12 +270,12 @@ extension ComponentConfiguration {
     /// Detecta se um tipo é uma struct/classe complexa
     func isComplexType(_ typeName: String) -> Bool {
         let primitiveTypes = ["String", "Int", "Bool", "Double", "Float", "CGFloat", "Date", "Data"]
-        return !primitiveTypes.contains(typeName) && 
-               !typeName.contains("->") && 
-               !typeName.contains("[") && 
-               !typeName.isEmpty &&
-               typeName.first?.isUppercase == true &&
-               !typeName.hasSuffix("Case") &&
-               !typeName.hasSuffix("Enum")
+        return !primitiveTypes.contains(typeName) &&
+        !typeName.contains("->") &&
+        !typeName.contains("[") &&
+        !typeName.isEmpty &&
+        typeName.first?.isUppercase == true &&
+        !typeName.hasSuffix("Case") &&
+        !typeName.hasSuffix("Enum")
     }
 }
