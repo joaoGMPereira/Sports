@@ -94,18 +94,35 @@ final class GenerateComponent {
     
     func stateVars(_ parameters: [ParameterProtocol]) -> [String] {
         var states: [String] = []
-        parameters.forEach { initParam in
-            if let defaultValue = initParam.defaultValue {
-                if initParam.type == "String" && (defaultValue.isEmpty || defaultValue == "\"\"") {
-                    states.append("\n    @State private var \(initParam.name): \(initParam.type) = \"Sample text\"")
+        parameters.forEach { parameter in
+            if let defaultValue = parameter.defaultValue {
+                if parameter.type == "String" && (defaultValue.isEmpty || defaultValue == "\"\"") {
+                    states.append("\n    @State private var \(parameter.name): \(parameter.type) = \"Sample text\"")
                 } else {
-                    states.append("\n    @State private var \(initParam.name): \(initParam.type) = \(defaultValue)")
+                    states.append("\n    @State private var \(parameter.name): \(parameter.type) = \(defaultValue)")
                 }
             } else {
-                states.append("\n    @State private var \(initParam.name): (\(initParam.type))?")
+                states.append(defaultUnsetVar(parameter))
             }
         }
         return states
+    }
+    
+    func defaultUnsetVar(_ parameter: ParameterProtocol) -> String {
+        return switch parameter.type {
+        case "String":
+            "\n    @State private var \(parameter.name): (\(parameter.type)) = \"Sample text\""
+        case "Bool":
+            "\n    @State private var \(parameter.name): (\(parameter.type)) = false"
+        case "Int", "Double", "CGFloat":
+            "\n    @State private var \(parameter.name): (\(parameter.type)) = 1"
+        default:
+            if parameter.type.contains("->") {
+                "\n    @State private var \(parameter.name): (\(parameter.type)) = {}"
+            } else {
+                "\n    @State private var \(parameter.name): (\(parameter.type)) = .\(componentInfo.styleFunctions.first!)"
+            }
+        }
     }
     
     func sampleDefaultOptions() -> String {

@@ -118,124 +118,6 @@ final class ComponentConfiguration {
     }
     
     // MARK: - Análise de código Swift (Parser)
-    
-    func extractProperties(from content: String) -> [InitParameter] {
-        var properties: [InitParameter] = []
-        
-        // Padrão para localizar propriedades
-        let pattern = "(var|let)\\s+(\\w+)\\s*:\\s*([^{=\\n]+)(?:\\s*=\\s*([^{\\n]+))?"
-        let regex = try! NSRegularExpression(pattern: pattern, options: [])
-        let matches = regex.matches(in: content, options: [], range: NSRange(content.startIndex..., in: content))
-        
-        for (index, match) in matches.enumerated() {
-            guard let propLabelRange = Range(match.range(at: 1), in: content),
-                  let propNameRange = Range(match.range(at: 2), in: content),
-                  let propTypeRange = Range(match.range(at: 3), in: content) else {
-                continue
-            }
-            
-            let propLabel = String(content[propLabelRange])
-            let propName = String(content[propNameRange])
-            var propType = String(content[propTypeRange]).trimmingCharacters(in: .whitespaces)
-            
-            var defaultValue: String? = nil
-            if match.numberOfRanges > 4, let defaultValueRange = Range(match.range(at: 4), in: content) {
-                defaultValue = String(content[defaultValueRange]).trimmingCharacters(in: .whitespaces)
-            }
-            
-            if propName == "body" && propType == "some View" {
-                continue
-            }
-            let isAction = propType.contains("->")
-            
-            var isUsedAsBinding = false
-            
-            if propType.contains("Binding") {
-                propType = propType.replacingOccurrences(of: "Binding<", with: "").replacingOccurrences(of: ">", with: "")
-                isUsedAsBinding = true
-            }
-            
-            properties.append(
-                InitParameter(
-                    order: index,
-                    hasObfuscatedArgument: propLabel.starts(with: "_"),
-                    isUsedAsBinding: isUsedAsBinding,
-                    label: propLabel,
-                    name: propName,
-                    type: propType,
-                    defaultValue: defaultValue,
-                    isAction: isAction
-                )
-            )
-        }
-        
-        return properties
-    }
-    
-    func extractStyleParameters(from content: String, componentName: String) -> [StyleConfig] {
-        var styleConfigs: [StyleConfig] = []
-        
-        // Log para debug
-        Log.log("Extraindo parâmetros de estilo para \(componentName)", level: .info)
-        
-        // Padrão para localizar extensões que contenham funções de estilo do componente
-        let extensionPattern = "public\\s+extension\\s+([^{]*)\\s*\\{[^}]*func\\s+(\\w+)Style\\s*\\(([^\\)]*)\\)"
-        let extensionRegex = try! NSRegularExpression(pattern: extensionPattern, options: [.dotMatchesLineSeparators])
-        let extensionMatches = extensionRegex.matches(in: content, options: [], range: NSRange(content.startIndex..., in: content))
-        
-        for match in extensionMatches {
-            if match.numberOfRanges < 4 {
-                continue
-            }
-            
-            guard let extensionTypeRange = Range(match.range(at: 1), in: content),
-                  let functionNameRange = Range(match.range(at: 2), in: content),
-                  let paramsRange = Range(match.range(at: 3), in: content) else {
-                continue
-            }
-            
-            let extensionType = String(content[extensionTypeRange]).trimmingCharacters(in: .whitespaces)
-            let functionName = String(content[functionNameRange]).trimmingCharacters(in: .whitespaces)
-            
-            // Verificamos se a extensão ou a função corresponde ao componente desejado
-            // A função pode ser componenteStyle (ex: textFieldStyle) ou apenas style
-            let matchesComponent = extensionType.contains(componentName) ||
-            functionName.lowercased() == componentName.lowercased()
-            
-            if !matchesComponent {
-                continue
-            }
-            
-            // Extrair todos os parâmetros da função de estilo
-            let paramsString = String(content[paramsRange]).trimmingCharacters(in: .whitespaces)
-            var parameters: [StyleParameter] = []
-            
-            // Precisamos lidar com o primeiro parâmetro de forma especial, pois é o estilo
-            let paramsList = splitFunctionParameters(paramsString)
-            
-            // Ignorar o primeiro parâmetro se for o estilo
-            let startIndex = paramsList.isEmpty ? 0 : (paramsList[0].contains("style") || paramsList[0].contains("_ style") ? 1 : 0)
-            
-            for i in startIndex..<paramsList.count {
-                if let styleParam = parseParameter(paramsList[i], index: i) {
-                    parameters.append(styleParam)
-                }
-            }
-            
-            // Nome do estilo baseado no componente
-            let styleConfigName = "default"
-            styleConfigs.append(StyleConfig(name: styleConfigName, parameters: parameters))
-            
-            Log.log("Função de estilo encontrada para \(componentName): \(styleConfigName) com \(parameters.count) parâmetros", level: .info)
-            for param in parameters {
-                Log.log("- Parâmetro: \(param.name) do tipo \(param.type) \(param.defaultValue != nil ? "com valor padrão: \(param.defaultValue!)" : "")", level: .info)
-            }
-        }
-        
-        // Caso não encontre nenhuma configuração de estilo, retorna uma lista vazia
-        return styleConfigs
-    }
-    
     func extractStyleFunctions(from content: String, componentName: String) -> [StyleConfig] {
         var styleFunctions: [StyleConfig] = []
         var uniqueFunctionNames = Set<String>() // Para evitar duplicações
@@ -388,11 +270,6 @@ final class ComponentConfiguration {
                 }
             }
             
-            // Se não houver parâmetros, adicione um padrão para compatibilidade
-            //            if parameters.isEmpty {
-            //                parameters = [StyleParameter(name: "color", type: "ColorName", defaultValue: nil)]
-            //            }
-            
             functions.append(StyleConfig(name: funcName, parameters: parameters))
         }
         
@@ -509,6 +386,71 @@ final class ComponentConfiguration {
         }
         
         return styleFunctions
+    }
+    
+    
+    func extractStyleParameters(from content: String, componentName: String) -> [StyleConfig] {
+        var styleConfigs: [StyleConfig] = []
+        
+        // Log para debug
+        Log.log("Extraindo parâmetros de estilo para \(componentName)", level: .info)
+        
+        // Padrão para localizar extensões que contenham funções de estilo do componente
+        let extensionPattern = "public\\s+extension\\s+([^{]*)\\s*\\{[^}]*func\\s+(\\w+)Style\\s*\\(([^\\)]*)\\)"
+        let extensionRegex = try! NSRegularExpression(pattern: extensionPattern, options: [.dotMatchesLineSeparators])
+        let extensionMatches = extensionRegex.matches(in: content, options: [], range: NSRange(content.startIndex..., in: content))
+        
+        for match in extensionMatches {
+            if match.numberOfRanges < 4 {
+                continue
+            }
+            
+            guard let extensionTypeRange = Range(match.range(at: 1), in: content),
+                  let functionNameRange = Range(match.range(at: 2), in: content),
+                  let paramsRange = Range(match.range(at: 3), in: content) else {
+                continue
+            }
+            
+            let extensionType = String(content[extensionTypeRange]).trimmingCharacters(in: .whitespaces)
+            let functionName = String(content[functionNameRange]).trimmingCharacters(in: .whitespaces)
+            
+            // Verificamos se a extensão ou a função corresponde ao componente desejado
+            // A função pode ser componenteStyle (ex: textFieldStyle) ou apenas style
+            let matchesComponent = extensionType.contains(componentName) ||
+            functionName.lowercased() == componentName.lowercased()
+            
+            if !matchesComponent {
+                continue
+            }
+            
+            // Extrair todos os parâmetros da função de estilo
+            let paramsString = String(content[paramsRange]).trimmingCharacters(in: .whitespaces)
+            var parameters: [StyleParameter] = []
+            
+            // Precisamos lidar com o primeiro parâmetro de forma especial, pois é o estilo
+            let paramsList = splitFunctionParameters(paramsString)
+            
+            // Ignorar o primeiro parâmetro se for o estilo
+            let startIndex = paramsList.isEmpty ? 0 : (paramsList[0].contains("style") || paramsList[0].contains("_ style") ? 1 : 0)
+            
+            for i in startIndex..<paramsList.count {
+                if let styleParam = parseParameter(paramsList[i], index: i) {
+                    parameters.append(styleParam)
+                }
+            }
+            
+            // Nome do estilo baseado no componente
+            let styleConfigName = "default"
+            styleConfigs.append(StyleConfig(name: styleConfigName, parameters: parameters))
+            
+            Log.log("Função de estilo encontrada para \(componentName): \(styleConfigName) com \(parameters.count) parâmetros", level: .info)
+            for param in parameters {
+                Log.log("- Parâmetro: \(param.name) do tipo \(param.type) \(param.defaultValue != nil ? "com valor padrão: \(param.defaultValue!)" : "")", level: .info)
+            }
+        }
+        
+        // Caso não encontre nenhuma configuração de estilo, retorna uma lista vazia
+        return styleConfigs
     }
     
     func extractInitParams(from content: String) -> [InitParameter] {
@@ -908,6 +850,65 @@ final class ComponentConfiguration {
         Log.log("Casos de estilo extraídos: \(Array(cases).sorted())", level: .info)
         
         return Array(cases).sorted()
+    }
+    
+    
+    
+    
+    /// METODOS NAO USADOS MAS QUE PODEM SER UTEIS
+    
+    /// olha pras propriedades da classe
+    func extractProperties(from content: String) -> [InitParameter] {
+        var properties: [InitParameter] = []
+        
+        // Padrão para localizar propriedades
+        let pattern = "(var|let)\\s+(\\w+)\\s*:\\s*([^{=\\n]+)(?:\\s*=\\s*([^{\\n]+))?"
+        let regex = try! NSRegularExpression(pattern: pattern, options: [])
+        let matches = regex.matches(in: content, options: [], range: NSRange(content.startIndex..., in: content))
+        
+        for (index, match) in matches.enumerated() {
+            guard let propLabelRange = Range(match.range(at: 1), in: content),
+                  let propNameRange = Range(match.range(at: 2), in: content),
+                  let propTypeRange = Range(match.range(at: 3), in: content) else {
+                continue
+            }
+            
+            let propLabel = String(content[propLabelRange])
+            let propName = String(content[propNameRange])
+            var propType = String(content[propTypeRange]).trimmingCharacters(in: .whitespaces)
+            
+            var defaultValue: String? = nil
+            if match.numberOfRanges > 4, let defaultValueRange = Range(match.range(at: 4), in: content) {
+                defaultValue = String(content[defaultValueRange]).trimmingCharacters(in: .whitespaces)
+            }
+            
+            if propName == "body" && propType == "some View" {
+                continue
+            }
+            let isAction = propType.contains("->")
+            
+            var isUsedAsBinding = false
+            
+            if propType.contains("Binding") {
+                propType = propType.replacingOccurrences(of: "Binding<", with: "").replacingOccurrences(of: ">", with: "")
+                isUsedAsBinding = true
+            }
+            
+            properties.append(
+                InitParameter(
+                    order: index,
+                    hasObfuscatedArgument: propLabel.starts(with: "_"),
+                    isUsedAsBinding: isUsedAsBinding,
+                    label: propLabel,
+                    name: propName,
+                    type: propType,
+                    defaultValue: defaultValue,
+                    isAction: isAction
+                )
+            )
+        }
+        
+        return properties
     }
 }
 
