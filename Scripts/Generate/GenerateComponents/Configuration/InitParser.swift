@@ -69,6 +69,7 @@ struct InitParser {
 }
 
 fileprivate extension InitParser {
+    
     // Nova função para extrair parâmetros de forma equilibrada, respeitando parênteses aninhados
     func extractBalancedParameters(from string: String) -> [String] {
         var parameters: [String] = []
@@ -132,7 +133,6 @@ fileprivate extension InitParser {
         
         return parameters
     }
-    
     
     // Nova função para análise manual de parâmetros de inicialização
     func parseInitParameter(_ paramString: String, index: Int) -> InitParameter? {
@@ -217,7 +217,7 @@ fileprivate extension InitParser {
         // Verificar se é binding
         var isBinding = false
         var processedType = type
-        let componentType = ComponentFinder().findComponentType(named: type)
+        let component = ComponentFinder(type: type).findComponentType()
         let replacedBinding = getContentInfo(processedType, patternStart: "Binding<")
         isBinding = replacedBinding.success
         if replacedBinding.success {
@@ -243,7 +243,7 @@ fileprivate extension InitParser {
                 defaultValue = ".\(enumValue)"
             }
         }
-        if defaultValue == nil, componentType.complexType {
+        if defaultValue == nil, component.type.complexType {
             if let complexType = findComplexTypeDefaultInfo(processedType) {
                 defaultValue = complexType
             }
@@ -263,7 +263,7 @@ fileprivate extension InitParser {
             label: label,
             name: name,
             type: processedType,
-            componentType: ComponentFinder().findComponentType(named: type),
+            component: ComponentFinder(type: type).findComponentType(),
             defaultValue: defaultValue,
             isAction: isAction
         )
@@ -644,64 +644,5 @@ fileprivate extension InitParser {
             }
             return "nil"
         }
-    }
-    
-    /// Busca e extrai informações sobre o inicializador de uma struct/classe
-    func extractInitializerInfo(from content: String, typeName: String) -> [(label: String?, paramName: String, paramType: String)]? {
-        // Padrão para encontrar inicializadores públicos
-        let initPattern = "(?:public|open)\\s+init\\s*\\(([^\\{]*)\\)"
-        let initRegex = try! NSRegularExpression(pattern: initPattern, options: [.dotMatchesLineSeparators])
-        let initMatches = initRegex.matches(in: content, options: [], range: NSRange(content.startIndex..., in: content))
-        
-        if let initMatch = initMatches.first,
-           let paramsRange = Range(initMatch.range(at: 1), in: content) {
-            let paramsStr = String(content[paramsRange]).trimmingCharacters(in: .whitespaces)
-            
-            // Extrair os parâmetros do inicializador
-            let params = extractBalancedParameters(from: paramsStr)
-            
-            var result: [(label: String?, paramName: String, paramType: String)] = []
-            
-            for param in params {
-                let trimmed = param.trimmingCharacters(in: .whitespaces)
-                if let colonIndex = trimmed.firstIndex(of: ":") {
-                    let leftSide = String(trimmed[..<colonIndex]).trimmingCharacters(in: .whitespaces)
-                    let rightSide = String(trimmed[trimmed.index(after: colonIndex)...])
-                        .trimmingCharacters(in: .whitespaces)
-                        .split(separator: "=")[0]
-                        .trimmingCharacters(in: .whitespaces)
-                    
-                    // Processar o lado esquerdo (label/nome)
-                    var label: String? = nil
-                    var name: String
-                    
-                    if leftSide.contains(" ") {
-                        let components = leftSide.split(separator: " ").map { String($0) }
-                        label = components[0]
-                        name = components[1]
-                    } else {
-                        name = leftSide
-                    }
-                    
-                    result.append((label: label, paramName: name, paramType: rightSide))
-                }
-            }
-            
-            return result
-        }
-        
-        return nil
-    }
-    
-    /// Detecta se um tipo é uma struct/classe complexa
-    func isComplexType(_ typeName: String) -> Bool {
-        let primitiveTypes = ["String", "Int", "Bool", "Double", "Float", "CGFloat", "Date", "Data"]
-        return !primitiveTypes.contains(typeName) &&
-        !typeName.contains("->") &&
-        !typeName.contains("[") &&
-        !typeName.isEmpty &&
-        typeName.first?.isUppercase == true &&
-        !typeName.hasSuffix("Case") &&
-        !typeName.hasSuffix("Enum")
     }
 }

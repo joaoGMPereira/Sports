@@ -33,7 +33,7 @@ final class ComponentConfiguration {
                     label: param.label,
                     name: param.name,
                     type: type,
-                    componentType: ComponentFinder().findComponentType(named: type),
+                    component: ComponentFinder(type: type).findComponentType(),
                     defaultValue: param.defaultValue,
                     isAction: param.isAction
                 )

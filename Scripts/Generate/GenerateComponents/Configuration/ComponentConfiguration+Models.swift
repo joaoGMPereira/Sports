@@ -5,7 +5,7 @@ protocol ParameterProtocol {
     var name: String { get }
     var type: String { get }
     var defaultValue: String? { get }
-    var componentType: ComponentType { get }
+    var component: any ComponentProtocol { get }
 }
 
 struct StyleParameter: Hashable, ParameterProtocol {
@@ -14,8 +14,29 @@ struct StyleParameter: Hashable, ParameterProtocol {
     let isUsedAsBinding: Bool
     let name: String
     let type: String
-    let componentType: ComponentType
+    let component: any ComponentProtocol
     let defaultValue: String?
+    
+    static func == (lhs: StyleParameter, rhs: StyleParameter) -> Bool {
+        // Compare all properties except 'component' which is an existential type
+        return lhs.order == rhs.order &&
+        lhs.hasObfuscatedArgument == rhs.hasObfuscatedArgument &&
+        lhs.isUsedAsBinding == rhs.isUsedAsBinding &&
+        lhs.name == rhs.name &&
+        lhs.type == rhs.type &&
+        lhs.defaultValue == rhs.defaultValue &&
+        lhs.component.name == rhs.component.name
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(order)
+        hasher.combine(hasObfuscatedArgument)
+        hasher.combine(isUsedAsBinding)
+        hasher.combine(name)
+        hasher.combine(type)
+        hasher.combine(component.name)
+        hasher.combine(defaultValue)
+    }
 }
 
 struct StyleConfig {
@@ -30,9 +51,34 @@ struct InitParameter: Hashable, ParameterProtocol {
     let label: String?
     let name: String
     var type: String
-    let componentType: ComponentType
+    let component: any ComponentProtocol
     var defaultValue: String?
     let isAction: Bool
+    
+    static func == (lhs: InitParameter, rhs: InitParameter) -> Bool {
+        // Compare all properties except 'component' which is an existential type
+        return lhs.order == rhs.order &&
+        lhs.hasObfuscatedArgument == rhs.hasObfuscatedArgument &&
+        lhs.isUsedAsBinding == rhs.isUsedAsBinding &&
+        lhs.label == rhs.label &&
+        lhs.name == rhs.name &&
+        lhs.type == rhs.type &&
+        lhs.defaultValue == rhs.defaultValue &&
+        lhs.isAction == rhs.isAction &&
+        lhs.component.name == rhs.component.name
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(order)
+        hasher.combine(hasObfuscatedArgument)
+        hasher.combine(isUsedAsBinding)
+        hasher.combine(label)
+        hasher.combine(name)
+        hasher.combine(type)
+        hasher.combine(component.name)
+        hasher.combine(defaultValue)
+        hasher.combine(isAction)
+    }
 }
 
 class ComponentInfo {
@@ -92,7 +138,7 @@ extension Array where Element == InitParameter {
                 if item.type.contains("->") {
                     "{}"
                 } else {
-                    if item.componentType.complexType {
+                    if item.component.type.complexType {
                         ""
                     } else {
                         ".\\(\(item.name).rawValue)"
@@ -163,7 +209,7 @@ extension Array where Element == StyleParameter {
                 if item.type.contains("->") {
                     "{}"
                 } else {
-                    if item.componentType.complexType {
+                    if item.component.type.complexType {
                         "\(item.name)()"
                     } else {
                         ".\\(\(item.name).rawValue)"

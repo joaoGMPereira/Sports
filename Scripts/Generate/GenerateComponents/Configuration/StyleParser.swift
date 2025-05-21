@@ -490,7 +490,7 @@ fileprivate extension StyleParser {
             isUsedAsBinding: isUsedAsBinding,
             name: name,
             type: type,
-            componentType: ComponentFinder().findComponentType(named: type),
+            component: ComponentFinder(type: type).findComponentType(),
             defaultValue: defaultValue
         )
     }

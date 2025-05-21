@@ -164,7 +164,7 @@ final class GenerateComponent {
             if parameter.type.contains("->") || parameter.type.contains("escaping") {
                 "\n    @State private var \(parameter.name): \(parameter.type) = {}"
             } else {
-                if parameter.componentType.complexType {
+                if parameter.component.type.complexType {
                     "\n    @State private var \(parameter.name): \(parameter.type) = .init()"
                 } else {
                     "\n    @State private var \(parameter.name): \(parameter.type) = \(defaultCase)"
@@ -382,7 +382,7 @@ final class GenerateComponent {
                 if parameter.type.contains("->") {
                     ""
                 } else {
-                    if parameter.componentType.complexType {
+                    if parameter.component.type.complexType {
                         ""
                     } else {
                         """

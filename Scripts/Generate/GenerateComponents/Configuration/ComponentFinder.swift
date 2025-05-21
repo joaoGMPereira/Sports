@@ -1,5 +1,50 @@
 import Foundation
 
+protocol ComponentProtocol: Equatable {
+    var name: String { get }
+    var type: ComponentType { get }
+}
+
+struct ClassComponent: ComponentProtocol {
+    let name: String
+    let type: ComponentType = .class
+}
+
+struct StructComponent: ComponentProtocol {
+    let name: String
+    let type: ComponentType = .struct
+}
+
+struct EnumComponent: ComponentProtocol {
+    let name: String
+    let type: ComponentType = .enum
+}
+
+struct ProtocolComponent: ComponentProtocol {
+    let name: String
+    let type: ComponentType = .protocol
+}
+
+struct ExtensionComponent: ComponentProtocol {
+    let name: String
+    let type: ComponentType = .extension
+}
+
+struct TypealiasComponent: ComponentProtocol {
+    let name: String
+    let type: ComponentType = .typealias
+}
+
+struct PrimitiveComponent: ComponentProtocol {
+    let name: String
+    let type: ComponentType = .primitive
+}
+
+struct NotFoundComponent: ComponentProtocol {
+    let name: String = "notFound"
+    let type: ComponentType = .notFound
+}
+
 enum ComponentType {
     case `class`
     case `struct`
@@ -9,19 +54,6 @@ enum ComponentType {
     case `typealias`
     case primitive
     case notFound
-    
-    var description: String {
-        switch self {
-        case .class: return "Class"
-        case .struct: return "Struct"
-        case .enum: return "Enum"
-        case .protocol: return "Protocol"
-        case .extension: return "Extension"
-        case .typealias: return "Typealias"
-        case .primitive: return "Primitive Type"
-        case .notFound: return "Not Found"
-        }
-    }
     
     var complexType: Bool {
         self == .class || self == .struct
@@ -41,63 +73,47 @@ class ComponentFinder {
     ]
     
     // Store found components during scanning
-    private var foundComponents: [String: ComponentType] = [:]
+    private var foundComponents: [String: any ComponentProtocol] = [:]
+    
+    let type: String
+    
+    init(type: String) {
+        self.type = type
+    }
+    
+    let scan = Scan()
     
     // Find component type by name by scanning a directory recursively
-    func findComponentType(named componentName: String) -> ComponentType {
+    func findComponentType() -> any ComponentProtocol {
         let searchPaths = [
             "\(COMPONENTS_PATH)",
 
         ]
-        var type: ComponentType = .primitive
+        var component: any ComponentProtocol = NotFoundComponent()
         for basePath in searchPaths {
             // First check if it's a primitive type
-            if primitiveTypes.contains(componentName) {
-                type = .primitive
+            if primitiveTypes.contains(type) {
+                component = PrimitiveComponent(name: type)
             }
             
-            if coreEnumTypes.contains(componentName) {
-                type = .enum
+            if coreEnumTypes.contains(type) {
+                component = EnumComponent(name: type)
             }
             
             // Try to find the component by scanning the directory
-            scanDirectory(at: basePath)
-            
-            // Check if we found the component
-            if let componentType = foundComponents[componentName] {
-                type = componentType
-            }
-            
-            type = .notFound
-        }
-        return type
-    }
-    
-    // Recursively scan a directory for Swift files
-    private func scanDirectory(at path: String) {
-        let fileManager = FileManager.default
-        
-        guard let contents = try? fileManager.contentsOfDirectory(atPath: path) else {
-            print("Could not access directory: \(path)")
-            return
-        }
-        
-        for item in contents {
-            let itemPath = (path as NSString).appendingPathComponent(item)
-            var isDirectory: ObjCBool = false
-            
-            guard fileManager.fileExists(atPath: itemPath, isDirectory: &isDirectory) else {
-                continue
-            }
-            
-            if isDirectory.boolValue {
-                // Recursively scan subdirectories
-                scanDirectory(at: itemPath)
-            } else if itemPath.hasSuffix(".swift") {
+            scan.scanDirectory(at: basePath) { itemPath in
                 // Process Swift files
                 scanSwiftFile(at: itemPath)
             }
+            
+            // Check if we found the component
+            if let componentType = foundComponents[type] {
+                component = componentType
+            }
+            
+            component = NotFoundComponent()
         }
+        return component
     }
     
     // Scan a Swift file for component declarations
@@ -108,46 +124,25 @@ class ComponentFinder {
         }
         
         // Remove comments to avoid false positives
-        let contentWithoutComments = removeComments(from: content)
+        let contentWithoutComments = content.removeComments()
         
         // Find all declarations in the file
         findDeclarations(in: contentWithoutComments)
     }
     
-    // Remove comments from Swift code to avoid false positives
-    private func removeComments(from content: String) -> String {
-        var result = content
-        
-        // Remove block comments (/* ... */)
-        while let range = result.range(of: "/\\*[\\s\\S]*?\\*/", options: .regularExpression) {
-            result.removeSubrange(range)
-        }
-        
-        // Remove line comments (// ...)
-        let lines = result.components(separatedBy: .newlines)
-        let processedLines = lines.map { line -> String in
-            if let range = line.range(of: "//.*$", options: .regularExpression) {
-                return String(line[..<range.lowerBound])
-            }
-            return line
-        }
-        
-        return processedLines.joined(separator: "\n")
-    }
-    
     // Find all type declarations in a Swift file
     private func findDeclarations(in content: String) {
         // Find class declarations
-        findComponentsOfType(.class, withKeyword: "class", in: content)
+        findComponentsOfType(ClassComponent(name: type), withKeyword: "class", in: content)
         
         // Find struct declarations
-        findComponentsOfType(.struct, withKeyword: "struct", in: content)
+        findComponentsOfType(StructComponent(name: type), withKeyword: "struct", in: content)
         
         // Find enum declarations
-        findComponentsOfType(.enum, withKeyword: "enum", in: content)
+        findComponentsOfType(EnumComponent(name: type), withKeyword: "enum", in: content)
         
         // Find protocol declarations
-        findComponentsOfType(.protocol, withKeyword: "protocol", in: content)
+        findComponentsOfType(ProtocolComponent(name: type), withKeyword: "protocol", in: content)
         
         // Find extensions
         findExtensions(in: content)
@@ -157,7 +152,7 @@ class ComponentFinder {
     }
     
     // Find components of a specific type in the content
-    private func findComponentsOfType(_ type: ComponentType, withKeyword keyword: String, in content: String) {
+    private func findComponentsOfType(_ type: any ComponentProtocol, withKeyword keyword: String, in content: String) {
         let pattern = "\(keyword)\\s+([A-Za-z][A-Za-z0-9_]*)(?:<[^>]*>)?\\s*(?::|\n|\\{)"
         
         guard let regex = try? NSRegularExpression(pattern: pattern) else {
@@ -192,7 +187,7 @@ class ComponentFinder {
                 
                 // Only record it as an extension if we haven't found the original type yet
                 if foundComponents[componentName] == nil {
-                    foundComponents[componentName] = .extension
+                    foundComponents[componentName] = ExtensionComponent(name: content)
                 }
             }
         }
@@ -212,7 +207,7 @@ class ComponentFinder {
         for match in matches {
             if match.numberOfRanges > 1, let nameRange = Range(match.range(at: 1), in: content) {
                 let componentName = String(content[nameRange])
-                foundComponents[componentName] = .typealias
+                foundComponents[componentName] = TypealiasComponent(name: componentName)
             }
         }
     }
