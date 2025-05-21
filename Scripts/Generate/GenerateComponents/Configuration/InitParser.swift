@@ -218,7 +218,7 @@ fileprivate extension InitParser {
         // Verificar se é binding
         var isBinding = false
         var processedType = type
-        let component = ComponentFinder(type: type).findComponentType()
+       
         let replacedBinding = getContentInfo(processedType, patternStart: "Binding<")
         isBinding = replacedBinding.success
         if replacedBinding.success {
@@ -239,6 +239,7 @@ fileprivate extension InitParser {
                 defaultValue = ".\(enumValue)"
             }
         }
+        let component = ComponentFinder(type: processedType).findComponentType()
         if defaultValue == nil, component.type.complexType {
             if let complexType = findComplexTypeDefaultInfo(processedType) {
                 defaultValue = complexType
@@ -258,7 +259,7 @@ fileprivate extension InitParser {
             isUsedAsBinding: isBinding,
             label: label,
             name: name,
-            component: ComponentFinder(type: processedType).findComponentType(),
+            component: component,
             defaultValue: defaultValue,
             isAction: isAction
         )
@@ -438,10 +439,7 @@ fileprivate extension InitParser {
             "\(COMPONENTS_PATH)/BaseElements/Customs",
             "\(COMPONENTS_PATH)/Components/Customs",
             "\(COMPONENTS_PATH)/Templates",
-            "\(COMPONENTS_PATH)/BaseElements/Natives",
-            "\(COMPONENTS_PATH)/Models",
-            "\(COMPONENTS_PATH)/Utils",
-            "\(COMPONENTS_PATH)/Styles"
+            "\(COMPONENTS_PATH)/BaseElements/Natives"
         ]
         
         // Buscar o tipo complexo em todos os caminhos possíveis
