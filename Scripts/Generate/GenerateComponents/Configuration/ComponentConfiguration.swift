@@ -32,7 +32,6 @@ final class ComponentConfiguration {
                     isUsedAsBinding: isUsedAsBinding,
                     label: param.label,
                     name: param.name,
-                    type: type,
                     component: ComponentFinder(type: type).findComponentType(),
                     defaultValue: param.defaultValue,
                     isAction: param.isAction

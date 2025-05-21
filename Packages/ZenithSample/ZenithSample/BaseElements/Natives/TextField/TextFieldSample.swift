@@ -11,9 +11,9 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
 
     @State private var state: DSState = .enabled
 
-    @State private var errorMessage: String = "Sample text"
-
     @State private var placeholder: String = "Sample text"
+
+    @State private var errorMessage: String = "Sample text"
 
     @State private var hasError: Bool = false
 
@@ -98,11 +98,11 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
                 height: 120
             )
             .padding(.horizontal)
-            TextField("", text: $errorMessage)
-                .textFieldStyle(.contentA(), placeholder: "errorMessage")
-                .padding(.horizontal)
             TextField("", text: $placeholder)
                 .textFieldStyle(.contentA(), placeholder: "placeholder")
+                .padding(.horizontal)
+            TextField("", text: $errorMessage)
+                .textFieldStyle(.contentA(), placeholder: "errorMessage")
                 .padding(.horizontal)
             Toggle("hasError", isOn: $hasError)
                 .toggleStyle(.default(.highlightA))

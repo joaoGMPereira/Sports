@@ -3,7 +3,6 @@ import Foundation
 
 protocol ParameterProtocol {
     var name: String { get }
-    var type: String { get }
     var defaultValue: String? { get }
     var component: any ComponentProtocol { get }
 }
@@ -50,8 +49,7 @@ struct InitParameter: Hashable, ParameterProtocol {
     let isUsedAsBinding: Bool
     let label: String?
     let name: String
-    var type: String
-    let component: any ComponentProtocol
+    var component: any ComponentProtocol
     var defaultValue: String?
     let isAction: Bool
     
@@ -62,7 +60,6 @@ struct InitParameter: Hashable, ParameterProtocol {
         lhs.isUsedAsBinding == rhs.isUsedAsBinding &&
         lhs.label == rhs.label &&
         lhs.name == rhs.name &&
-        lhs.type == rhs.type &&
         lhs.defaultValue == rhs.defaultValue &&
         lhs.isAction == rhs.isAction &&
         lhs.component.name == rhs.component.name
@@ -74,7 +71,6 @@ struct InitParameter: Hashable, ParameterProtocol {
         hasher.combine(isUsedAsBinding)
         hasher.combine(label)
         hasher.combine(name)
-        hasher.combine(type)
         hasher.combine(component.name)
         hasher.combine(defaultValue)
         hasher.combine(isAction)
@@ -126,16 +122,16 @@ extension Array where Element == InitParameter {
         sorted(by: {$0.order < $1.order }).enumerated().map { index, item in
             
             let parameterType = "\(item.name): "
-            var parameterValue = switch item.type {
+            var parameterValue = switch item.component.type {
                 
-            case "String", "StringImageEnum":
+            case .String, .stringImageEnum:
                 "\"\\(\(item.name))\""
-            case "Bool":
+            case .Bool:
                 "\\(\(item.name))"
-            case "Int", "Double", "CGFloat":
+            case .Int, .Double, .CGFloat:
                 "\(item.name)"
             default:
-                if item.type.contains("->") {
+                if item.component.name.contains("->") {
                     "{}"
                 } else {
                     if item.component.type.complexType {

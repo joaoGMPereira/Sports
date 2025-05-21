@@ -2,12 +2,13 @@ import Foundation
 
 struct Scan {
     // Recursively scan a directory for Swift files
-    func scanDirectory(at path: String, completion: (String) -> Void) {
+    func scanDirectory(at path: String, type: String? = nil) -> [String] {
         let fileManager = FileManager.default
+        var pathsFound: [String] = []
         
         guard let contents = try? fileManager.contentsOfDirectory(atPath: path) else {
             print("Could not access directory: \(path)")
-            return
+            return pathsFound
         }
         
         for item in contents {
@@ -20,11 +21,20 @@ struct Scan {
             
             if isDirectory.boolValue {
                 // Recursively scan subdirectories
-                scanDirectory(at: itemPath, completion: completion)
+                pathsFound.append(contentsOf: scanDirectory(at: itemPath, type: type))
             } else if itemPath.hasSuffix(".swift") {
-                // Process Swift files
-                completion(itemPath)
+                // Check if we're looking for a specific type in the file
+                if let typeName = type {
+                    if let fileContent = try? String(contentsOfFile: itemPath), fileContent.contains(typeName) {
+                        pathsFound.append(itemPath)
+                    }
+                } else {
+                    // Add all Swift files if no type filter
+                    pathsFound.append(itemPath)
+                }
             }
         }
+        
+        return pathsFound
     }
 }

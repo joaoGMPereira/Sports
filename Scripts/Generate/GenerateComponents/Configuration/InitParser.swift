@@ -44,7 +44,7 @@ struct InitParser {
                 
                 if let initParam = result {
                     initParams.append(initParam)
-                    Log.log("Parâmetro processado com sucesso: \(initParam.name): \(initParam.type)", level: .info)
+                    Log.log("Parâmetro processado com sucesso: \(initParam.name): \(initParam.component.name)", level: .info)
                 } else {
                     Log.log("Falha ao processar parâmetro: \(param)", level: .warning)
                 }
@@ -54,13 +54,14 @@ struct InitParser {
         
         initParams.forEach { param in
             // Tratamento para Imagem em String
-            if filteredInitParams.contains(where: { $0.name == param.name && $0.type == "String" && param.type == "SFSymbol" }), var foundInitParam = filteredInitParams.first(where: { $0.name == param.name && $0.type == "String" }) {
-                filteredInitParams.removeAll(where: { $0.name == param.name && $0.type == "String" })
+            if filteredInitParams.contains(where: { $0.name == param.name && $0.component.type == .String && param.component.name == "SFSymbol" }), var foundInitParam = filteredInitParams.first(where: { $0.name == param.name && $0.component.type == .String }) {
+                filteredInitParams.removeAll(where: { $0.name == param.name && $0.component.type == .String })
                 foundInitParam.defaultValue = "\"figure.run\""
-                foundInitParam.type = "StringImageEnum"
+                foundInitParam.component.name = "StringImageEnum"
+                foundInitParam.component.type = .SFSymbol
                 filteredInitParams.append(foundInitParam)
             }
-            if filteredInitParams.contains(where: { $0.name == param.name }) == false && param.type.contains("StyleConfiguration") == false {
+            if filteredInitParams.contains(where: { $0.name == param.name }) == false && param.component.name.contains("StyleConfiguration") == false {
                 filteredInitParams.append(param)
             }
         }
@@ -224,11 +225,6 @@ fileprivate extension InitParser {
             processedType = replacedBinding.type
         }
         
-        let replacedOptional = getContentInfo(processedType, patternStart: "Optional<")
-        if replacedOptional.success {
-            processedType = "\(replacedBinding.type)?"
-        }
-        
         // Processar @escaping e outros modificadores
         if processedType.contains("@escaping") {
             processedType = processedType.replacingOccurrences(of: "@escaping ", with: "")
@@ -262,8 +258,7 @@ fileprivate extension InitParser {
             isUsedAsBinding: isBinding,
             label: label,
             name: name,
-            type: processedType,
-            component: ComponentFinder(type: type).findComponentType(),
+            component: ComponentFinder(type: processedType).findComponentType(),
             defaultValue: defaultValue,
             isAction: isAction
         )

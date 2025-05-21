@@ -1,58 +1,68 @@
 import Foundation
 
 protocol ComponentProtocol: Equatable {
-    var name: String { get }
-    var type: ComponentType { get }
+    var name: String { get set }
+    var type: ComponentType { get set }
 }
 
 struct ClassComponent: ComponentProtocol {
-    let name: String
-    let type: ComponentType = .class
+    var name: String
+    var type: ComponentType = .class
 }
 
 struct StructComponent: ComponentProtocol {
-    let name: String
-    let type: ComponentType = .struct
+    var name: String
+    var type: ComponentType = .struct
 }
 
 struct EnumComponent: ComponentProtocol {
-    let name: String
-    let type: ComponentType = .enum
+    var name: String
+    var type: ComponentType = .enum
 }
 
 struct ProtocolComponent: ComponentProtocol {
-    let name: String
-    let type: ComponentType = .protocol
+    var name: String
+    var type: ComponentType = .protocol
 }
 
 struct ExtensionComponent: ComponentProtocol {
-    let name: String
-    let type: ComponentType = .extension
+    var name: String
+    var type: ComponentType = .extension
 }
 
 struct TypealiasComponent: ComponentProtocol {
-    let name: String
-    let type: ComponentType = .typealias
+    var name: String
+    var type: ComponentType = .typealias
 }
 
 struct PrimitiveComponent: ComponentProtocol {
-    let name: String
-    let type: ComponentType = .primitive
+    var name: String
+    var type: ComponentType = .primitive
+}
+
+struct CustomComponent: ComponentProtocol {
+    var name: String
+    var type: ComponentType
 }
 
 struct NotFoundComponent: ComponentProtocol {
-    let name: String = "notFound"
-    let type: ComponentType = .notFound
+    var name: String = "notFound"
+    var type: ComponentType = .notFound
 }
 
-enum ComponentType {
+enum ComponentType: String, Equatable, CaseIterable {
     case `class`
     case `struct`
     case `enum`
     case `protocol`
     case `extension`
     case `typealias`
+    case stringImageEnum
     case primitive
+    case ColorName
+    case FontName
+    case SFSymbol
+    case Int, UInt, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float, Double, Bool, String, Character, Void, Optional, Array, Dictionary, Set, Data, Date, URL, CGFloat
     case notFound
     
     var complexType: Bool {
@@ -61,15 +71,15 @@ enum ComponentType {
 }
 
 class ComponentFinder {
-    private let primitiveTypes: Set<String> = [
-        "Int", "UInt", "Int8", "UInt8", "Int16", "UInt16", "Int32", "UInt32", "Int64", "UInt64",
-        "Float", "Double", "Bool", "String", "Character",
-        "Void", "Optional", "Array", "Dictionary", "Set",
-        "Data", "Date", "URL"
+    private let primitiveTypes: Set<ComponentType> = [
+        .Int, .UInt, .Int8, .UInt8, .Int16, .UInt16, .Int32, .UInt32, .Int64, .UInt64,
+        .Float, .Double, .Bool, .String, .Character,
+        .Void, .Optional, .Array, .Dictionary, .Set,
+        .Data, .Date, .URL, .CGFloat
     ]
     
-    private let coreEnumTypes: Set<String> = [
-        "ColorName", "FontName"
+    private let coreEnumTypes: Set<ComponentType> = [
+        .ColorName, .FontName
     ]
     
     // Store found components during scanning
@@ -87,42 +97,38 @@ class ComponentFinder {
     func findComponentType() -> any ComponentProtocol {
         let searchPaths = [
             "\(COMPONENTS_PATH)",
-
         ]
-        var component: any ComponentProtocol = NotFoundComponent()
+        
+        // First check if it's a primitive type
+        if let primitiveType = primitiveTypes.first(where: { $0.rawValue == type }) {
+            return PrimitiveComponent(name: type, type: primitiveType)
+        }
+        
+        if let coreType = coreEnumTypes.first(where: { $0.rawValue == type }) {
+            return EnumComponent(name: type, type: coreType)
+        }
+        
+        // Try to find the component by scanning the directory
         for basePath in searchPaths {
-            // First check if it's a primitive type
-            if primitiveTypes.contains(type) {
-                component = PrimitiveComponent(name: type)
-            }
+            let filePaths = scan.scanDirectory(at: basePath, type: type)
             
-            if coreEnumTypes.contains(type) {
-                component = EnumComponent(name: type)
-            }
-            
-            // Try to find the component by scanning the directory
-            scan.scanDirectory(at: basePath) { itemPath in
-                // Process Swift files
-                scanSwiftFile(at: itemPath)
+            for filePath in filePaths {
+                if let fileContent = try? String(contentsOfFile: filePath) {
+                    scanSwiftFile(at: fileContent)
+                }
             }
             
             // Check if we found the component
             if let componentType = foundComponents[type] {
-                component = componentType
+                return componentType
             }
-            
-            component = NotFoundComponent()
         }
-        return component
+        
+        return NotFoundComponent()
     }
     
     // Scan a Swift file for component declarations
-    private func scanSwiftFile(at path: String) {
-        guard let content = try? String(contentsOfFile: path, encoding: .utf8) else {
-            print("Could not read file: \(path)")
-            return
-        }
-        
+    private func scanSwiftFile(at content: String) {
         // Remove comments to avoid false positives
         let contentWithoutComments = content.removeComments()
         
@@ -153,7 +159,7 @@ class ComponentFinder {
     
     // Find components of a specific type in the content
     private func findComponentsOfType(_ type: any ComponentProtocol, withKeyword keyword: String, in content: String) {
-        let pattern = "\(keyword)\\s+([A-Za-z][A-Za-z0-9_]*)(?:<[^>]*>)?\\s*(?::|\n|\\{)"
+        let pattern = "(?:public|private|internal|fileprivate|open)?\\s*(?:@\\w+\\s+)*\(keyword)\\s+([A-Za-z][A-Za-z0-9_]*)(?:<[^>]*>)?\\s*(?::|\n|\\{)"
         
         guard let regex = try? NSRegularExpression(pattern: pattern) else {
             return
@@ -165,7 +171,9 @@ class ComponentFinder {
         for match in matches {
             if match.numberOfRanges > 1, let nameRange = Range(match.range(at: 1), in: content) {
                 let componentName = String(content[nameRange])
-                foundComponents[componentName] = type
+                if componentName == type.name {
+                    foundComponents[type.name] = type
+                }
             }
         }
     }
@@ -187,7 +195,9 @@ class ComponentFinder {
                 
                 // Only record it as an extension if we haven't found the original type yet
                 if foundComponents[componentName] == nil {
-                    foundComponents[componentName] = ExtensionComponent(name: content)
+                    if componentName == type {
+                        foundComponents[type] = ExtensionComponent(name: componentName)
+                    }
                 }
             }
         }
@@ -195,7 +205,7 @@ class ComponentFinder {
     
     // Find typealiases
     private func findTypealiases(in content: String) {
-        let pattern = "typealias\\s+([A-Za-z][A-Za-z0-9_]*)(?:<[^>]*>)?\\s*="
+        let pattern = "typealias\\s+([A-Za-z][A-ZaZ0-9_]*)(?:<[^>]*>)?\\s*="
         
         guard let regex = try? NSRegularExpression(pattern: pattern) else {
             return
@@ -207,7 +217,9 @@ class ComponentFinder {
         for match in matches {
             if match.numberOfRanges > 1, let nameRange = Range(match.range(at: 1), in: content) {
                 let componentName = String(content[nameRange])
-                foundComponents[componentName] = TypealiasComponent(name: componentName)
+                if componentName == type {
+                    foundComponents[type] = TypealiasComponent(name: componentName)
+                }
             }
         }
     }

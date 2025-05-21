@@ -97,10 +97,10 @@ final class GenerateComponent {
         var states: [String] = []
         parameters.forEach { parameter in
             if let defaultValue = parameter.defaultValue {
-                if parameter.type == "String" && (defaultValue.isEmpty || defaultValue == "\"\"") {
-                    states.append("\n    @State private var \(parameter.name): \(parameter.type) = \"Sample text\"")
+                if parameter.component.type == .String && (defaultValue.isEmpty || defaultValue == "\"\"") {
+                    states.append("\n    @State private var \(parameter.name): \(parameter.component.name) = \"Sample text\"")
                 } else {
-                    if parameter.type == "StringImageEnum" {
+                    if parameter.component.name == "StringImageEnum" {
                         states.append(
                             """
                             @State private var \(parameter.name): String = \"figure.run\"
@@ -118,7 +118,7 @@ final class GenerateComponent {
                             """
                         )
                     } else {
-                        states.append("\n    @State private var \(parameter.name): \(parameter.type) = \(defaultValue)")
+                        states.append("\n    @State private var \(parameter.name): \(parameter.component.name) = \(defaultValue)")
                     }
                 }
             } else {
@@ -134,9 +134,9 @@ final class GenerateComponent {
         defaultParameters += firstStyle.parameters.joined()
         let defaultCase = ".\(firstStyle.name)(\(defaultParameters))"
         
-        return switch parameter.type {
+        return switch parameter.component.name {
         case "String":
-            "\n    @State private var \(parameter.name): \(parameter.type) = \"Sample text\""
+            "\n    @State private var \(parameter.name): \(parameter.component.name) = \"Sample text\""
         case "StringImageEnum":
             """
             @State private var \(parameter.name): String = \"figure.run\"
@@ -153,21 +153,21 @@ final class GenerateComponent {
             }
             """
         case "Bool":
-            "\n    @State private var \(parameter.name): \(parameter.type) = false"
+            "\n    @State private var \(parameter.name): \(parameter.component.name) = false"
         case "Int":
-            "\n    @State private var \(parameter.name): \(parameter.type) = 1"
+            "\n    @State private var \(parameter.name): \(parameter.component.name) = 1"
         case "Double":
-            "\n    @State private var \(parameter.name): \(parameter.type) = 0.01"
+            "\n    @State private var \(parameter.name): \(parameter.component.name) = 0.01"
         case "CGFloat":
-            "\n    @State private var \(parameter.name): \(parameter.type) = 1"
+            "\n    @State private var \(parameter.name): \(parameter.component.name) = 1"
         default:
-            if parameter.type.contains("->") || parameter.type.contains("escaping") {
-                "\n    @State private var \(parameter.name): \(parameter.type) = {}"
+            if parameter.component.name.contains("->") || parameter.component.name.contains("escaping") {
+                "\n    @State private var \(parameter.name): \(parameter.component.name) = {}"
             } else {
                 if parameter.component.type.complexType {
-                    "\n    @State private var \(parameter.name): \(parameter.type) = .init()"
+                    "\n    @State private var \(parameter.name): \(parameter.component.name) = .init()"
                 } else {
-                    "\n    @State private var \(parameter.name): \(parameter.type) = \(defaultCase)"
+                    "\n    @State private var \(parameter.name): \(parameter.component.name) = \(defaultCase)"
                 }
             }
         }
@@ -305,7 +305,7 @@ final class GenerateComponent {
     func interactiveComponents(_ parameters: [ParameterProtocol]) -> String {
         var interactiveComponents = ""
         parameters.forEach { parameter in
-            let parameterComponent = switch parameter.type {
+            let parameterComponent = switch parameter.component.name {
             case "String":
                 """
                 TextField("", text: $\(parameter.name))
@@ -379,15 +379,15 @@ final class GenerateComponent {
                         .padding(.horizontal)\n
                     """
             default:
-                if parameter.type.contains("->") {
+                if parameter.component.name.contains("->") {
                     ""
                 } else {
                     if parameter.component.type.complexType {
                         ""
                     } else {
                         """
-                        EnumSelector<\(parameter.type)>(
-                            title: "\(parameter.type)",
+                        EnumSelector<\(parameter.component.name)>(
+                            title: "\(parameter.component.name)",
                             selection: $\(parameter.name),
                             columnsCount: 3,
                             height: 120
