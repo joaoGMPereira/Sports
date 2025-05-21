@@ -124,7 +124,7 @@ extension Array where Element == InitParameter {
             let parameterType = "\(item.name): "
             var parameterValue = switch item.component.type {
                 
-            case .String, .stringImageEnum:
+            case .String, .StringImageEnum:
                 "\"\\(\(item.name))\""
             case .Bool:
                 "\\(\(item.name))"

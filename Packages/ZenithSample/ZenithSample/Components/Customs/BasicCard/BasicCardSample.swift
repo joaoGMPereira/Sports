@@ -13,7 +13,7 @@ struct BasicCardSample: View, @preconcurrency BaseThemeDependencies {
 
     @State private var contentLayout: CardLayoutCase = .imageText
 
-    @State private var action: (() -> Void) = {}
+    @State private var action: () -> Void = {}
     @State private var image: String = "figure.run"
     @State private var symbolSearch = ""
     var filteredSymbols: [String] {

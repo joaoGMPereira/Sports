@@ -19,7 +19,7 @@ struct InitParser {
         let initRegex = try! NSRegularExpression(pattern: initPattern, options: [.dotMatchesLineSeparators])
         let initMatches = initRegex.matches(in: content, options: [], range: NSRange(content.startIndex..., in: content))
         
-        if let match = initMatches.first {
+        for match in initMatches {
             guard let paramsRange = Range(match.range(at: 1), in: content) else {
                 return []
             }
@@ -58,7 +58,7 @@ struct InitParser {
                 filteredInitParams.removeAll(where: { $0.name == param.name && $0.component.type == .String })
                 foundInitParam.defaultValue = "\"figure.run\""
                 foundInitParam.component.name = "StringImageEnum"
-                foundInitParam.component.type = .SFSymbol
+                foundInitParam.component.type = .String
                 filteredInitParams.append(foundInitParam)
             }
             if filteredInitParams.contains(where: { $0.name == param.name }) == false && param.component.name.contains("StyleConfiguration") == false {

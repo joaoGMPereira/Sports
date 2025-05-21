@@ -37,12 +37,17 @@ struct TypealiasComponent: ComponentProtocol {
 
 struct PrimitiveComponent: ComponentProtocol {
     var name: String
-    var type: ComponentType = .primitive
+    var type: ComponentType = .Primitive
 }
 
 struct CustomComponent: ComponentProtocol {
     var name: String
     var type: ComponentType
+}
+
+struct ClosureComponent: ComponentProtocol {
+    var name: String
+    var type: ComponentType = .Closure
 }
 
 struct NotFoundComponent: ComponentProtocol {
@@ -57,11 +62,12 @@ enum ComponentType: String, Equatable, CaseIterable {
     case `protocol`
     case `extension`
     case `typealias`
-    case stringImageEnum
-    case primitive
+    case StringImageEnum
+    case Primitive
     case ColorName
     case FontName
     case SFSymbol
+    case Closure
     case Int, UInt, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float, Double, Bool, String, Character, Void, Optional, Array, Dictionary, Set, Data, Date, URL, CGFloat
     case notFound
     
@@ -106,6 +112,14 @@ class ComponentFinder {
         
         if let coreType = coreEnumTypes.first(where: { $0.rawValue == type }) {
             return EnumComponent(name: type, type: coreType)
+        }
+        
+        if let customType = ComponentType.allCases.first(where: { $0.rawValue == type }) {
+            return CustomComponent(name: type, type: customType)
+        }
+        
+        if type.contains("->") || type.contains("escaping") {
+            return ClosureComponent(name: type)
         }
         
         // Try to find the component by scanning the directory
