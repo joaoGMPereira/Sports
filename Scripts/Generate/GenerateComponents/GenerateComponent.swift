@@ -114,6 +114,7 @@ final class GenerateComponent {
                 }
             }
             
+            
             // Adicionar estados para todos os parâmetros de todos os inicializadores
             states.append(contentsOf: stateVars(allInitParams))
         } else {
@@ -129,11 +130,14 @@ final class GenerateComponent {
         var states: [String] = []
         parameters.forEach { parameter in
             if let defaultValue = parameter.defaultValue {
-                if parameter.component.type == .String && (defaultValue.isEmpty || defaultValue == "\"\"") {
-                    states.append("\n    @State private var \(parameter.name): \(parameter.component.name) = \"Sample text\"")
+                if parameter.component.name == "() -> some View" {
+                    states.append("\n    private func \(parameter.name)\(parameter.component.name) { Text(\"CustomComponent\").textStyle(.medium()) }")
                 } else {
-                    if parameter.component.name == "StringImageEnum" {
-                        states.append(
+                    if parameter.component.type == .String && (defaultValue.isEmpty || defaultValue == "\"\"") {
+                        states.append("\n    @State private var \(parameter.name): \(parameter.component.name) = \"Sample text\"")
+                    } else {
+                        if parameter.component.name == "StringImageEnum" {
+                            states.append(
                             """
                             @State private var \(parameter.name): String = \"figure.run\"
                             @State private var symbolSearch = ""
@@ -148,9 +152,10 @@ final class GenerateComponent {
                                     .sorted()
                             }
                             """
-                        )
-                    } else {
-                        states.append("\n    @State private var \(parameter.name): \(parameter.component.name) = \(defaultValue)")
+                            )
+                        } else {
+                            states.append("\n    @State private var \(parameter.name): \(parameter.component.name) = \(defaultValue)")
+                        }
                     }
                 }
             } else {
