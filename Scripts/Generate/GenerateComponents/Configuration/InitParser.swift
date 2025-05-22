@@ -37,7 +37,7 @@ struct InitParser {
             
             // Processar cada parâmetro individualmente
             for (index, paramString) in params.enumerated() {
-                let param = paramString.replacingOccurrences(of: "\n", with: " ").trimmingCharacters(in: .whitespaces)
+                let param = paramString.replacingOccurrences(of: "\n", with: "").trimmingCharacters(in: .whitespaces)
                 
                 // Nova abordagem: análise baseada em tokens em vez de regex
                 let result = parseInitParameter(param, index: index)
@@ -69,7 +69,7 @@ struct InitParser {
     }
 }
 
-fileprivate extension InitParser {
+extension InitParser {
     
     // Nova função para extrair parâmetros de forma equilibrada, respeitando parênteses aninhados
     func extractBalancedParameters(from string: String) -> [String] {
@@ -142,6 +142,29 @@ fileprivate extension InitParser {
         // Verificar se é um parâmetro vazio
         if trimmed.isEmpty {
             return nil
+        }
+        
+        // Verificar se é um parâmetro ViewBuilder
+        // Exemplo: "@ViewBuilder trailingContent: () -> TrailingContent"
+        if trimmed.contains("@ViewBuilder") {
+            // Extrair o nome do parâmetro após @ViewBuilder
+            if let parts = trimmed.components(separatedBy: ":").first?.components(separatedBy: " "), 
+               let name = parts.last(where: { !$0.isEmpty && !$0.starts(with: "@") }) {
+                
+                Log.log("Detectado parâmetro ViewBuilder: \(name)", level: .info)
+                var component = ComponentFinder(type: "() -> View").findComponentType()
+                component.name = "() -> some View"
+                return InitParameter(
+                    order: index,
+                    hasObfuscatedArgument: false,
+                    isUsedAsBinding: false,
+                    label: nil,
+                    name: name,
+                    component: component,
+                    defaultValue: "{ Text(\"CustomComponent\").textStyle(.medium()) }",
+                    isAction: true
+                )
+            }
         }
         
         // Dividir o parâmetro nas partes principais: label/nome e tipo/valor padrão

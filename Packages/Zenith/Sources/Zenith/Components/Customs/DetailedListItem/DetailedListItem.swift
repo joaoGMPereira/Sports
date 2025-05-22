@@ -189,13 +189,3 @@ public struct DetailedListItem: View {
         )
     }
 }
-
-public struct DetailedListItemInfo: Decodable {
-    let title: String
-    let description: String
-    
-    public init(title: String = "", description: String = "") {
-        self.title = title
-        self.description = description
-    }
-}

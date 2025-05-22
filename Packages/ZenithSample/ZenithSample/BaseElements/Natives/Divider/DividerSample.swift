@@ -76,6 +76,7 @@ struct DividerSample: View, @preconcurrency BaseThemeDependencies {
             TextField("", text: $sampleText)
                 .textFieldStyle(.contentA(), placeholder: "Texto de exemplo")
                 .padding(.horizontal)
+
             EnumSelector<GenerateDividerSampleEnum>(
                 title: "Divider Estilos",
                 selection: $style,

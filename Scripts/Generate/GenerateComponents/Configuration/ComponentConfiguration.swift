@@ -119,7 +119,23 @@ final class ComponentConfiguration {
                     Log.log("View encontrada: \(filePath)")
                     if let content = componentInfo.viewPath.readFile() {
                         let initParser = InitParser(content: content, componentName: name)
-                        componentInfo.publicInitParams = initParser.extractInitParams()
+                        
+                        // Extrair informações sobre múltiplos inicializadores
+                        let initializers = initParser.extractMultipleInits()
+                        componentInfo.initializerInfos = initializers
+                        
+                        // Verificar se temos múltiplos inicializadores
+                        componentInfo.hasMultipleInits = initializers.count > 1
+                        Log.log("Componente com múltiplos inicializadores: \(componentInfo.hasMultipleInits) - Quantidade: \(initializers.count)")
+                        
+                        // Para compatibilidade, mantemos os publicInitParams com o primeiro inicializador
+                        if let firstInit = initializers.first {
+                            componentInfo.publicInitParams = firstInit.parameters
+                        } else {
+                            // Se não encontrou inicializadores, usar o método antigo
+                            componentInfo.publicInitParams = initParser.extractInitParams()
+                        }
+                        
                         componentInfo.exampleCode = """
                         \(name)(\(componentInfo.publicInitParams.joined()))
                         """

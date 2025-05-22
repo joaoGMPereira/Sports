@@ -1,8 +1,12 @@
 import SwiftUI
 import ZenithCoreInterface
 
+/// Protocolo para identificar structs genericamente
+public protocol AnyStruct {}
+public extension AnyStruct where Self: Decodable {}
+
 // Configuração compartilhada de blur que pode ser usada por diferentes componentes
-public struct BlurConfig: Sendable {
+public struct BlurConfig: Sendable, Equatable, AnyStruct {
     // Primeira camada de blur (menor e mais próxima)
     public let blur1Width: CGFloat
     public let blur1Height: CGFloat

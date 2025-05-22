@@ -84,6 +84,7 @@ struct ButtonSample: View, @preconcurrency BaseThemeDependencies {
             TextField("", text: $sampleText)
                 .textFieldStyle(.contentA(), placeholder: "Texto de exemplo")
                 .padding(.horizontal)
+
             EnumSelector<GenerateButtonSampleEnum>(
                 title: "Button Estilos",
                 selection: $style,

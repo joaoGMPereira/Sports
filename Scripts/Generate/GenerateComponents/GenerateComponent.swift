@@ -45,8 +45,19 @@ final class GenerateComponent {
         fullContent += configurationSection()
         fullContent += allStyles()
         fullContent += generateCode()
+        if componentInfo.hasMultipleInits {
+            fullContent += generateGetInit()
+        }
+        
         fullContent += generateGetStyle()
+        
+        // Adicionar o enum de estilos
         fullContent += generateEnumStyle()
+        
+        // Adicionar o enum de inicializadores e função getInit se o componente tiver múltiplos inicializadores
+        if componentInfo.hasMultipleInits {
+            fullContent += generateEnumInit()
+        }
         
         return fullContent
     }
@@ -86,9 +97,30 @@ final class GenerateComponent {
         // Estados específicos para tipo de componente
         states.append("\n    @State private var style: Generate\(componentInfo.name)SampleEnum = .\(componentInfo.styleFunctions.first!.name)")
         
+        // Adicionar estado para seleção de inicializador se o componente tiver múltiplos inicializadores
+        if componentInfo.hasMultipleInits, let firstInit = componentInfo.initializerInfos.first {
+            states.append("\n    @State private var selectedInit: Generate\(componentInfo.name)InitEnum = .\(firstInit.name)")
+            
+            // Coletar todos os parâmetros de todos os inicializadores para garantir que temos todas as variáveis necessárias
+            var allParameters = Set<String>()
+            var allInitParams: [InitParameter] = []
+            
+            componentInfo.initializerInfos.forEach { initInfo in
+                initInfo.parameters.forEach { param in
+                    if !allParameters.contains(param.name) {
+                        allParameters.insert(param.name)
+                        allInitParams.append(param)
+                    }
+                }
+            }
+            
+            // Adicionar estados para todos os parâmetros de todos os inicializadores
+            states.append(contentsOf: stateVars(allInitParams))
+        } else {
+            states.append(contentsOf: stateVars(config.initParams))
+        }
         states.append(contentsOf: stateVars(Array(config.styleFunctions)))
         states.append(contentsOf: stateVars(Array(config.styleParameters)))
-        states.append(contentsOf: stateVars(config.initParams))
         
         return "\(states.joined(separator: "\n"))\n"
     }
@@ -238,11 +270,21 @@ final class GenerateComponent {
                     // Preview do componente com as configurações atuais
         """
         
-        previewComponent += """
+        // Se o componente tem múltiplos inicializadores, usamos get{Component}Init
+        if componentInfo.hasMultipleInits {
+            previewComponent += """
+            
+                    get\(componentInfo.name)Init(selectedInit.rawValue)
+                    .\(componentInfo.name.firstLowerCased)Style(get\(componentInfo.name)Style(style.rawValue)\(config.styleParams))
+            """
+        } else {
+            previewComponent += """
+            
+                    \(componentInfo.exampleCode)
+                    .\(componentInfo.name.firstLowerCased)Style(get\(componentInfo.name)Style(style.rawValue)\(config.styleParams))
+            """
+        }
         
-                \(componentInfo.exampleCode)
-                .\(componentInfo.name.firstLowerCased)Style(get\(componentInfo.name)Style(style.rawValue)\(config.styleParams))
-        """
         previewComponent += """
                     \n .padding()
                     .frame(maxWidth: .infinity)
@@ -266,12 +308,39 @@ final class GenerateComponent {
                 .padding(.horizontal)
             """
         }
+        
+        // Adicionar seletor de inicializador se o componente tiver múltiplos inicializadores
+        var initSelector = ""
+        if componentInfo.hasMultipleInits {
+            initSelector = """
+            VStack(alignment: .leading) {
+                Text("\(componentInfo.name) Inicializadores")
+                    .font(fonts.smallBold)
+                    .foregroundColor(colors.contentA)
+                    .padding(.horizontal, 8)
+                
+                EnumSelector<Generate\(componentInfo.name)InitEnum>(
+                    title: "Selecione um inicializador",
+                    selection: $selectedInit,
+                    columnsCount: 1,
+                    height: 160
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(colors.highlightA.opacity(0.3), lineWidth: 1)
+                )
+            }
+            .padding(.horizontal)
+            """
+        }
+        
         var configurationSection = """
             
             // Área de configuração
             private var configurationSection: some View {
                 VStack(spacing: 16) {
                     \(sampleText)
+                    \(initSelector)
                     EnumSelector<Generate\(componentInfo.name)SampleEnum>(
                         title: "\(componentInfo.name) Estilos",
                         selection: $style,
@@ -460,14 +529,88 @@ final class GenerateComponent {
             styleParametersCases.append(parameters)
         }
         
-        generateCode += """
-        let styleFunctionsCases = [\(styleFunctionsCases.joined(separator: ", "))]
-        let selectedStyle = styleFunctionsCases.first(where: { $0.contains(style.rawValue) }) ?? \".\\(style.rawValue)()\"
-        code += \"\"\"
-        \(componentInfo.generateCode)
-        .\(componentInfo.name.firstLowerCased)Style(\\(selectedStyle)\(styleParametersCases))
-        \"\"\"\n
-        """
+        // Se tiver múltiplos inicializadores, gerar código para selecionar o correto
+        if componentInfo.hasMultipleInits {
+            generateCode += """
+            let styleFunctionsCases = [\(styleFunctionsCases.joined(separator: ", "))]
+            let selectedStyle = styleFunctionsCases.first(where: { $0.contains(style.rawValue) }) ?? \".\\(style.rawValue)()\"
+            
+            // Gerar código para o inicializador selecionado
+            var initCode = ""
+            switch selectedInit {
+            """
+            
+            // Adicionar casos para cada inicializador
+            for initInfo in componentInfo.initializerInfos {
+                // Gerar uma string que representa o inicializador e seus parâmetros
+                var initializerCode = "\(componentInfo.name)("
+                
+                // Iterar pelos parâmetros ordenados por ordem
+                for (idx, param) in initInfo.parameters.sorted(by: { $0.order < $1.order }).enumerated() {
+                    let paramName = param.name
+                    var paramValue = ""
+                    
+                    // Formatar baseado no tipo
+                    switch param.component.type {
+                    case .String, .StringImageEnum:
+                        paramValue = "\(paramName): \\\"\\(\(paramName))\\\""
+                    case .Bool:
+                        paramValue = "\(paramName): \\(\(paramName))"
+                    case .Int, .Double, .CGFloat:
+                        paramValue = "\(paramName): \\(\(paramName))"
+                    default:
+                        if param.component.name.contains("->") {
+                            paramValue = "\(paramName): {}"
+                        } else if param.component.type.complexType {
+                            paramValue = "\(paramName): \\(\(paramName))"
+                        } else {
+                            paramValue = "\(paramName): .\\(\(paramName)).rawValue"
+                        }
+                    }
+                    
+                    if param.hasObfuscatedArgument {
+                        paramValue = "\\(\(paramName))"
+                    }
+                    
+                    // Adicionar à string do inicializador
+                    initializerCode += paramValue
+                    
+                    // Adicionar vírgula se não for o último parâmetro
+                    if idx < initInfo.parameters.count - 1 {
+                        initializerCode += ", "
+                    }
+                }
+                
+                initializerCode += ")"
+                
+                generateCode += """
+                
+                case .\(initInfo.name):
+                    initCode = "\(initializerCode)"
+                """
+            }
+            
+            generateCode += """
+            
+            }
+            
+            code += \"\"\"
+            \\(initCode)
+            .\(componentInfo.name.firstLowerCased)Style(\\(selectedStyle)\(styleParametersCases))
+            \"\"\"\n
+            """
+        } else {
+            // Código original para componentes com um único inicializador
+            generateCode += """
+            let styleFunctionsCases = [\(styleFunctionsCases.joined(separator: ", "))]
+            let selectedStyle = styleFunctionsCases.first(where: { $0.contains(style.rawValue) }) ?? \".\\(style.rawValue)()\"
+            code += \"\"\"
+            \(componentInfo.generateCode)
+            .\(componentInfo.name.firstLowerCased)Style(\\(selectedStyle)\(styleParametersCases))
+            \"\"\"\n
+            """
+        }
+        
         generateCode += """
                 return code
             }
@@ -528,4 +671,52 @@ final class GenerateComponent {
             }
         """
     }
+    
+    // Novo método para gerar o enum de inicializadores
+    func generateEnumInit() -> String {
+        var cases = ""
+        componentInfo.initializerInfos.forEach { initInfo in
+            cases += "case \(initInfo.name)\n"
+        }
+        
+        return """
+        
+            enum Generate\(componentInfo.name)InitEnum: String, CaseIterable, Identifiable {
+                public var id: Self { self }
+        
+                \(cases)
+            }
+        """
+    }
+    
+    // Novo método para gerar o getter de inicializadores
+    func generateGetInit() -> String {
+        let name = componentInfo.name
+        var cases = ""
+        
+        componentInfo.initializerInfos.forEach { initInfo in
+            let parameters = initInfo.parameters.joined()
+            cases += "case \"\(initInfo.name)\":\n"
+            cases += "    \(name)(\(parameters))\n"
+        }
+        
+        if let firstInit = componentInfo.initializerInfos.first {
+            let defaultParameters = firstInit.parameters.joined()
+            
+            return """
+            
+                private func get\(name)Init(_ initType: String) -> some View {
+                    switch initType {
+                    \(cases)
+                    default:
+                        \(name)(\(defaultParameters))
+                    }
+                }
+            """
+        }
+        
+        // Caso não haja inicializadores definidos, retornar string vazia
+        return ""
+    }
+    
 }

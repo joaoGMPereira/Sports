@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/DebugSwift/DebugSwift.git",
       "state" : {
-        "revision" : "a5cdece2984da5c26cb9a7c57f9c9533b8eea0d3",
-        "version" : "0.3.9"
+        "revision" : "4bb3daceccecefe77502cac2cd148643e7917466",
+        "version" : "0.4.0"
       }
     },
     {
@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/johnno1962/HotSwiftUI.git",
       "state" : {
-        "revision" : "0539ebfa37114156fc726fc88902981db2ecbec0",
-        "version" : "1.2.0"
+        "revision" : "79b90df110099c6fe6f14be3da577f744cf3ec1a",
+        "version" : "1.2.1"
       }
     },
     {

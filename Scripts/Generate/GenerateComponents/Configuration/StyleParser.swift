@@ -452,7 +452,8 @@ fileprivate extension StyleParser {
         return params
     }
     
-    func parseParameter(_ paramString: String, index: Int) -> StyleParameter? {
+    func parseParameter(_ param: String, index: Int) -> StyleParameter? {
+        let paramString = param.replacingOccurrences(of: "\n", with: "").trimmingCharacters(in: .whitespaces)
         // Padrão para extrair nome e tipo do parâmetro + valor padrão opcional
         let paramPattern = "(?:_\\s+)?(\\w+)\\s*:\\s*([^=]+)(?:\\s*=\\s*(.+))?"
         let paramRegex = try! NSRegularExpression(pattern: paramPattern, options: [])

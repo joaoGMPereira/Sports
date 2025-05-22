@@ -11,11 +11,11 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
 
     @State private var state: DSState = .enabled
 
-    @State private var placeholder: String = "Sample text"
+    @State private var hasError: Bool = false
 
     @State private var errorMessage: String = "Sample text"
 
-    @State private var hasError: Bool = false
+    @State private var placeholder: String = "Sample text"
 
     @State private var showAllStyles = false
     @State private var useContrastBackground = true
@@ -84,6 +84,7 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
             TextField("", text: $sampleText)
                 .textFieldStyle(.contentA(), placeholder: "Texto de exemplo")
                 .padding(.horizontal)
+
             EnumSelector<GenerateTextFieldSampleEnum>(
                 title: "TextField Estilos",
                 selection: $style,
@@ -98,14 +99,14 @@ struct TextFieldSample: View, @preconcurrency BaseThemeDependencies {
                 height: 120
             )
             .padding(.horizontal)
-            TextField("", text: $placeholder)
-                .textFieldStyle(.contentA(), placeholder: "placeholder")
+            Toggle("hasError", isOn: $hasError)
+                .toggleStyle(.default(.highlightA))
                 .padding(.horizontal)
             TextField("", text: $errorMessage)
                 .textFieldStyle(.contentA(), placeholder: "errorMessage")
                 .padding(.horizontal)
-            Toggle("hasError", isOn: $hasError)
-                .toggleStyle(.default(.highlightA))
+            TextField("", text: $placeholder)
+                .textFieldStyle(.contentA(), placeholder: "placeholder")
                 .padding(.horizontal)
             // Toggles para opções
             VStack {

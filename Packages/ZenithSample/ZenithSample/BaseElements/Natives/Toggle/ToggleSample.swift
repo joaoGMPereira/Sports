@@ -80,6 +80,7 @@ struct ToggleSample: View, @preconcurrency BaseThemeDependencies {
             TextField("", text: $sampleText)
                 .textFieldStyle(.contentA(), placeholder: "Texto de exemplo")
                 .padding(.horizontal)
+
             EnumSelector<GenerateToggleSampleEnum>(
                 title: "Toggle Estilos",
                 selection: $style,

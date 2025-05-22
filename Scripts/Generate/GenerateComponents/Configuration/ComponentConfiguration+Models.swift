@@ -91,6 +91,8 @@ class ComponentInfo {
     var styleFunctions: [StyleConfig] = []
     
     var publicInitParams: [InitParameter] = []
+    var initializerInfos: [InitializerInfo] = [] // Nova propriedade para armazenar múltiplos inicializadores
+    var hasMultipleInits: Bool = false // Flag para indicar se o componente possui múltiplos inicializadores
     var hasActionParam: Bool = false
     var isNative: Bool = false
     var exampleCode: String = ""
