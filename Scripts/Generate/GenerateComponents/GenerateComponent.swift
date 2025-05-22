@@ -383,7 +383,14 @@ final class GenerateComponent {
                     ""
                 } else {
                     if parameter.component.type.complexType {
-                        ""
+                        """
+                        ComplexTypeSelectorView(
+                            title: "\(parameter.name)",
+                            componentType: .\(parameter.component.type.rawValue),
+                            value: $\(parameter.name)
+                        )
+                        .padding(.horizontal)\n
+                        """
                     } else {
                         """
                         EnumSelector<\(parameter.component.name)>(

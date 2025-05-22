@@ -54,7 +54,7 @@ public extension View {
         clipShape(RoundedCorner(radius: radius, corners: corners))
     }
     
-    func sheet(isPresented: Binding<Bool>, @ViewBuilder content: @escaping () -> some View) -> some View {
+    func sheet(_ isPresented: Binding<Bool>, @ViewBuilder content: @escaping () -> some View) -> some View {
         popup(isPresented: isPresented) {
             ActionSheetView {
                 content()
