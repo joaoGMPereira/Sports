@@ -4,7 +4,7 @@ struct GenerateComponentConfiguration {
     var styleFunctions = Set<StyleParameter>()
     var styleParameters = Set<StyleParameter>()
     var styleParams = String()
-    let initParams: [InitParameter]
+    var initParams: [InitParameter]
     
     init(_ componentInfo: ComponentInfo) {
         var styleFunctions = Set<StyleParameter>()
@@ -24,6 +24,22 @@ struct GenerateComponentConfiguration {
         styleParams = "\(styleParameters.isEmpty ? "" : ",")"
         styleParams += Array(styleParameters).joined()
         initParams = componentInfo.publicInitParams
+        if componentInfo.hasMultipleInits, let firstInit = componentInfo.initializerInfos.first {
+            // Coletar todos os parâmetros de todos os inicializadores para garantir que temos todas as variáveis necessárias
+            var allParameters = Set<String>()
+            var allInitParams: [InitParameter] = []
+            
+            componentInfo.initializerInfos.forEach { initInfo in
+                initInfo.parameters.forEach { param in
+                    if !allParameters.contains(param.name) {
+                        allParameters.insert(param.name)
+                        allInitParams.append(param)
+                    }
+                }
+            }
+
+            initParams = allInitParams
+        }
     }
 }
 
@@ -561,21 +577,45 @@ final class GenerateComponent {
                     """
                 case "Int":
                         """
+                        
+                        VStack(alignment: .leading) {
+                        Text("\(parameter.name): $\\(String(format: "%.2f", \(parameter.name)))")
+                            .font(fonts.smallBold)
+                            .foregroundColor(colors.contentA) 
+                            .padding(.horizontal)
                         Slider(value: $\(parameter.name), in: -100...100, step: 1)
                             .accentColor(colors.highlightA)
-                            .padding(.horizontal)\n
+                            .padding(.horizontal)
+                        }
+                        
                         """
                 case "Double":
                         """
-                        Slider(value: $\(parameter.name), in: -100...100, step: 0.01)
+                        
+                        VStack(alignment: .leading) {
+                        Text("\(parameter.name): $\\(String(format: "%.2f", \(parameter.name)))")
+                             .font(fonts.smallBold)
+                             .foregroundColor(colors.contentA)  
+                             .padding(.horizontal)
+                        Slider(value: $\(parameter.name), in: -1...1, step: 0.01)
                             .accentColor(colors.highlightA)
-                            .padding(.horizontal)\n
+                            .padding(.horizontal)
+                        }
+                        
                         """
                 case "CGFloat":
                         """
+                        
+                        VStack {
+                        Text("\(parameter.name): $\\(String(format: "%.2f", \(parameter.name)))")
+                            .font(fonts.smallBold)
+                            .foregroundColor(colors.contentA)  
+                            .padding(.horizontal)
                         Slider(value: $\(parameter.name), in: -100...100, step: 0.1)
                             .accentColor(colors.highlightA)
-                            .padding(.horizontal)\n
+                            .padding(.horizontal)
+                        }
+                        
                         """
                 default:
                     if parameter.component.name.contains("->") {
@@ -654,58 +694,67 @@ final class GenerateComponent {
             editor += """
             
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("\(innerParam.name): \(innerParam.type)")
-                        .font(fonts.small)
-                        .foregroundColor(colors.contentA)
+            
             """
             
             // Escolher o editor apropriado para o tipo da propriedade interna
             let editorComponent = switch innerParam.type {
             case "String":
                 """
-                
+
+                    Text("\(innerParam.name): \\(\(innerVarName))")
+                        .font(fonts.small)
+                        .foregroundColor(colors.contentA)
                     TextField("", text: $\(innerVarName))
                         .textFieldStyle(.contentA(), placeholder: "\(innerParam.name)")
-                        .onChange(of: \(innerVarName)) { newValue in
+                        .onChange(of: \(innerVarName)) {
                             \(parameter.name) = configure\(parameter.name.capitalized)()
                         }
                 """
             case "Bool":
                 """
-                
+                    Text("\(innerParam.name): \\(\(innerVarName))")
+                        .font(fonts.small)
+                        .foregroundColor(colors.contentA)
                     Toggle("\(innerParam.name)", isOn: $\(innerVarName))
                         .toggleStyle(.default(.highlightA))
-                        .onChange(of: \(innerVarName)) { newValue in
+                        .onChange(of: \(innerVarName)) {
                             \(parameter.name) = configure\(parameter.name.capitalized)()
                         }
                 """
             case "Int", "Int8", "Int16", "Int32", "Int64",
                  "UInt", "UInt8", "UInt16", "UInt32", "UInt64":
                         """
-                        
+                        Text("\(innerParam.name): \\(String(format: "%.2f",\(innerVarName)))")
+                            .font(fonts.small)
+                            .foregroundColor(colors.contentA)                        
                         Slider(value: $\(innerVarName), in: -100...100, step: 1)
                             .accentColor(colors.highlightA)
-                            .onChange(of: \(innerVarName)) { newValue in
+                            .onChange(of: \(innerVarName)) {
                                 \(parameter.name) = configure\(parameter.name.capitalized)()
                             }
                             
                         """
             case "Double":
                     """
-
-                    Slider(value: $\(innerVarName), in: -100...100, step: 0.01)
+                    Text("\(innerParam.name): \\(String(format: "%.2f",\(innerVarName)))")
+                        .font(fonts.small)
+                        .foregroundColor(colors.contentA)                                    
+                    Slider(value: $\(innerVarName), in: -1...1, step: 0.01)
                             .accentColor(colors.highlightA)
-                            .onChange(of: \(innerVarName)) { newValue in
+                            .onChange(of: \(innerVarName)) {
                                 \(parameter.name) = configure\(parameter.name.capitalized)()
                             }
 
                     """
             case "CGFloat":
                     """
-
+                    Text("\(innerParam.name): \\(String(format: "%.2f",\(innerVarName)))")
+                        .font(fonts.small)
+                        .foregroundColor(colors.contentA)                    
                     Slider(value: $\(innerVarName), in: -100...100, step: 0.1)
                             .accentColor(colors.highlightA)
-                            .onChange(of: \(innerVarName)) { newValue in
+                            .onChange(of: \(innerVarName)) {
                                 \(parameter.name) = configure\(parameter.name.capitalized)()
                             }
                     
@@ -720,7 +769,7 @@ final class GenerateComponent {
                             columnsCount: 3,
                             height: 120
                         )
-                        .onChange(of: \(innerVarName)) { newValue in
+                        .onChange(of: \(innerVarName)) {
                             \(parameter.name) = configure\(parameter.name.capitalized)()
                         }
                     """
@@ -729,7 +778,7 @@ final class GenerateComponent {
                     
                         TextField("", text: $\(innerVarName))
                             .textFieldStyle(.contentA(), placeholder: "\(innerParam.name)")
-                            .onChange(of: \(innerVarName)) { newValue in
+                            .onChange(of: \(innerVarName)) {
                                 \(parameter.name) = configure\(parameter.name.capitalized)()
                             }
                     """
@@ -832,35 +881,14 @@ final class GenerateComponent {
                     if param.hasObfuscatedArgument {
                         paramValue = "\\(\(paramName))"
                     } else {
-                        switch param.component.type {
-                        case .String, .StringImageEnum:
-                            paramValue = "\(paramName): \\\"\\(\(paramName))\\\""
-                        case .Bool:
-                            paramValue = "\(paramName): \\(\(paramName))"
-                        case .Int, .Double, .CGFloat:
-                            paramValue = "\(paramName): \\(\(paramName))"
-                        default:
-                            if param.component.name.contains("->") {
-                                paramValue = "\(paramName): {}"
-                            } else if param.component.type.complexType, let innerParams = getInnerParameters(param) {
-                                // Usar código específico para parâmetros complexos
-                                var innerCode = "\(paramName): \(param.component.name)("
-                                
-                                for (innerIdx, innerParam) in innerParams.enumerated() {
-                                    let innerVarName = "\(paramName)_\(innerParam.name)"
-                                    innerCode += "\(innerParam.name): \\(\(innerVarName))"
-                                    
-                                    if innerIdx < innerParams.count - 1 {
-                                        innerCode += ", "
-                                    }
-                                }
-                                
-                                innerCode += ")"
-                                paramValue = innerCode
-                            } else {
-                                paramValue = "\(paramName): .\\(\(paramName)).rawValue"
-                            }
-                        }
+                        let innerParams = getInnerParameters(param)
+                        paramValue = formatParameterValue(
+                            paramName: paramName,
+                            paramValue: paramName,
+                            component: param.component,
+                            hasObfuscatedArgument: param.hasObfuscatedArgument,
+                            innerParams: innerParams
+                        )
                     }
                     
                     // Adicionar à string do inicializador
@@ -1010,4 +1038,45 @@ final class GenerateComponent {
         return ""
     }
     
+    // Função para formatar o valor de um parâmetro baseado em seu tipo
+    private func formatParameterValue(paramName: String, paramValue: String, component: any ComponentProtocol, hasObfuscatedArgument: Bool = false, innerParams: [ComponentProperty]? = nil) -> String {
+        if hasObfuscatedArgument {
+            return "\\(\(paramName))"
+        }
+        
+        switch component.type {
+        case .String, .StringImageEnum:
+            return "\(paramName): \\\"\\(\(paramValue))\\\""
+        case .Bool, .Int, .Double, .CGFloat:
+            return "\(paramName): \\(\(paramValue))"
+        default:
+            if component.name.contains("->") {
+                return "\(paramName): {}"
+            } else if component.type.complexType, let innerParams = innerParams, !innerParams.isEmpty {
+                // Usar código específico para parâmetros complexos
+                var innerCode = "\(paramName): \(component.name)("
+                
+                for (innerIdx, innerParam) in innerParams.enumerated() {
+                    let innerVarName = "\(innerParam.name)"
+                    let paramValue = "\(paramName)_\(innerParam.name)"
+                    innerCode += formatParameterValue(
+                        paramName: innerVarName,
+                        paramValue: paramValue,
+                        component: innerParam.component,
+                        hasObfuscatedArgument: false,
+                        innerParams: innerParam.innerParameters
+                    )
+                    
+                    if innerIdx < innerParams.count - 1 {
+                        innerCode += ", "
+                    }
+                }
+                
+                innerCode += ")"
+                return innerCode
+            } else {
+                return "\(paramName): .\\(\(paramName)).rawValue"
+            }
+        }
+    }
 }
