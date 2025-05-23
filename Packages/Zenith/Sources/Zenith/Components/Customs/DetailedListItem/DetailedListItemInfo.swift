@@ -1,8 +1,8 @@
 import Foundation
 
 public struct DetailedListItemInfo: Decodable, Equatable, AnyStruct {
-    let title: String
-    let description: String
+    public var title: String
+    public var description: String
     
     public init(title: String = "", description: String = "") {
         self.title = title

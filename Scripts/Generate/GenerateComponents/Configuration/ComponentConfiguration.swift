@@ -25,18 +25,21 @@ final class ComponentConfiguration {
                 isUsedAsBinding = true
             }
             
-            componentInfo.publicInitParams.append(
-                InitParameter(
-                    order: index,
-                    hasObfuscatedArgument: (param.label ?? "").starts(with: "_"),
-                    isUsedAsBinding: isUsedAsBinding,
-                    label: param.label,
-                    name: param.name,
-                    component: ComponentFinder(type: type).findComponentType(),
-                    defaultValue: param.defaultValue,
-                    isAction: param.isAction
-                )
+            var initParam = InitParameter(
+                order: index,
+                hasObfuscatedArgument: (param.label ?? "").starts(with: "_"),
+                isUsedAsBinding: isUsedAsBinding,
+                label: param.label,
+                name: param.name,
+                component: ComponentFinder(type: type).findComponentType(),
+                defaultValue: param.defaultValue,
+                isAction: param.isAction
             )
+            
+            // Se for um componente complexo, preencher innerParameters
+            fillInnerParameters(parameter: &initParam)
+            
+            componentInfo.publicInitParams.append(initParam)
         }
         
         componentInfo.exampleCode = nativeComponent.exampleCode
@@ -131,9 +134,19 @@ final class ComponentConfiguration {
                         // Para compatibilidade, mantemos os publicInitParams com o primeiro inicializador
                         if let firstInit = initializers.first {
                             componentInfo.publicInitParams = firstInit.parameters
+                            
+                            // Preencher innerParameters para parâmetros complexos
+                            for i in 0..<componentInfo.publicInitParams.count {
+                                fillInnerParameters(parameter: &componentInfo.publicInitParams[i])
+                            }
                         } else {
                             // Se não encontrou inicializadores, usar o método antigo
                             componentInfo.publicInitParams = initParser.extractInitParams()
+                            
+                            // Preencher innerParameters para parâmetros complexos
+                            for i in 0..<componentInfo.publicInitParams.count {
+                                fillInnerParameters(parameter: &componentInfo.publicInitParams[i])
+                            }
                         }
                         
                         componentInfo.exampleCode = """
@@ -173,10 +186,20 @@ final class ComponentConfiguration {
                 componentInfo.styleCases = styleParser.extractStyleCases()
                 componentInfo.styleFunctions = styleParser.extractStyleFunctions()
                 componentInfo.styleParameters = styleParser.extractStyleParameters()
+                
+                // Preencher innerParameters para parâmetros de estilo complexos
+                for i in 0..<componentInfo.styleParameters.count {
+                    for j in 0..<componentInfo.styleParameters[i].parameters.count {
+                        fillStyleParameters(parameter: &componentInfo.styleParameters[i].parameters[j])
+                    }
+                }
+                
                 Log.log("Parametros da função de estilo encontrados: \(componentInfo.styleParameters.map { $0.name })")
                 Log.log("Casos de estilo encontrados: \(componentInfo.styleCases)")
                 Log.log("Funções de estilo encontradas: \(componentInfo.styleFunctions.map { $0.name })")
             }
+            
+            return componentInfo
         }
         return nil
     }

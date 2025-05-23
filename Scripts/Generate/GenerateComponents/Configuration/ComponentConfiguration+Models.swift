@@ -1,5 +1,4 @@
 import Foundation
-// MARK: - Modelos de dados
 
 protocol ParameterProtocol {
     var name: String { get }
@@ -15,6 +14,7 @@ struct StyleParameter: Hashable, ParameterProtocol {
     let type: String
     let component: any ComponentProtocol
     let defaultValue: String?
+    var innerParameters: [ComponentProperty] = [] // Propriedades internas para componentes complexos
     
     static func == (lhs: StyleParameter, rhs: StyleParameter) -> Bool {
         // Compare all properties except 'component' which is an existential type
@@ -35,12 +35,13 @@ struct StyleParameter: Hashable, ParameterProtocol {
         hasher.combine(type)
         hasher.combine(component.name)
         hasher.combine(defaultValue)
+        // Não incluímos innerParameters no hash para evitar loops recursivos
     }
 }
 
 struct StyleConfig {
     let name: String
-    let parameters: [StyleParameter]
+    var parameters: [StyleParameter]
 }
 
 struct InitParameter: Hashable, ParameterProtocol {
@@ -52,6 +53,7 @@ struct InitParameter: Hashable, ParameterProtocol {
     var component: any ComponentProtocol
     var defaultValue: String?
     let isAction: Bool
+    var innerParameters: [ComponentProperty] = [] // Propriedades internas para componentes complexos
     
     static func == (lhs: InitParameter, rhs: InitParameter) -> Bool {
         // Compare all properties except 'component' which is an existential type
@@ -74,6 +76,7 @@ struct InitParameter: Hashable, ParameterProtocol {
         hasher.combine(component.name)
         hasher.combine(defaultValue)
         hasher.combine(isAction)
+        // Não incluímos innerParameters no hash para evitar loops recursivos
     }
 }
 

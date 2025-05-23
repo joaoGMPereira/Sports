@@ -3,7 +3,6 @@ import SwiftUI
 import Zenith
 import ZenithCoreInterface
 
-@MainActor
 struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) var themeConfigurator
     @State private var style: GenerateDetailedListItemSampleEnum = .default
@@ -148,13 +147,9 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
 
                 ComplexTypeEditor(
                     componentType: .struct,
-                    value: $leftInfo,
-                    completion: processComplexTypeChanges(_:)
+                    value: $leftInfo
                 )
                 .padding(.vertical, 8)
-                .onChange(of: leftInfo) { oldValue, newValue in
-                    print(newValue)
-                }
             }
             .padding()
             .background(colors.backgroundA.opacity(0.5))
@@ -171,13 +166,9 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
 
                 ComplexTypeEditor(
                     componentType: .struct,
-                    value: $rightInfo,
-                    completion: processComplexTypeChanges(_:)
+                    value: $rightInfo
                 )
                 .padding(.vertical, 8)
-                .onChange(of: rightInfo) { oldValue, newValue in
-                    print("rightInfo atualizado: \(newValue)")
-                }
             }
             .padding()
             .background(colors.backgroundA.opacity(0.5))
@@ -194,13 +185,9 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
 
                 ComplexTypeEditor(
                     componentType: .struct,
-                    value: $blurConfig,
-                    completion: processComplexTypeChanges(_:)
+                    value: $blurConfig
                 )
                 .padding(.vertical, 8)
-                .onChange(of: blurConfig) { oldValue, newValue in
-                    print("blurConfig atualizado: \(newValue)")
-                }
             }
             .padding()
             .background(colors.backgroundA.opacity(0.5))
@@ -307,36 +294,6 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
             .default(colorName)
         }
         return AnyDetailedListItemStyle(style)
-    }
-    
-    // Método para processar as alterações recebidas via NotificationCenter
-    private func processComplexTypeChanges(_ properties: [String: Any]) {
-        guard
-              let properties = properties["properties"] as? [[String: Any]] else {
-            return
-        }
-        // Exibir todas as propriedades modificadas para debug
-        print("Propriedades alteradas via NotificationCenter: \(properties)")
-        
-        // Processar as modificações das propriedades
-        for property in properties {
-            if let name = property["name"] as? String,
-               let type = property["type"] as? String {
-                print("Propriedade modificada: \(name) do tipo \(type)")
-                
-                // Aqui você pode adicionar lógica específica para cada propriedade
-                if name == "title" && property["value"] is String {
-                    // Exemplo de processamento específico para uma propriedade
-                    print("Título foi atualizado")
-                }
-            }
-        }
-        
-        // Outras ações possíveis:
-        // - Validar os valores
-        // - Sincronizar com um backend
-        // - Atualizar outras partes da sua UI
-        // - Salvar os valores em armazenamento persistente
     }
 }
 
