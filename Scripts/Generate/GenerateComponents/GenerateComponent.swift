@@ -561,19 +561,19 @@ final class GenerateComponent {
                     """
                 case "Int":
                         """
-                        Slider(value: $\(parameter.name), in: 0...100, step: 1)
+                        Slider(value: $\(parameter.name), in: -100...100, step: 1)
                             .accentColor(colors.highlightA)
                             .padding(.horizontal)\n
                         """
                 case "Double":
                         """
-                        Slider(value: $\(parameter.name), in: 0...1, step: 0.01)
+                        Slider(value: $\(parameter.name), in: -100...100, step: 0.01)
                             .accentColor(colors.highlightA)
                             .padding(.horizontal)\n
                         """
                 case "CGFloat":
                         """
-                        Slider(value: $\(parameter.name), in: 0...100, step: 0.1)
+                        Slider(value: $\(parameter.name), in: -100...100, step: 0.1)
                             .accentColor(colors.highlightA)
                             .padding(.horizontal)\n
                         """
@@ -681,40 +681,35 @@ final class GenerateComponent {
                 """
             case "Int", "Int8", "Int16", "Int32", "Int64",
                  "UInt", "UInt8", "UInt16", "UInt32", "UInt64":
-                """
-                
-                    HStack {
-                        TextField("", text: Binding(
-                            get: { String(\(innerVarName)) },
-                            set: { if let value = Int($0) { \(innerVarName) = value; \(parameter.name) = configure\(parameter.name.capitalized)() } }
-                        ))
-                        .textFieldStyle(.contentA(), placeholder: "0")
-                        .keyboardType(.numberPad)
+                        """
                         
-                        Stepper("", value: $\(innerVarName), in: 0...100)
-                            .onChange(of: \(innerVarName)) { newValue in
-                                \(parameter.name) = configure\(parameter.name.capitalized)()
-                            }
-                    }
-                """
-            case "Float", "Double", "CGFloat":
-                """
-                
-                    VStack(spacing: 4) {
-                        TextField("", text: Binding(
-                            get: { String(format: "%.2f", \(innerVarName)) },
-                            set: { if let value = Double($0) { \(innerVarName) = value; \(parameter.name) = configure\(parameter.name.capitalized)() } }
-                        ))
-                        .textFieldStyle(.contentA(), placeholder: "0.0")
-                        .keyboardType(.decimalPad)
-                        
-                        Slider(value: $\(innerVarName), in: 0...1, step: 0.01)
+                        Slider(value: $\(innerVarName), in: -100...100, step: 1)
                             .accentColor(colors.highlightA)
                             .onChange(of: \(innerVarName)) { newValue in
                                 \(parameter.name) = configure\(parameter.name.capitalized)()
                             }
-                    }
-                """
+                            
+                        """
+            case "Double":
+                    """
+
+                    Slider(value: $\(innerVarName), in: -100...100, step: 0.01)
+                            .accentColor(colors.highlightA)
+                            .onChange(of: \(innerVarName)) { newValue in
+                                \(parameter.name) = configure\(parameter.name.capitalized)()
+                            }
+
+                    """
+            case "CGFloat":
+                    """
+
+                    Slider(value: $\(innerVarName), in: -100...100, step: 0.1)
+                            .accentColor(colors.highlightA)
+                            .onChange(of: \(innerVarName)) { newValue in
+                                \(parameter.name) = configure\(parameter.name.capitalized)()
+                            }
+                    
+                    """
             default:
                 if innerParam.type.hasSuffix("Enum") || innerParam.type.contains("Case") {
                     """

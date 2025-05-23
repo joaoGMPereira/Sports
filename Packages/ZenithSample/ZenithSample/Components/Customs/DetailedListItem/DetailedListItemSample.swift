@@ -312,362 +312,191 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                         Text("blur1Width: CGFloat")
                             .font(fonts.small)
                             .foregroundColor(colors.contentA)
-                        VStack(spacing: 4) {
-                            TextField("", text: Binding(
-                                get: { String(format: "%.2f", blurConfig_blur1Width) },
-                                set: { if let value = Double($0) { blurConfig_blur1Width = value; blurConfig = configureBlurconfig() } }
-                            ))
-                            .textFieldStyle(.contentA(), placeholder: "0.0")
-                            .keyboardType(.decimalPad)
-
-                            Slider(value: $blurConfig_blur1Width, in: 0 ... 1, step: 0.01)
-                                .accentColor(colors.highlightA)
-                                .onChange(of: blurConfig_blur1Width) { _ in
-                                    blurConfig = configureBlurconfig()
-                                }
-                        }
+                        Slider(value: $blurConfig_blur1Width, in: -100 ... 100, step: 0.1)
+                            .accentColor(colors.highlightA)
+                            .onChange(of: blurConfig_blur1Width) { _ in
+                                blurConfig = configureBlurconfig()
+                            }
                     }
                     VStack(alignment: .leading, spacing: 4) {
                         Text("blur1Height: CGFloat")
                             .font(fonts.small)
                             .foregroundColor(colors.contentA)
-                        VStack(spacing: 4) {
-                            TextField("", text: Binding(
-                                get: { String(format: "%.2f", blurConfig_blur1Height) },
-                                set: { if let value = Double($0) { blurConfig_blur1Height = value; blurConfig = configureBlurconfig() } }
-                            ))
-                            .textFieldStyle(.contentA(), placeholder: "0.0")
-                            .keyboardType(.decimalPad)
-
-                            Slider(value: $blurConfig_blur1Height, in: 0 ... 1, step: 0.01)
-                                .accentColor(colors.highlightA)
-                                .onChange(of: blurConfig_blur1Height) { _ in
-                                    blurConfig = configureBlurconfig()
-                                }
-                        }
+                        Slider(value: $blurConfig_blur1Height, in: -100 ... 100, step: 0.1)
+                            .accentColor(colors.highlightA)
+                            .onChange(of: blurConfig_blur1Height) { _ in
+                                blurConfig = configureBlurconfig()
+                            }
                     }
                     VStack(alignment: .leading, spacing: 4) {
                         Text("blur1Radius: CGFloat")
                             .font(fonts.small)
                             .foregroundColor(colors.contentA)
-                        VStack(spacing: 4) {
-                            TextField("", text: Binding(
-                                get: { String(format: "%.2f", blurConfig_blur1Radius) },
-                                set: { if let value = Double($0) { blurConfig_blur1Radius = value; blurConfig = configureBlurconfig() } }
-                            ))
-                            .textFieldStyle(.contentA(), placeholder: "0.0")
-                            .keyboardType(.decimalPad)
-
-                            Slider(value: $blurConfig_blur1Radius, in: 0 ... 1, step: 0.01)
-                                .accentColor(colors.highlightA)
-                                .onChange(of: blurConfig_blur1Radius) { _ in
-                                    blurConfig = configureBlurconfig()
-                                }
-                        }
+                        Slider(value: $blurConfig_blur1Radius, in: -100 ... 100, step: 0.1)
+                            .accentColor(colors.highlightA)
+                            .onChange(of: blurConfig_blur1Radius) { _ in
+                                blurConfig = configureBlurconfig()
+                            }
                     }
                     VStack(alignment: .leading, spacing: 4) {
                         Text("blur1OffsetX: CGFloat")
                             .font(fonts.small)
                             .foregroundColor(colors.contentA)
-                        VStack(spacing: 4) {
-                            TextField("", text: Binding(
-                                get: { String(format: "%.2f", blurConfig_blur1OffsetX) },
-                                set: { if let value = Double($0) { blurConfig_blur1OffsetX = value; blurConfig = configureBlurconfig() } }
-                            ))
-                            .textFieldStyle(.contentA(), placeholder: "0.0")
-                            .keyboardType(.decimalPad)
-
-                            Slider(value: $blurConfig_blur1OffsetX, in: 0 ... 1, step: 0.01)
-                                .accentColor(colors.highlightA)
-                                .onChange(of: blurConfig_blur1OffsetX) { _ in
-                                    blurConfig = configureBlurconfig()
-                                }
-                        }
+                        Slider(value: $blurConfig_blur1OffsetX, in: -100 ... 100, step: 0.1)
+                            .accentColor(colors.highlightA)
+                            .onChange(of: blurConfig_blur1OffsetX) { _ in
+                                blurConfig = configureBlurconfig()
+                            }
                     }
                     VStack(alignment: .leading, spacing: 4) {
                         Text("blur1OffsetY: CGFloat")
                             .font(fonts.small)
                             .foregroundColor(colors.contentA)
-                        VStack(spacing: 4) {
-                            TextField("", text: Binding(
-                                get: { String(format: "%.2f", blurConfig_blur1OffsetY) },
-                                set: { if let value = Double($0) { blurConfig_blur1OffsetY = value; blurConfig = configureBlurconfig() } }
-                            ))
-                            .textFieldStyle(.contentA(), placeholder: "0.0")
-                            .keyboardType(.decimalPad)
-
-                            Slider(value: $blurConfig_blur1OffsetY, in: 0 ... 1, step: 0.01)
-                                .accentColor(colors.highlightA)
-                                .onChange(of: blurConfig_blur1OffsetY) { _ in
-                                    blurConfig = configureBlurconfig()
-                                }
-                        }
+                        Slider(value: $blurConfig_blur1OffsetY, in: -100 ... 100, step: 0.1)
+                            .accentColor(colors.highlightA)
+                            .onChange(of: blurConfig_blur1OffsetY) { _ in
+                                blurConfig = configureBlurconfig()
+                            }
                     }
                     VStack(alignment: .leading, spacing: 4) {
                         Text("blur1Opacity: Double")
                             .font(fonts.small)
                             .foregroundColor(colors.contentA)
-                        VStack(spacing: 4) {
-                            TextField("", text: Binding(
-                                get: { String(format: "%.2f", blurConfig_blur1Opacity) },
-                                set: { if let value = Double($0) { blurConfig_blur1Opacity = value; blurConfig = configureBlurconfig() } }
-                            ))
-                            .textFieldStyle(.contentA(), placeholder: "0.0")
-                            .keyboardType(.decimalPad)
-
-                            Slider(value: $blurConfig_blur1Opacity, in: 0 ... 1, step: 0.01)
-                                .accentColor(colors.highlightA)
-                                .onChange(of: blurConfig_blur1Opacity) { _ in
-                                    blurConfig = configureBlurconfig()
-                                }
-                        }
+                        Slider(value: $blurConfig_blur1Opacity, in: -100 ... 100, step: 0.01)
+                            .accentColor(colors.highlightA)
+                            .onChange(of: blurConfig_blur1Opacity) { _ in
+                                blurConfig = configureBlurconfig()
+                            }
                     }
                     VStack(alignment: .leading, spacing: 4) {
                         Text("blur2Width: CGFloat")
                             .font(fonts.small)
                             .foregroundColor(colors.contentA)
-                        VStack(spacing: 4) {
-                            TextField("", text: Binding(
-                                get: { String(format: "%.2f", blurConfig_blur2Width) },
-                                set: { if let value = Double($0) { blurConfig_blur2Width = value; blurConfig = configureBlurconfig() } }
-                            ))
-                            .textFieldStyle(.contentA(), placeholder: "0.0")
-                            .keyboardType(.decimalPad)
-
-                            Slider(value: $blurConfig_blur2Width, in: 0 ... 1, step: 0.01)
-                                .accentColor(colors.highlightA)
-                                .onChange(of: blurConfig_blur2Width) { _ in
-                                    blurConfig = configureBlurconfig()
-                                }
-                        }
+                        Slider(value: $blurConfig_blur2Width, in: -100 ... 100, step: 0.1)
+                            .accentColor(colors.highlightA)
+                            .onChange(of: blurConfig_blur2Width) { _ in
+                                blurConfig = configureBlurconfig()
+                            }
                     }
                     VStack(alignment: .leading, spacing: 4) {
                         Text("blur2Height: CGFloat")
                             .font(fonts.small)
                             .foregroundColor(colors.contentA)
-                        VStack(spacing: 4) {
-                            TextField("", text: Binding(
-                                get: { String(format: "%.2f", blurConfig_blur2Height) },
-                                set: { if let value = Double($0) { blurConfig_blur2Height = value; blurConfig = configureBlurconfig() } }
-                            ))
-                            .textFieldStyle(.contentA(), placeholder: "0.0")
-                            .keyboardType(.decimalPad)
-
-                            Slider(value: $blurConfig_blur2Height, in: 0 ... 1, step: 0.01)
-                                .accentColor(colors.highlightA)
-                                .onChange(of: blurConfig_blur2Height) { _ in
-                                    blurConfig = configureBlurconfig()
-                                }
-                        }
+                        Slider(value: $blurConfig_blur2Height, in: -100 ... 100, step: 0.1)
+                            .accentColor(colors.highlightA)
+                            .onChange(of: blurConfig_blur2Height) { _ in
+                                blurConfig = configureBlurconfig()
+                            }
                     }
                     VStack(alignment: .leading, spacing: 4) {
                         Text("blur2Radius: CGFloat")
                             .font(fonts.small)
                             .foregroundColor(colors.contentA)
-                        VStack(spacing: 4) {
-                            TextField("", text: Binding(
-                                get: { String(format: "%.2f", blurConfig_blur2Radius) },
-                                set: { if let value = Double($0) { blurConfig_blur2Radius = value; blurConfig = configureBlurconfig() } }
-                            ))
-                            .textFieldStyle(.contentA(), placeholder: "0.0")
-                            .keyboardType(.decimalPad)
-
-                            Slider(value: $blurConfig_blur2Radius, in: 0 ... 1, step: 0.01)
-                                .accentColor(colors.highlightA)
-                                .onChange(of: blurConfig_blur2Radius) { _ in
-                                    blurConfig = configureBlurconfig()
-                                }
-                        }
+                        Slider(value: $blurConfig_blur2Radius, in: -100 ... 100, step: 0.1)
+                            .accentColor(colors.highlightA)
+                            .onChange(of: blurConfig_blur2Radius) { _ in
+                                blurConfig = configureBlurconfig()
+                            }
                     }
                     VStack(alignment: .leading, spacing: 4) {
                         Text("blur2OffsetX: CGFloat")
                             .font(fonts.small)
                             .foregroundColor(colors.contentA)
-                        VStack(spacing: 4) {
-                            TextField("", text: Binding(
-                                get: { String(format: "%.2f", blurConfig_blur2OffsetX) },
-                                set: { if let value = Double($0) { blurConfig_blur2OffsetX = value; blurConfig = configureBlurconfig() } }
-                            ))
-                            .textFieldStyle(.contentA(), placeholder: "0.0")
-                            .keyboardType(.decimalPad)
-
-                            Slider(value: $blurConfig_blur2OffsetX, in: 0 ... 1, step: 0.01)
-                                .accentColor(colors.highlightA)
-                                .onChange(of: blurConfig_blur2OffsetX) { _ in
-                                    blurConfig = configureBlurconfig()
-                                }
-                        }
+                        Slider(value: $blurConfig_blur2OffsetX, in: -100 ... 100, step: 0.1)
+                            .accentColor(colors.highlightA)
+                            .onChange(of: blurConfig_blur2OffsetX) { _ in
+                                blurConfig = configureBlurconfig()
+                            }
                     }
                     VStack(alignment: .leading, spacing: 4) {
                         Text("blur2OffsetY: CGFloat")
                             .font(fonts.small)
                             .foregroundColor(colors.contentA)
-                        VStack(spacing: 4) {
-                            TextField("", text: Binding(
-                                get: { String(format: "%.2f", blurConfig_blur2OffsetY) },
-                                set: { if let value = Double($0) { blurConfig_blur2OffsetY = value; blurConfig = configureBlurconfig() } }
-                            ))
-                            .textFieldStyle(.contentA(), placeholder: "0.0")
-                            .keyboardType(.decimalPad)
-
-                            Slider(value: $blurConfig_blur2OffsetY, in: 0 ... 1, step: 0.01)
-                                .accentColor(colors.highlightA)
-                                .onChange(of: blurConfig_blur2OffsetY) { _ in
-                                    blurConfig = configureBlurconfig()
-                                }
-                        }
+                        Slider(value: $blurConfig_blur2OffsetY, in: -100 ... 100, step: 0.1)
+                            .accentColor(colors.highlightA)
+                            .onChange(of: blurConfig_blur2OffsetY) { _ in
+                                blurConfig = configureBlurconfig()
+                            }
                     }
                     VStack(alignment: .leading, spacing: 4) {
                         Text("blur2Opacity: Double")
                             .font(fonts.small)
                             .foregroundColor(colors.contentA)
-                        VStack(spacing: 4) {
-                            TextField("", text: Binding(
-                                get: { String(format: "%.2f", blurConfig_blur2Opacity) },
-                                set: { if let value = Double($0) { blurConfig_blur2Opacity = value; blurConfig = configureBlurconfig() } }
-                            ))
-                            .textFieldStyle(.contentA(), placeholder: "0.0")
-                            .keyboardType(.decimalPad)
-
-                            Slider(value: $blurConfig_blur2Opacity, in: 0 ... 1, step: 0.01)
-                                .accentColor(colors.highlightA)
-                                .onChange(of: blurConfig_blur2Opacity) { _ in
-                                    blurConfig = configureBlurconfig()
-                                }
-                        }
+                        Slider(value: $blurConfig_blur2Opacity, in: -100 ... 100, step: 0.01)
+                            .accentColor(colors.highlightA)
+                            .onChange(of: blurConfig_blur2Opacity) { _ in
+                                blurConfig = configureBlurconfig()
+                            }
                     }
                     VStack(alignment: .leading, spacing: 4) {
                         Text("blur3Width: CGFloat")
                             .font(fonts.small)
                             .foregroundColor(colors.contentA)
-                        VStack(spacing: 4) {
-                            TextField("", text: Binding(
-                                get: { String(format: "%.2f", blurConfig_blur3Width) },
-                                set: { if let value = Double($0) { blurConfig_blur3Width = value; blurConfig = configureBlurconfig() } }
-                            ))
-                            .textFieldStyle(.contentA(), placeholder: "0.0")
-                            .keyboardType(.decimalPad)
-
-                            Slider(value: $blurConfig_blur3Width, in: 0 ... 1, step: 0.01)
-                                .accentColor(colors.highlightA)
-                                .onChange(of: blurConfig_blur3Width) { _ in
-                                    blurConfig = configureBlurconfig()
-                                }
-                        }
+                        Slider(value: $blurConfig_blur3Width, in: -100 ... 100, step: 0.1)
+                            .accentColor(colors.highlightA)
+                            .onChange(of: blurConfig_blur3Width) { _ in
+                                blurConfig = configureBlurconfig()
+                            }
                     }
                     VStack(alignment: .leading, spacing: 4) {
                         Text("blur3Height: CGFloat")
                             .font(fonts.small)
                             .foregroundColor(colors.contentA)
-                        VStack(spacing: 4) {
-                            TextField("", text: Binding(
-                                get: { String(format: "%.2f", blurConfig_blur3Height) },
-                                set: { if let value = Double($0) { blurConfig_blur3Height = value; blurConfig = configureBlurconfig() } }
-                            ))
-                            .textFieldStyle(.contentA(), placeholder: "0.0")
-                            .keyboardType(.decimalPad)
-
-                            Slider(value: $blurConfig_blur3Height, in: 0 ... 1, step: 0.01)
-                                .accentColor(colors.highlightA)
-                                .onChange(of: blurConfig_blur3Height) { _ in
-                                    blurConfig = configureBlurconfig()
-                                }
-                        }
+                        Slider(value: $blurConfig_blur3Height, in: -100 ... 100, step: 0.1)
+                            .accentColor(colors.highlightA)
+                            .onChange(of: blurConfig_blur3Height) { _ in
+                                blurConfig = configureBlurconfig()
+                            }
                     }
                     VStack(alignment: .leading, spacing: 4) {
                         Text("blur3Radius: CGFloat")
                             .font(fonts.small)
                             .foregroundColor(colors.contentA)
-                        VStack(spacing: 4) {
-                            TextField("", text: Binding(
-                                get: { String(format: "%.2f", blurConfig_blur3Radius) },
-                                set: { if let value = Double($0) { blurConfig_blur3Radius = value; blurConfig = configureBlurconfig() } }
-                            ))
-                            .textFieldStyle(.contentA(), placeholder: "0.0")
-                            .keyboardType(.decimalPad)
-
-                            Slider(value: $blurConfig_blur3Radius, in: 0 ... 1, step: 0.01)
-                                .accentColor(colors.highlightA)
-                                .onChange(of: blurConfig_blur3Radius) { _ in
-                                    blurConfig = configureBlurconfig()
-                                }
-                        }
+                        Slider(value: $blurConfig_blur3Radius, in: -100 ... 100, step: 0.1)
+                            .accentColor(colors.highlightA)
+                            .onChange(of: blurConfig_blur3Radius) { _ in
+                                blurConfig = configureBlurconfig()
+                            }
                     }
                     VStack(alignment: .leading, spacing: 4) {
                         Text("blur3OffsetX: CGFloat")
                             .font(fonts.small)
                             .foregroundColor(colors.contentA)
-                        VStack(spacing: 4) {
-                            TextField("", text: Binding(
-                                get: { String(format: "%.2f", blurConfig_blur3OffsetX) },
-                                set: { if let value = Double($0) { blurConfig_blur3OffsetX = value; blurConfig = configureBlurconfig() } }
-                            ))
-                            .textFieldStyle(.contentA(), placeholder: "0.0")
-                            .keyboardType(.decimalPad)
-
-                            Slider(value: $blurConfig_blur3OffsetX, in: 0 ... 1, step: 0.01)
-                                .accentColor(colors.highlightA)
-                                .onChange(of: blurConfig_blur3OffsetX) { _ in
-                                    blurConfig = configureBlurconfig()
-                                }
-                        }
+                        Slider(value: $blurConfig_blur3OffsetX, in: -100 ... 100, step: 0.1)
+                            .accentColor(colors.highlightA)
+                            .onChange(of: blurConfig_blur3OffsetX) { _ in
+                                blurConfig = configureBlurconfig()
+                            }
                     }
                     VStack(alignment: .leading, spacing: 4) {
                         Text("blur3OffsetY: CGFloat")
                             .font(fonts.small)
                             .foregroundColor(colors.contentA)
-                        VStack(spacing: 4) {
-                            TextField("", text: Binding(
-                                get: { String(format: "%.2f", blurConfig_blur3OffsetY) },
-                                set: { if let value = Double($0) { blurConfig_blur3OffsetY = value; blurConfig = configureBlurconfig() } }
-                            ))
-                            .textFieldStyle(.contentA(), placeholder: "0.0")
-                            .keyboardType(.decimalPad)
-
-                            Slider(value: $blurConfig_blur3OffsetY, in: 0 ... 1, step: 0.01)
-                                .accentColor(colors.highlightA)
-                                .onChange(of: blurConfig_blur3OffsetY) { _ in
-                                    blurConfig = configureBlurconfig()
-                                }
-                        }
+                        Slider(value: $blurConfig_blur3OffsetY, in: -100 ... 100, step: 0.1)
+                            .accentColor(colors.highlightA)
+                            .onChange(of: blurConfig_blur3OffsetY) { _ in
+                                blurConfig = configureBlurconfig()
+                            }
                     }
                     VStack(alignment: .leading, spacing: 4) {
                         Text("blur3Opacity: Double")
                             .font(fonts.small)
                             .foregroundColor(colors.contentA)
-                        VStack(spacing: 4) {
-                            TextField("", text: Binding(
-                                get: { String(format: "%.2f", blurConfig_blur3Opacity) },
-                                set: { if let value = Double($0) { blurConfig_blur3Opacity = value; blurConfig = configureBlurconfig() } }
-                            ))
-                            .textFieldStyle(.contentA(), placeholder: "0.0")
-                            .keyboardType(.decimalPad)
-
-                            Slider(value: $blurConfig_blur3Opacity, in: 0 ... 1, step: 0.01)
-                                .accentColor(colors.highlightA)
-                                .onChange(of: blurConfig_blur3Opacity) { _ in
-                                    blurConfig = configureBlurconfig()
-                                }
-                        }
+                        Slider(value: $blurConfig_blur3Opacity, in: -100 ... 100, step: 0.01)
+                            .accentColor(colors.highlightA)
+                            .onChange(of: blurConfig_blur3Opacity) { _ in
+                                blurConfig = configureBlurconfig()
+                            }
                     }
                     VStack(alignment: .leading, spacing: 4) {
                         Text("cornerRadius: CGFloat")
                             .font(fonts.small)
                             .foregroundColor(colors.contentA)
-                        VStack(spacing: 4) {
-                            TextField("", text: Binding(
-                                get: { String(format: "%.2f", blurConfig_cornerRadius) },
-                                set: { if let value = Double($0) { blurConfig_cornerRadius = value; blurConfig = configureBlurconfig() } }
-                            ))
-                            .textFieldStyle(.contentA(), placeholder: "0.0")
-                            .keyboardType(.decimalPad)
-
-                            Slider(value: $blurConfig_cornerRadius, in: 0 ... 1, step: 0.01)
-                                .accentColor(colors.highlightA)
-                                .onChange(of: blurConfig_cornerRadius) { _ in
-                                    blurConfig = configureBlurconfig()
-                                }
-                        }
+                        Slider(value: $blurConfig_cornerRadius, in: -100 ... 100, step: 0.1)
+                            .accentColor(colors.highlightA)
+                            .onChange(of: blurConfig_cornerRadius) { _ in
+                                blurConfig = configureBlurconfig()
+                            }
                     }
                 }
             }
