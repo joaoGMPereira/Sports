@@ -458,11 +458,24 @@ final class GenerateComponent {
                 } else {
                     if parameter.component.type.complexType {
                         """
-                        ComplexTypeSelectorView(
-                            title: "\(parameter.name)",
-                            componentType: .\(parameter.component.type.rawValue),
-                            value: $\(parameter.name)
-                        )
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("\(parameter.name)")
+                                .font(fonts.mediumBold)
+                                .foregroundColor(colors.contentA)
+                            
+                            Text("\(parameter.component.name)")
+                                .font(fonts.small)
+                                .foregroundColor(colors.contentB)
+                            
+                            ComplexTypeEditor(
+                                componentType: .\(parameter.component.type.rawValue),
+                                value: $\(parameter.name)
+                            )
+                            .padding(.vertical, 8)
+                        }
+                        .padding()
+                        .background(colors.backgroundA.opacity(0.5))
+                        .cornerRadius(8)
                         .padding(.horizontal)\n
                         """
                     } else {

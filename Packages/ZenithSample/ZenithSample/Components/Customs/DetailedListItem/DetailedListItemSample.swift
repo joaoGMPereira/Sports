@@ -3,6 +3,7 @@ import SwiftUI
 import Zenith
 import ZenithCoreInterface
 
+@MainActor
 struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) var themeConfigurator
     @State private var style: GenerateDetailedListItemSampleEnum = .default
@@ -136,23 +137,74 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
             TextField("", text: $description)
                 .textFieldStyle(.contentA(), placeholder: "description")
                 .padding(.horizontal)
-            ComplexTypeSelectorView(
-                title: "leftInfo",
-                componentType: .struct,
-                value: $leftInfo
-            )
+            VStack(alignment: .leading, spacing: 8) {
+                Text("leftInfo")
+                    .font(fonts.mediumBold)
+                    .foregroundColor(colors.contentA)
+
+                Text("DetailedListItemInfo")
+                    .font(fonts.small)
+                    .foregroundColor(colors.contentB)
+
+                ComplexTypeEditor(
+                    componentType: .struct,
+                    value: $leftInfo,
+                    completion: processComplexTypeChanges(_:)
+                )
+                .padding(.vertical, 8)
+                .onChange(of: leftInfo) { oldValue, newValue in
+                    print(newValue)
+                }
+            }
+            .padding()
+            .background(colors.backgroundA.opacity(0.5))
+            .cornerRadius(8)
             .padding(.horizontal)
-            ComplexTypeSelectorView(
-                title: "rightInfo",
-                componentType: .struct,
-                value: $rightInfo
-            )
+            VStack(alignment: .leading, spacing: 8) {
+                Text("rightInfo")
+                    .font(fonts.mediumBold)
+                    .foregroundColor(colors.contentA)
+
+                Text("DetailedListItemInfo")
+                    .font(fonts.small)
+                    .foregroundColor(colors.contentB)
+
+                ComplexTypeEditor(
+                    componentType: .struct,
+                    value: $rightInfo,
+                    completion: processComplexTypeChanges(_:)
+                )
+                .padding(.vertical, 8)
+                .onChange(of: rightInfo) { oldValue, newValue in
+                    print("rightInfo atualizado: \(newValue)")
+                }
+            }
+            .padding()
+            .background(colors.backgroundA.opacity(0.5))
+            .cornerRadius(8)
             .padding(.horizontal)
-            ComplexTypeSelectorView(
-                title: "blurConfig",
-                componentType: .struct,
-                value: $blurConfig
-            )
+            VStack(alignment: .leading, spacing: 8) {
+                Text("blurConfig")
+                    .font(fonts.mediumBold)
+                    .foregroundColor(colors.contentA)
+
+                Text("BlurConfig")
+                    .font(fonts.small)
+                    .foregroundColor(colors.contentB)
+
+                ComplexTypeEditor(
+                    componentType: .struct,
+                    value: $blurConfig,
+                    completion: processComplexTypeChanges(_:)
+                )
+                .padding(.vertical, 8)
+                .onChange(of: blurConfig) { oldValue, newValue in
+                    print("blurConfig atualizado: \(newValue)")
+                }
+            }
+            .padding()
+            .background(colors.backgroundA.opacity(0.5))
+            .cornerRadius(8)
             .padding(.horizontal)
             // Toggles para opções
             VStack {
@@ -255,6 +307,36 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
             .default(colorName)
         }
         return AnyDetailedListItemStyle(style)
+    }
+    
+    // Método para processar as alterações recebidas via NotificationCenter
+    private func processComplexTypeChanges(_ properties: [String: Any]) {
+        guard
+              let properties = properties["properties"] as? [[String: Any]] else {
+            return
+        }
+        // Exibir todas as propriedades modificadas para debug
+        print("Propriedades alteradas via NotificationCenter: \(properties)")
+        
+        // Processar as modificações das propriedades
+        for property in properties {
+            if let name = property["name"] as? String,
+               let type = property["type"] as? String {
+                print("Propriedade modificada: \(name) do tipo \(type)")
+                
+                // Aqui você pode adicionar lógica específica para cada propriedade
+                if name == "title" && property["value"] is String {
+                    // Exemplo de processamento específico para uma propriedade
+                    print("Título foi atualizado")
+                }
+            }
+        }
+        
+        // Outras ações possíveis:
+        // - Validar os valores
+        // - Sincronizar com um backend
+        // - Atualizar outras partes da sua UI
+        // - Salvar os valores em armazenamento persistente
     }
 }
 
