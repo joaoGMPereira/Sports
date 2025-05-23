@@ -126,6 +126,9 @@ final class ComponentConfiguration {
                         // Extrair informações sobre múltiplos inicializadores
                         let initializers = initParser.extractMultipleInits()
                         componentInfo.initializerInfos = initializers
+                        for i in 0..<componentInfo.publicInitParams.count {
+                            fillInnerParameters(parameter: &componentInfo.publicInitParams[i])
+                        }
                         
                         // Verificar se temos múltiplos inicializadores
                         componentInfo.hasMultipleInits = initializers.count > 1

@@ -153,6 +153,21 @@ final class GenerateComponent {
                             }
                             """
                             )
+                        } else if parameter.component.type.complexType {
+                            // Tratar componentes complexos com innerParameters
+                            states.append("\n    @State private var \(parameter.name): \(parameter.component.name) = \(defaultValue)")
+                            
+                            if let innerParams = getInnerParameters(parameter) {
+                                // Adicionar estados para os parâmetros internos
+                                innerParams.forEach { innerParam in
+                                    let innerVarName = "\(parameter.name)_\(innerParam.name)"
+                                    let innerDefaultValue = innerParam.defaultValue ?? determineDefaultValueForType(innerParam.type)
+                                    states.append("\n    @State private var \(innerVarName): \(innerParam.type) = \(innerDefaultValue)")
+                                }
+                                
+                                // Adicionar um método para configurar o componente complexo
+                                states.append(createConfigureComplexTypeMethod(parameter, innerParams))
+                            }
                         } else {
                             states.append("\n    @State private var \(parameter.name): \(parameter.component.name) = \(defaultValue)")
                         }
@@ -165,11 +180,116 @@ final class GenerateComponent {
         return states
     }
     
+    // Método auxiliar para extrair os innerParameters de um ParameterProtocol
+    private func getInnerParameters(_ parameter: ParameterProtocol) -> [ComponentProperty]? {
+        if let initParam = parameter as? InitParameter {
+            return initParam.innerParameters.isEmpty ? nil : initParam.innerParameters
+        } else if let styleParam = parameter as? StyleParameter {
+            return styleParam.innerParameters.isEmpty ? nil : styleParam.innerParameters
+        }
+        return nil
+    }
+    
+    // Método para criar um método que configura um tipo complexo a partir de seus innerParameters
+    private func createConfigureComplexTypeMethod(_ parameter: ParameterProtocol, _ innerParams: [ComponentProperty]) -> String {
+        var methodCode = """
+        
+            // Método para configurar \(parameter.name) com seus parâmetros internos
+            private func configure\(parameter.name.capitalized)() -> \(parameter.component.name) {
+                \(parameter.component.name)(
+        """
+        
+        for (index, innerParam) in innerParams.enumerated() {
+            let innerVarName = "\(parameter.name)_\(innerParam.name)"
+            methodCode += "\n            \(innerParam.name): \(innerVarName)"
+            if index < innerParams.count - 1 {
+                methodCode += ","
+            }
+        }
+        
+        methodCode += "\n        )"
+        methodCode += "\n    }"
+        
+        return methodCode
+    }
+    
+    // Método auxiliar para gerar código para parâmetros complexos
+    private func generateComplexTypeCode(_ parameter: ParameterProtocol) -> String {
+        guard let innerParams = getInnerParameters(parameter) else {
+            return "\(parameter.name): \(parameter.component.name)()"
+        }
+        
+        var code = "\(parameter.name): \(parameter.component.name)("
+        
+        for (index, innerParam) in innerParams.enumerated() {
+            let innerVarName = "\(parameter.name)_\(innerParam.name)"
+            code += "\(innerParam.name): \(innerVarName)"
+            
+            if index < innerParams.count - 1 {
+                code += ", "
+            }
+        }
+        
+        code += ")"
+        return code
+    }
+    
+    // Determina um valor padrão apropriado para um tipo específico
+    private func determineDefaultValueForType(_ type: String) -> String {
+        let trimmedType = type.trimmingCharacters(in: .whitespaces)
+        
+        if trimmedType.hasSuffix("?") {
+            return "nil"
+        }
+        
+        switch trimmedType {
+        case "String":
+            return "\"\""
+        case "Int", "Int8", "Int16", "Int32", "Int64",
+             "UInt", "UInt8", "UInt16", "UInt32", "UInt64":
+            return "0"
+        case "Float", "Double", "CGFloat":
+            return "0.0"
+        case "Bool":
+            return "false"
+        case let arrayType where arrayType.hasPrefix("[") && arrayType.hasSuffix("]"):
+            return "[]"
+        case let dictType where dictType.hasPrefix("[") && dictType.contains(":"):
+            return "[:]"
+        default:
+            // Se for um tipo personalizado
+            if trimmedType.first?.isUppercase == true &&
+                !trimmedType.contains("->") &&
+                !trimmedType.contains("<") {
+                return "\(trimmedType)()"
+            }
+            return "nil"
+        }
+    }
+    
     func defaultUnsetVar(_ parameter: ParameterProtocol) -> String {
         let firstStyle = componentInfo.styleFunctions.first!
         var defaultParameters = ""
         defaultParameters += firstStyle.parameters.joined()
         let defaultCase = ".\(firstStyle.name)(\(defaultParameters))"
+        
+        // Verificar se o parâmetro é um componente complexo com innerParameters
+        if parameter.component.type.complexType, let innerParams = getInnerParameters(parameter) {
+            // Criar o estado para o componente complexo
+            var result = "\n    @State private var \(parameter.name): \(parameter.component.name) = .init()"
+            
+            // Adicionar estados para os parâmetros internos
+            innerParams.forEach { innerParam in
+                let innerVarName = "\(parameter.name)_\(innerParam.name)"
+                let innerDefaultValue = innerParam.defaultValue ?? determineDefaultValueForType(innerParam.type)
+                result += "\n    @State private var \(innerVarName): \(innerParam.type) = \(innerDefaultValue)"
+            }
+            
+            // Adicionar um método para configurar o componente complexo
+            result += createConfigureComplexTypeMethod(parameter, innerParams)
+            
+            return result
+        }
         
         return switch parameter.component.name {
         case "String":
@@ -379,121 +499,266 @@ final class GenerateComponent {
     func interactiveComponents(_ parameters: [ParameterProtocol]) -> String {
         var interactiveComponents = ""
         parameters.forEach { parameter in
-            let parameterComponent = switch parameter.component.name {
-            case "String":
-                """
-                TextField("", text: $\(parameter.name))
-                    .textFieldStyle(.contentA(), placeholder: "\(parameter.name)")
-                    .padding(.horizontal)\n
-                """
-            case "StringImageEnum":
-                """
-                Text("Ícone")
-                    .font(fonts.smallBold)
-                    .foregroundColor(colors.contentA)
-                
-                TextField("Buscar símbolo", text: $symbolSearch)
-                    .textFieldStyle(.roundedBorder)
-                
-                ScrollView {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 8) {
-                        ForEach(filteredSymbols, id: \\.self) { symbol in
-                            VStack {
-                                Image(systemName: symbol)
-                                    .font(.system(size: 22))
-                                    .frame(width: 44, height: 44)
-                                    .background(
-                                        Circle()
-                                            .fill(symbol == \(parameter.name) ?
-                                                  colors.highlightA : colors.backgroundB)
-                                    )
-                                    .foregroundColor(symbol == \(parameter.name) ?
-                                                     colors.contentC : colors.contentA)
-                                
-                                Text(symbol)
-                                    .font(fonts.small)
-                                    .foregroundColor(colors.contentA)
-                                    .lineLimit(1)
-                                    .truncationMode(.tail)
-                            }
-                            .frame(width: 80, height: 80)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                \(parameter.name) = symbol
+            // Verificar se o parâmetro é um componente complexo com innerParameters
+            if parameter.component.type.complexType, let innerParams = getInnerParameters(parameter) {
+                // Criar um editor expandível para o tipo complexo
+                interactiveComponents += createComplexParameterEditor(parameter, innerParams)
+            } else {
+                let parameterComponent = switch parameter.component.name {
+                case "String":
+                    """
+                    TextField("", text: $\(parameter.name))
+                        .textFieldStyle(.contentA(), placeholder: "\(parameter.name)")
+                        .padding(.horizontal)\n
+                    """
+                case "StringImageEnum":
+                    """
+                    Text("Ícone")
+                        .font(fonts.smallBold)
+                        .foregroundColor(colors.contentA)
+                    
+                    TextField("Buscar símbolo", text: $symbolSearch)
+                        .textFieldStyle(.roundedBorder)
+                    
+                    ScrollView {
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 8) {
+                            ForEach(filteredSymbols, id: \\.self) { symbol in
+                                VStack {
+                                    Image(systemName: symbol)
+                                        .font(.system(size: 22))
+                                        .frame(width: 44, height: 44)
+                                        .background(
+                                            Circle()
+                                                .fill(symbol == \(parameter.name) ?
+                                                      colors.highlightA : colors.backgroundB)
+                                        )
+                                        .foregroundColor(symbol == \(parameter.name) ?
+                                                         colors.contentC : colors.contentA)
+                                    
+                                    Text(symbol)
+                                        .font(fonts.small)
+                                        .foregroundColor(colors.contentA)
+                                        .lineLimit(1)
+                                        .truncationMode(.tail)
+                                }
+                                .frame(width: 80, height: 80)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    \(parameter.name) = symbol
+                                }
                             }
                         }
                     }
+                    .frame(height: 200)
+                    .background(colors.backgroundB.opacity(0.5))
+                    .cornerRadius(8)
+                    """
+                case "Bool":
+                    """
+                    Toggle("\(parameter.name)", isOn: $\(parameter.name))
+                        .toggleStyle(.default(.highlightA))
+                        .padding(.horizontal)\n
+                    """
+                case "Int":
+                        """
+                        Slider(value: $\(parameter.name), in: 0...100, step: 1)
+                            .accentColor(colors.highlightA)
+                            .padding(.horizontal)\n
+                        """
+                case "Double":
+                        """
+                        Slider(value: $\(parameter.name), in: 0...1, step: 0.01)
+                            .accentColor(colors.highlightA)
+                            .padding(.horizontal)\n
+                        """
+                case "CGFloat":
+                        """
+                        Slider(value: $\(parameter.name), in: 0...100, step: 0.1)
+                            .accentColor(colors.highlightA)
+                            .padding(.horizontal)\n
+                        """
+                default:
+                    if parameter.component.name.contains("->") {
+                        ""
+                    } else {
+                        if parameter.component.type.complexType {
+                            // Em vez do ComplexTypeEditor, usamos diretamente as propriedades internas
+                            // Isso é tratado pelo método createComplexParameterEditor
+                            """
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("\(parameter.name)")
+                                    .font(fonts.mediumBold)
+                                    .foregroundColor(colors.contentA)
+                                
+                                Text("\(parameter.component.name)")
+                                    .font(fonts.small)
+                                    .foregroundColor(colors.contentB)
+                                
+                                Button(action: {
+                                    \(parameter.name) = configure\(parameter.name.capitalized)()
+                                }) {
+                                    Text("Atualizar \(parameter.name)")
+                                        .font(fonts.smallBold)
+                                        .padding(.vertical, 6)
+                                        .padding(.horizontal, 12)
+                                        .background(colors.highlightA)
+                                        .foregroundColor(colors.contentC)
+                                        .cornerRadius(8)
+                                }
+                                .padding(.vertical, 8)
+                            }
+                            .padding()
+                            .background(colors.backgroundA.opacity(0.5))
+                            .cornerRadius(8)
+                            .padding(.horizontal)\n
+                            """
+                        } else {
+                            """
+                            EnumSelector<\(parameter.component.name)>(
+                                title: "\(parameter.component.name)",
+                                selection: $\(parameter.name),
+                                columnsCount: 3,
+                                height: 120
+                            )
+                            .padding(.horizontal)\n
+                            """
+                        }
+                    }
                 }
-                .frame(height: 200)
-                .background(colors.backgroundB.opacity(0.5))
-                .cornerRadius(8)
+                interactiveComponents += parameterComponent
+            }
+        }
+        return interactiveComponents
+    }
+    
+    // Cria um editor para tipos complexos usando seus innerParameters
+    private func createComplexParameterEditor(_ parameter: ParameterProtocol, _ innerParams: [ComponentProperty]) -> String {
+        var editor = """
+        VStack(alignment: .leading, spacing: 8) {
+            Text("\(parameter.name)")
+                .font(fonts.mediumBold)
+                .foregroundColor(colors.contentA)
+            
+            Text("\(parameter.component.name)")
+                .font(fonts.small)
+                .foregroundColor(colors.contentB)
+            
+            // Campos para propriedades internas
+            VStack(alignment: .leading, spacing: 12) {
+        """
+        
+        // Adicionar editores para cada propriedade interna
+        for innerParam in innerParams {
+            let innerVarName = "\(parameter.name)_\(innerParam.name)"
+            
+            editor += """
+            
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("\(innerParam.name): \(innerParam.type)")
+                        .font(fonts.small)
+                        .foregroundColor(colors.contentA)
+            """
+            
+            // Escolher o editor apropriado para o tipo da propriedade interna
+            let editorComponent = switch innerParam.type {
+            case "String":
+                """
+                
+                    TextField("", text: $\(innerVarName))
+                        .textFieldStyle(.contentA(), placeholder: "\(innerParam.name)")
+                        .onChange(of: \(innerVarName)) { newValue in
+                            \(parameter.name) = configure\(parameter.name.capitalized)()
+                        }
                 """
             case "Bool":
                 """
-                Toggle("\(parameter.name)", isOn: $\(parameter.name))
-                    .toggleStyle(.default(.highlightA))
-                    .padding(.horizontal)\n
-                """
-            case "Int":
-                    """
-                    Slider(value: $\(parameter.name), in: 0...100, step: 1)
-                        .accentColor(colors.highlightA)
-                        .padding(.horizontal)\n
-                    """
-            case "Double":
-                    """
-                    Slider(value: $\(parameter.name), in: 0...1, step: 0.01)
-                        .accentColor(colors.highlightA)
-                        .padding(.horizontal)\n
-                    """
-            case "CGFloat":
-                    """
-                    Slider(value: $\(parameter.name), in: 0...100, step: 0.1)
-                        .accentColor(colors.highlightA)
-                        .padding(.horizontal)\n
-                    """
-            default:
-                if parameter.component.name.contains("->") {
-                    ""
-                } else {
-                    if parameter.component.type.complexType {
-                        """
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("\(parameter.name)")
-                                .font(fonts.mediumBold)
-                                .foregroundColor(colors.contentA)
-                            
-                            Text("\(parameter.component.name)")
-                                .font(fonts.small)
-                                .foregroundColor(colors.contentB)
-                            
-                            ComplexTypeEditor(
-                                componentType: .\(parameter.component.type.rawValue),
-                                value: $\(parameter.name)
-                            )
-                            .padding(.vertical, 8)
+                
+                    Toggle("\(innerParam.name)", isOn: $\(innerVarName))
+                        .toggleStyle(.default(.highlightA))
+                        .onChange(of: \(innerVarName)) { newValue in
+                            \(parameter.name) = configure\(parameter.name.capitalized)()
                         }
-                        .padding()
-                        .background(colors.backgroundA.opacity(0.5))
-                        .cornerRadius(8)
-                        .padding(.horizontal)\n
-                        """
-                    } else {
-                        """
-                        EnumSelector<\(parameter.component.name)>(
-                            title: "\(parameter.component.name)",
-                            selection: $\(parameter.name),
+                """
+            case "Int", "Int8", "Int16", "Int32", "Int64",
+                 "UInt", "UInt8", "UInt16", "UInt32", "UInt64":
+                """
+                
+                    HStack {
+                        TextField("", text: Binding(
+                            get: { String(\(innerVarName)) },
+                            set: { if let value = Int($0) { \(innerVarName) = value; \(parameter.name) = configure\(parameter.name.capitalized)() } }
+                        ))
+                        .textFieldStyle(.contentA(), placeholder: "0")
+                        .keyboardType(.numberPad)
+                        
+                        Stepper("", value: $\(innerVarName), in: 0...100)
+                            .onChange(of: \(innerVarName)) { newValue in
+                                \(parameter.name) = configure\(parameter.name.capitalized)()
+                            }
+                    }
+                """
+            case "Float", "Double", "CGFloat":
+                """
+                
+                    VStack(spacing: 4) {
+                        TextField("", text: Binding(
+                            get: { String(format: "%.2f", \(innerVarName)) },
+                            set: { if let value = Double($0) { \(innerVarName) = value; \(parameter.name) = configure\(parameter.name.capitalized)() } }
+                        ))
+                        .textFieldStyle(.contentA(), placeholder: "0.0")
+                        .keyboardType(.decimalPad)
+                        
+                        Slider(value: $\(innerVarName), in: 0...1, step: 0.01)
+                            .accentColor(colors.highlightA)
+                            .onChange(of: \(innerVarName)) { newValue in
+                                \(parameter.name) = configure\(parameter.name.capitalized)()
+                            }
+                    }
+                """
+            default:
+                if innerParam.type.hasSuffix("Enum") || innerParam.type.contains("Case") {
+                    """
+                    
+                        EnumSelector<\(innerParam.type)>(
+                            title: "\(innerParam.name)",
+                            selection: $\(innerVarName),
                             columnsCount: 3,
                             height: 120
                         )
-                        .padding(.horizontal)\n
-                        """
-                    }
+                        .onChange(of: \(innerVarName)) { newValue in
+                            \(parameter.name) = configure\(parameter.name.capitalized)()
+                        }
+                    """
+                } else {
+                    """
+                    
+                        TextField("", text: $\(innerVarName))
+                            .textFieldStyle(.contentA(), placeholder: "\(innerParam.name)")
+                            .onChange(of: \(innerVarName)) { newValue in
+                                \(parameter.name) = configure\(parameter.name.capitalized)()
+                            }
+                    """
                 }
             }
-            interactiveComponents += parameterComponent
+            
+            editor += editorComponent
+            editor += """
+                
+                }
+            """
         }
-        return interactiveComponents
+        
+        editor += """
+            
+            }
+        }
+        .padding()
+        .background(colors.backgroundA.opacity(0.5))
+        .cornerRadius(8)
+        .padding(.horizontal)\n
+        """
+        
+        return editor
     }
     
     func allStyles() -> String {
@@ -569,25 +834,38 @@ final class GenerateComponent {
                     var paramValue = ""
                     
                     // Formatar baseado no tipo
-                    switch param.component.type {
-                    case .String, .StringImageEnum:
-                        paramValue = "\(paramName): \\\"\\(\(paramName))\\\""
-                    case .Bool:
-                        paramValue = "\(paramName): \\(\(paramName))"
-                    case .Int, .Double, .CGFloat:
-                        paramValue = "\(paramName): \\(\(paramName))"
-                    default:
-                        if param.component.name.contains("->") {
-                            paramValue = "\(paramName): {}"
-                        } else if param.component.type.complexType {
-                            paramValue = "\(paramName): \\(\(paramName))"
-                        } else {
-                            paramValue = "\(paramName): .\\(\(paramName)).rawValue"
-                        }
-                    }
-                    
                     if param.hasObfuscatedArgument {
                         paramValue = "\\(\(paramName))"
+                    } else {
+                        switch param.component.type {
+                        case .String, .StringImageEnum:
+                            paramValue = "\(paramName): \\\"\\(\(paramName))\\\""
+                        case .Bool:
+                            paramValue = "\(paramName): \\(\(paramName))"
+                        case .Int, .Double, .CGFloat:
+                            paramValue = "\(paramName): \\(\(paramName))"
+                        default:
+                            if param.component.name.contains("->") {
+                                paramValue = "\(paramName): {}"
+                            } else if param.component.type.complexType, let innerParams = getInnerParameters(param) {
+                                // Usar código específico para parâmetros complexos
+                                var innerCode = "\(paramName): \(param.component.name)("
+                                
+                                for (innerIdx, innerParam) in innerParams.enumerated() {
+                                    let innerVarName = "\(paramName)_\(innerParam.name)"
+                                    innerCode += "\(innerParam.name): \\(\(innerVarName))"
+                                    
+                                    if innerIdx < innerParams.count - 1 {
+                                        innerCode += ", "
+                                    }
+                                }
+                                
+                                innerCode += ")"
+                                paramValue = innerCode
+                            } else {
+                                paramValue = "\(paramName): .\\(\(paramName)).rawValue"
+                            }
+                        }
                     }
                     
                     // Adicionar à string do inicializador

@@ -82,7 +82,7 @@ struct ComplexTypeEditor<T: Any>: View, @preconcurrency BaseThemeDependencies {
     /// Controla se as propriedades estão expandidas
     @State private var isExpanded: Bool = false
     
-    let completion: ([String: Any]) -> Void
+    //let completion: ([String: Any]) -> Void
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -396,31 +396,31 @@ struct ComplexTypeEditor<T: Any>: View, @preconcurrency BaseThemeDependencies {
     
     /// Aplica as alterações ao objeto original
     private func applyChanges() {
-        completion([
-            "valueType": componentType.rawValue,
-            "properties": properties.map {
-                var propertyData: [String: Any] = [
-                    "name": $0.name,
-                    "type": $0.type.rawValue
-                ]
-                
-                switch $0.type {
-                case .String:
-                    propertyData["value"] = $0.stringValue
-                case .Int, .UInt, .Int8, .UInt8, .Int16, .UInt16, .Int32, .UInt32, .Int64, .UInt64:
-                    propertyData["value"] = $0.intValue
-                case .Float, .Double, .CGFloat:
-                    propertyData["value"] = $0.doubleValue
-                case .Bool:
-                    propertyData["value"] = $0.boolValue
-                case .enum:
-                    propertyData["value"] = $0.enumValue as Any
-                default:
-                    break
-                }
-                
-                return propertyData
-            }
-        ])
+//        completion([
+//            "valueType": componentType.rawValue,
+//            "properties": properties.map {
+//                var propertyData: [String: Any] = [
+//                    "name": $0.name,
+//                    "type": $0.type.rawValue
+//                ]
+//                
+//                switch $0.type {
+//                case .String:
+//                    propertyData["value"] = $0.stringValue
+//                case .Int, .UInt, .Int8, .UInt8, .Int16, .UInt16, .Int32, .UInt32, .Int64, .UInt64:
+//                    propertyData["value"] = $0.intValue
+//                case .Float, .Double, .CGFloat:
+//                    propertyData["value"] = $0.doubleValue
+//                case .Bool:
+//                    propertyData["value"] = $0.boolValue
+//                case .enum:
+//                    propertyData["value"] = $0.enumValue as Any
+//                default:
+//                    break
+//                }
+//                
+//                return propertyData
+//            }
+//        ])
     }
 }

@@ -31,6 +31,30 @@ struct InitializerInfo {
 }
 
 extension InitParser {
+    // Método para preencher innerParameters para um parâmetro complexo
+    func fillInnerParameters(parameter: inout InitParameter) {
+        // Verificar se o componente é complexo (struct ou class)
+        if parameter.component.type == .struct || parameter.component.type == .class {
+            Log.log("Preenchendo innerParameters para \(parameter.name) do tipo \(parameter.component.name)")
+            
+            // Usar o ComponentFinder para extrair as propriedades do componente
+            let finder = ComponentFinder(type: parameter.component.name)
+            
+            // Utilizamos a nova implementação do extractPropertiesFromInit que primeiro
+            // busca arquivos com a definição do componente
+            let properties = finder.extractPropertiesFromInit(componentName: parameter.component.name)
+            
+            // Atribuir as propriedades encontradas ao innerParameters do parâmetro
+            parameter.innerParameters = properties
+            
+            if !properties.isEmpty {
+                Log.log("Propriedades internas encontradas: \(properties.map { $0.name }.joined(separator: ", "))")
+            } else {
+                Log.log("Nenhuma propriedade interna encontrada para \(parameter.component.name)")
+            }
+        }
+    }
+    
     // Método para agrupar os parâmetros em inicializadores
     func extractMultipleInits() -> [InitializerInfo] {
         var allInitializers: [InitializerInfo] = []
@@ -68,7 +92,8 @@ extension InitParser {
                 let param = paramString.replacingOccurrences(of: "\n", with: " ").trimmingCharacters(in: .whitespaces)
                 
                 // Nova abordagem: análise baseada em tokens em vez de regex
-                if let initParam = parseInitParameter(param, index: paramIndex) {
+                if var initParam = parseInitParameter(param, index: paramIndex) {
+                    fillInnerParameters(parameter: &initParam)
                     initParams.append(initParam)
                     Log.log("Parâmetro processado com sucesso: \(initParam.name): \(initParam.component.name)", level: .info)
                 }

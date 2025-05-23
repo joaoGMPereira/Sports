@@ -15,9 +15,96 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
 
     @State private var leftInfo: DetailedListItemInfo = .init()
 
+    @State private var leftInfo_title: String = ""
+
+    @State private var leftInfo_description: String = ""
+
+    // Método para configurar leftInfo com seus parâmetros internos
+    private func configureLeftinfo() -> DetailedListItemInfo {
+        DetailedListItemInfo(
+            title: leftInfo_title,
+            description: leftInfo_description
+        )
+    }
+
     @State private var rightInfo: DetailedListItemInfo = .init()
 
+    @State private var rightInfo_title: String = ""
+
+    @State private var rightInfo_description: String = ""
+
+    // Método para configurar rightInfo com seus parâmetros internos
+    private func configureRightinfo() -> DetailedListItemInfo {
+        DetailedListItemInfo(
+            title: rightInfo_title,
+            description: rightInfo_description
+        )
+    }
+
     @State private var blurConfig: BlurConfig = .standard()
+
+    @State private var blurConfig_blur1Width: CGFloat = 42
+
+    @State private var blurConfig_blur1Height: CGFloat = 24
+
+    @State private var blurConfig_blur1Radius: CGFloat = 20
+
+    @State private var blurConfig_blur1OffsetX: CGFloat = -25
+
+    @State private var blurConfig_blur1OffsetY: CGFloat = 25
+
+    @State private var blurConfig_blur1Opacity: Double = 0.9
+
+    @State private var blurConfig_blur2Width: CGFloat = 80
+
+    @State private var blurConfig_blur2Height: CGFloat = 40
+
+    @State private var blurConfig_blur2Radius: CGFloat = 40
+
+    @State private var blurConfig_blur2OffsetX: CGFloat = -20
+
+    @State private var blurConfig_blur2OffsetY: CGFloat = 20
+
+    @State private var blurConfig_blur2Opacity: Double = 1.0
+
+    @State private var blurConfig_blur3Width: CGFloat = 100
+
+    @State private var blurConfig_blur3Height: CGFloat = 50
+
+    @State private var blurConfig_blur3Radius: CGFloat = 50
+
+    @State private var blurConfig_blur3OffsetX: CGFloat = -20
+
+    @State private var blurConfig_blur3OffsetY: CGFloat = 20
+
+    @State private var blurConfig_blur3Opacity: Double = 1.0
+
+    @State private var blurConfig_cornerRadius: CGFloat = 20
+
+    // Método para configurar blurConfig com seus parâmetros internos
+    private func configureBlurconfig() -> BlurConfig {
+        BlurConfig(
+            blur1Width: blurConfig_blur1Width,
+            blur1Height: blurConfig_blur1Height,
+            blur1Radius: blurConfig_blur1Radius,
+            blur1OffsetX: blurConfig_blur1OffsetX,
+            blur1OffsetY: blurConfig_blur1OffsetY,
+            blur1Opacity: blurConfig_blur1Opacity,
+            blur2Width: blurConfig_blur2Width,
+            blur2Height: blurConfig_blur2Height,
+            blur2Radius: blurConfig_blur2Radius,
+            blur2OffsetX: blurConfig_blur2OffsetX,
+            blur2OffsetY: blurConfig_blur2OffsetY,
+            blur2Opacity: blurConfig_blur2Opacity,
+            blur3Width: blurConfig_blur3Width,
+            blur3Height: blurConfig_blur3Height,
+            blur3Radius: blurConfig_blur3Radius,
+            blur3OffsetX: blurConfig_blur3OffsetX,
+            blur3OffsetY: blurConfig_blur3OffsetY,
+            blur3Opacity: blurConfig_blur3Opacity,
+            cornerRadius: blurConfig_cornerRadius
+        )
+    }
 
     @State private var action: () -> Void = {}
 
@@ -145,11 +232,29 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                     .font(fonts.small)
                     .foregroundColor(colors.contentB)
 
-                ComplexTypeEditor(
-                    componentType: .struct,
-                    value: $leftInfo
-                )
-                .padding(.vertical, 8)
+                // Campos para propriedades internas
+                VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("title: String")
+                            .font(fonts.small)
+                            .foregroundColor(colors.contentA)
+                        TextField("", text: $leftInfo_title)
+                            .textFieldStyle(.contentA(), placeholder: "title")
+                            .onChange(of: leftInfo_title) { _ in
+                                leftInfo = configureLeftinfo()
+                            }
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("description: String")
+                            .font(fonts.small)
+                            .foregroundColor(colors.contentA)
+                        TextField("", text: $leftInfo_description)
+                            .textFieldStyle(.contentA(), placeholder: "description")
+                            .onChange(of: leftInfo_description) { _ in
+                                leftInfo = configureLeftinfo()
+                            }
+                    }
+                }
             }
             .padding()
             .background(colors.backgroundA.opacity(0.5))
@@ -164,11 +269,29 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                     .font(fonts.small)
                     .foregroundColor(colors.contentB)
 
-                ComplexTypeEditor(
-                    componentType: .struct,
-                    value: $rightInfo
-                )
-                .padding(.vertical, 8)
+                // Campos para propriedades internas
+                VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("title: String")
+                            .font(fonts.small)
+                            .foregroundColor(colors.contentA)
+                        TextField("", text: $rightInfo_title)
+                            .textFieldStyle(.contentA(), placeholder: "title")
+                            .onChange(of: rightInfo_title) { _ in
+                                rightInfo = configureRightinfo()
+                            }
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("description: String")
+                            .font(fonts.small)
+                            .foregroundColor(colors.contentA)
+                        TextField("", text: $rightInfo_description)
+                            .textFieldStyle(.contentA(), placeholder: "description")
+                            .onChange(of: rightInfo_description) { _ in
+                                rightInfo = configureRightinfo()
+                            }
+                    }
+                }
             }
             .padding()
             .background(colors.backgroundA.opacity(0.5))
@@ -183,11 +306,370 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                     .font(fonts.small)
                     .foregroundColor(colors.contentB)
 
-                ComplexTypeEditor(
-                    componentType: .struct,
-                    value: $blurConfig
-                )
-                .padding(.vertical, 8)
+                // Campos para propriedades internas
+                VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("blur1Width: CGFloat")
+                            .font(fonts.small)
+                            .foregroundColor(colors.contentA)
+                        VStack(spacing: 4) {
+                            TextField("", text: Binding(
+                                get: { String(format: "%.2f", blurConfig_blur1Width) },
+                                set: { if let value = Double($0) { blurConfig_blur1Width = value; blurConfig = configureBlurconfig() } }
+                            ))
+                            .textFieldStyle(.contentA(), placeholder: "0.0")
+                            .keyboardType(.decimalPad)
+
+                            Slider(value: $blurConfig_blur1Width, in: 0 ... 1, step: 0.01)
+                                .accentColor(colors.highlightA)
+                                .onChange(of: blurConfig_blur1Width) { _ in
+                                    blurConfig = configureBlurconfig()
+                                }
+                        }
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("blur1Height: CGFloat")
+                            .font(fonts.small)
+                            .foregroundColor(colors.contentA)
+                        VStack(spacing: 4) {
+                            TextField("", text: Binding(
+                                get: { String(format: "%.2f", blurConfig_blur1Height) },
+                                set: { if let value = Double($0) { blurConfig_blur1Height = value; blurConfig = configureBlurconfig() } }
+                            ))
+                            .textFieldStyle(.contentA(), placeholder: "0.0")
+                            .keyboardType(.decimalPad)
+
+                            Slider(value: $blurConfig_blur1Height, in: 0 ... 1, step: 0.01)
+                                .accentColor(colors.highlightA)
+                                .onChange(of: blurConfig_blur1Height) { _ in
+                                    blurConfig = configureBlurconfig()
+                                }
+                        }
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("blur1Radius: CGFloat")
+                            .font(fonts.small)
+                            .foregroundColor(colors.contentA)
+                        VStack(spacing: 4) {
+                            TextField("", text: Binding(
+                                get: { String(format: "%.2f", blurConfig_blur1Radius) },
+                                set: { if let value = Double($0) { blurConfig_blur1Radius = value; blurConfig = configureBlurconfig() } }
+                            ))
+                            .textFieldStyle(.contentA(), placeholder: "0.0")
+                            .keyboardType(.decimalPad)
+
+                            Slider(value: $blurConfig_blur1Radius, in: 0 ... 1, step: 0.01)
+                                .accentColor(colors.highlightA)
+                                .onChange(of: blurConfig_blur1Radius) { _ in
+                                    blurConfig = configureBlurconfig()
+                                }
+                        }
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("blur1OffsetX: CGFloat")
+                            .font(fonts.small)
+                            .foregroundColor(colors.contentA)
+                        VStack(spacing: 4) {
+                            TextField("", text: Binding(
+                                get: { String(format: "%.2f", blurConfig_blur1OffsetX) },
+                                set: { if let value = Double($0) { blurConfig_blur1OffsetX = value; blurConfig = configureBlurconfig() } }
+                            ))
+                            .textFieldStyle(.contentA(), placeholder: "0.0")
+                            .keyboardType(.decimalPad)
+
+                            Slider(value: $blurConfig_blur1OffsetX, in: 0 ... 1, step: 0.01)
+                                .accentColor(colors.highlightA)
+                                .onChange(of: blurConfig_blur1OffsetX) { _ in
+                                    blurConfig = configureBlurconfig()
+                                }
+                        }
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("blur1OffsetY: CGFloat")
+                            .font(fonts.small)
+                            .foregroundColor(colors.contentA)
+                        VStack(spacing: 4) {
+                            TextField("", text: Binding(
+                                get: { String(format: "%.2f", blurConfig_blur1OffsetY) },
+                                set: { if let value = Double($0) { blurConfig_blur1OffsetY = value; blurConfig = configureBlurconfig() } }
+                            ))
+                            .textFieldStyle(.contentA(), placeholder: "0.0")
+                            .keyboardType(.decimalPad)
+
+                            Slider(value: $blurConfig_blur1OffsetY, in: 0 ... 1, step: 0.01)
+                                .accentColor(colors.highlightA)
+                                .onChange(of: blurConfig_blur1OffsetY) { _ in
+                                    blurConfig = configureBlurconfig()
+                                }
+                        }
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("blur1Opacity: Double")
+                            .font(fonts.small)
+                            .foregroundColor(colors.contentA)
+                        VStack(spacing: 4) {
+                            TextField("", text: Binding(
+                                get: { String(format: "%.2f", blurConfig_blur1Opacity) },
+                                set: { if let value = Double($0) { blurConfig_blur1Opacity = value; blurConfig = configureBlurconfig() } }
+                            ))
+                            .textFieldStyle(.contentA(), placeholder: "0.0")
+                            .keyboardType(.decimalPad)
+
+                            Slider(value: $blurConfig_blur1Opacity, in: 0 ... 1, step: 0.01)
+                                .accentColor(colors.highlightA)
+                                .onChange(of: blurConfig_blur1Opacity) { _ in
+                                    blurConfig = configureBlurconfig()
+                                }
+                        }
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("blur2Width: CGFloat")
+                            .font(fonts.small)
+                            .foregroundColor(colors.contentA)
+                        VStack(spacing: 4) {
+                            TextField("", text: Binding(
+                                get: { String(format: "%.2f", blurConfig_blur2Width) },
+                                set: { if let value = Double($0) { blurConfig_blur2Width = value; blurConfig = configureBlurconfig() } }
+                            ))
+                            .textFieldStyle(.contentA(), placeholder: "0.0")
+                            .keyboardType(.decimalPad)
+
+                            Slider(value: $blurConfig_blur2Width, in: 0 ... 1, step: 0.01)
+                                .accentColor(colors.highlightA)
+                                .onChange(of: blurConfig_blur2Width) { _ in
+                                    blurConfig = configureBlurconfig()
+                                }
+                        }
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("blur2Height: CGFloat")
+                            .font(fonts.small)
+                            .foregroundColor(colors.contentA)
+                        VStack(spacing: 4) {
+                            TextField("", text: Binding(
+                                get: { String(format: "%.2f", blurConfig_blur2Height) },
+                                set: { if let value = Double($0) { blurConfig_blur2Height = value; blurConfig = configureBlurconfig() } }
+                            ))
+                            .textFieldStyle(.contentA(), placeholder: "0.0")
+                            .keyboardType(.decimalPad)
+
+                            Slider(value: $blurConfig_blur2Height, in: 0 ... 1, step: 0.01)
+                                .accentColor(colors.highlightA)
+                                .onChange(of: blurConfig_blur2Height) { _ in
+                                    blurConfig = configureBlurconfig()
+                                }
+                        }
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("blur2Radius: CGFloat")
+                            .font(fonts.small)
+                            .foregroundColor(colors.contentA)
+                        VStack(spacing: 4) {
+                            TextField("", text: Binding(
+                                get: { String(format: "%.2f", blurConfig_blur2Radius) },
+                                set: { if let value = Double($0) { blurConfig_blur2Radius = value; blurConfig = configureBlurconfig() } }
+                            ))
+                            .textFieldStyle(.contentA(), placeholder: "0.0")
+                            .keyboardType(.decimalPad)
+
+                            Slider(value: $blurConfig_blur2Radius, in: 0 ... 1, step: 0.01)
+                                .accentColor(colors.highlightA)
+                                .onChange(of: blurConfig_blur2Radius) { _ in
+                                    blurConfig = configureBlurconfig()
+                                }
+                        }
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("blur2OffsetX: CGFloat")
+                            .font(fonts.small)
+                            .foregroundColor(colors.contentA)
+                        VStack(spacing: 4) {
+                            TextField("", text: Binding(
+                                get: { String(format: "%.2f", blurConfig_blur2OffsetX) },
+                                set: { if let value = Double($0) { blurConfig_blur2OffsetX = value; blurConfig = configureBlurconfig() } }
+                            ))
+                            .textFieldStyle(.contentA(), placeholder: "0.0")
+                            .keyboardType(.decimalPad)
+
+                            Slider(value: $blurConfig_blur2OffsetX, in: 0 ... 1, step: 0.01)
+                                .accentColor(colors.highlightA)
+                                .onChange(of: blurConfig_blur2OffsetX) { _ in
+                                    blurConfig = configureBlurconfig()
+                                }
+                        }
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("blur2OffsetY: CGFloat")
+                            .font(fonts.small)
+                            .foregroundColor(colors.contentA)
+                        VStack(spacing: 4) {
+                            TextField("", text: Binding(
+                                get: { String(format: "%.2f", blurConfig_blur2OffsetY) },
+                                set: { if let value = Double($0) { blurConfig_blur2OffsetY = value; blurConfig = configureBlurconfig() } }
+                            ))
+                            .textFieldStyle(.contentA(), placeholder: "0.0")
+                            .keyboardType(.decimalPad)
+
+                            Slider(value: $blurConfig_blur2OffsetY, in: 0 ... 1, step: 0.01)
+                                .accentColor(colors.highlightA)
+                                .onChange(of: blurConfig_blur2OffsetY) { _ in
+                                    blurConfig = configureBlurconfig()
+                                }
+                        }
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("blur2Opacity: Double")
+                            .font(fonts.small)
+                            .foregroundColor(colors.contentA)
+                        VStack(spacing: 4) {
+                            TextField("", text: Binding(
+                                get: { String(format: "%.2f", blurConfig_blur2Opacity) },
+                                set: { if let value = Double($0) { blurConfig_blur2Opacity = value; blurConfig = configureBlurconfig() } }
+                            ))
+                            .textFieldStyle(.contentA(), placeholder: "0.0")
+                            .keyboardType(.decimalPad)
+
+                            Slider(value: $blurConfig_blur2Opacity, in: 0 ... 1, step: 0.01)
+                                .accentColor(colors.highlightA)
+                                .onChange(of: blurConfig_blur2Opacity) { _ in
+                                    blurConfig = configureBlurconfig()
+                                }
+                        }
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("blur3Width: CGFloat")
+                            .font(fonts.small)
+                            .foregroundColor(colors.contentA)
+                        VStack(spacing: 4) {
+                            TextField("", text: Binding(
+                                get: { String(format: "%.2f", blurConfig_blur3Width) },
+                                set: { if let value = Double($0) { blurConfig_blur3Width = value; blurConfig = configureBlurconfig() } }
+                            ))
+                            .textFieldStyle(.contentA(), placeholder: "0.0")
+                            .keyboardType(.decimalPad)
+
+                            Slider(value: $blurConfig_blur3Width, in: 0 ... 1, step: 0.01)
+                                .accentColor(colors.highlightA)
+                                .onChange(of: blurConfig_blur3Width) { _ in
+                                    blurConfig = configureBlurconfig()
+                                }
+                        }
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("blur3Height: CGFloat")
+                            .font(fonts.small)
+                            .foregroundColor(colors.contentA)
+                        VStack(spacing: 4) {
+                            TextField("", text: Binding(
+                                get: { String(format: "%.2f", blurConfig_blur3Height) },
+                                set: { if let value = Double($0) { blurConfig_blur3Height = value; blurConfig = configureBlurconfig() } }
+                            ))
+                            .textFieldStyle(.contentA(), placeholder: "0.0")
+                            .keyboardType(.decimalPad)
+
+                            Slider(value: $blurConfig_blur3Height, in: 0 ... 1, step: 0.01)
+                                .accentColor(colors.highlightA)
+                                .onChange(of: blurConfig_blur3Height) { _ in
+                                    blurConfig = configureBlurconfig()
+                                }
+                        }
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("blur3Radius: CGFloat")
+                            .font(fonts.small)
+                            .foregroundColor(colors.contentA)
+                        VStack(spacing: 4) {
+                            TextField("", text: Binding(
+                                get: { String(format: "%.2f", blurConfig_blur3Radius) },
+                                set: { if let value = Double($0) { blurConfig_blur3Radius = value; blurConfig = configureBlurconfig() } }
+                            ))
+                            .textFieldStyle(.contentA(), placeholder: "0.0")
+                            .keyboardType(.decimalPad)
+
+                            Slider(value: $blurConfig_blur3Radius, in: 0 ... 1, step: 0.01)
+                                .accentColor(colors.highlightA)
+                                .onChange(of: blurConfig_blur3Radius) { _ in
+                                    blurConfig = configureBlurconfig()
+                                }
+                        }
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("blur3OffsetX: CGFloat")
+                            .font(fonts.small)
+                            .foregroundColor(colors.contentA)
+                        VStack(spacing: 4) {
+                            TextField("", text: Binding(
+                                get: { String(format: "%.2f", blurConfig_blur3OffsetX) },
+                                set: { if let value = Double($0) { blurConfig_blur3OffsetX = value; blurConfig = configureBlurconfig() } }
+                            ))
+                            .textFieldStyle(.contentA(), placeholder: "0.0")
+                            .keyboardType(.decimalPad)
+
+                            Slider(value: $blurConfig_blur3OffsetX, in: 0 ... 1, step: 0.01)
+                                .accentColor(colors.highlightA)
+                                .onChange(of: blurConfig_blur3OffsetX) { _ in
+                                    blurConfig = configureBlurconfig()
+                                }
+                        }
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("blur3OffsetY: CGFloat")
+                            .font(fonts.small)
+                            .foregroundColor(colors.contentA)
+                        VStack(spacing: 4) {
+                            TextField("", text: Binding(
+                                get: { String(format: "%.2f", blurConfig_blur3OffsetY) },
+                                set: { if let value = Double($0) { blurConfig_blur3OffsetY = value; blurConfig = configureBlurconfig() } }
+                            ))
+                            .textFieldStyle(.contentA(), placeholder: "0.0")
+                            .keyboardType(.decimalPad)
+
+                            Slider(value: $blurConfig_blur3OffsetY, in: 0 ... 1, step: 0.01)
+                                .accentColor(colors.highlightA)
+                                .onChange(of: blurConfig_blur3OffsetY) { _ in
+                                    blurConfig = configureBlurconfig()
+                                }
+                        }
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("blur3Opacity: Double")
+                            .font(fonts.small)
+                            .foregroundColor(colors.contentA)
+                        VStack(spacing: 4) {
+                            TextField("", text: Binding(
+                                get: { String(format: "%.2f", blurConfig_blur3Opacity) },
+                                set: { if let value = Double($0) { blurConfig_blur3Opacity = value; blurConfig = configureBlurconfig() } }
+                            ))
+                            .textFieldStyle(.contentA(), placeholder: "0.0")
+                            .keyboardType(.decimalPad)
+
+                            Slider(value: $blurConfig_blur3Opacity, in: 0 ... 1, step: 0.01)
+                                .accentColor(colors.highlightA)
+                                .onChange(of: blurConfig_blur3Opacity) { _ in
+                                    blurConfig = configureBlurconfig()
+                                }
+                        }
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("cornerRadius: CGFloat")
+                            .font(fonts.small)
+                            .foregroundColor(colors.contentA)
+                        VStack(spacing: 4) {
+                            TextField("", text: Binding(
+                                get: { String(format: "%.2f", blurConfig_cornerRadius) },
+                                set: { if let value = Double($0) { blurConfig_cornerRadius = value; blurConfig = configureBlurconfig() } }
+                            ))
+                            .textFieldStyle(.contentA(), placeholder: "0.0")
+                            .keyboardType(.decimalPad)
+
+                            Slider(value: $blurConfig_cornerRadius, in: 0 ... 1, step: 0.01)
+                                .accentColor(colors.highlightA)
+                                .onChange(of: blurConfig_cornerRadius) { _ in
+                                    blurConfig = configureBlurconfig()
+                                }
+                        }
+                    }
+                }
             }
             .padding()
             .background(colors.backgroundA.opacity(0.5))
@@ -238,21 +720,21 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
         var initCode = ""
         switch selectedInit {
         case .title_description_0:
-            initCode = "DetailedListItem(title: \"\(title)\", description: \"\(description)\", leftInfo: \(leftInfo), rightInfo: \(rightInfo), blurConfig: \(blurConfig), action: {})"
+            initCode = "DetailedListItem(title: \"\(title)\", description: \"\(description)\", leftInfo: DetailedListItemInfo(title: \(leftInfo_title), description: \(leftInfo_description)), rightInfo: DetailedListItemInfo(title: \(rightInfo_title), description: \(rightInfo_description)), blurConfig: BlurConfig(blur1Width: \(blurConfig_blur1Width), blur1Height: \(blurConfig_blur1Height), blur1Radius: \(blurConfig_blur1Radius), blur1OffsetX: \(blurConfig_blur1OffsetX), blur1OffsetY: \(blurConfig_blur1OffsetY), blur1Opacity: \(blurConfig_blur1Opacity), blur2Width: \(blurConfig_blur2Width), blur2Height: \(blurConfig_blur2Height), blur2Radius: \(blurConfig_blur2Radius), blur2OffsetX: \(blurConfig_blur2OffsetX), blur2OffsetY: \(blurConfig_blur2OffsetY), blur2Opacity: \(blurConfig_blur2Opacity), blur3Width: \(blurConfig_blur3Width), blur3Height: \(blurConfig_blur3Height), blur3Radius: \(blurConfig_blur3Radius), blur3OffsetX: \(blurConfig_blur3OffsetX), blur3OffsetY: \(blurConfig_blur3OffsetY), blur3Opacity: \(blurConfig_blur3Opacity), cornerRadius: \(blurConfig_cornerRadius)), action: {})"
         case .title_description_2:
-            initCode = "DetailedListItem(title: \"\(title)\", description: \"\(description)\", leftInfo: \(leftInfo), rightInfo: \(rightInfo), blurConfig: \(blurConfig), action: {}, trailingContent: {})"
+            initCode = "DetailedListItem(title: \"\(title)\", description: \"\(description)\", leftInfo: DetailedListItemInfo(title: \(leftInfo_title), description: \(leftInfo_description)), rightInfo: DetailedListItemInfo(title: \(rightInfo_title), description: \(rightInfo_description)), blurConfig: BlurConfig(blur1Width: \(blurConfig_blur1Width), blur1Height: \(blurConfig_blur1Height), blur1Radius: \(blurConfig_blur1Radius), blur1OffsetX: \(blurConfig_blur1OffsetX), blur1OffsetY: \(blurConfig_blur1OffsetY), blur1Opacity: \(blurConfig_blur1Opacity), blur2Width: \(blurConfig_blur2Width), blur2Height: \(blurConfig_blur2Height), blur2Radius: \(blurConfig_blur2Radius), blur2OffsetX: \(blurConfig_blur2OffsetX), blur2OffsetY: \(blurConfig_blur2OffsetY), blur2Opacity: \(blurConfig_blur2Opacity), blur3Width: \(blurConfig_blur3Width), blur3Height: \(blurConfig_blur3Height), blur3Radius: \(blurConfig_blur3Radius), blur3OffsetX: \(blurConfig_blur3OffsetX), blur3OffsetY: \(blurConfig_blur3OffsetY), blur3Opacity: \(blurConfig_blur3Opacity), cornerRadius: \(blurConfig_cornerRadius)), action: {}, trailingContent: {})"
         case .title_description_3:
-            initCode = "DetailedListItem(title: \"\(title)\", description: \"\(description)\", leftInfo: \(leftInfo), rightInfo: \(rightInfo), action: {}, progressText: \"\(progressText)\", blurConfig: \(blurConfig))"
+            initCode = "DetailedListItem(title: \"\(title)\", description: \"\(description)\", leftInfo: DetailedListItemInfo(title: \(leftInfo_title), description: \(leftInfo_description)), rightInfo: DetailedListItemInfo(title: \(rightInfo_title), description: \(rightInfo_description)), action: {}, progressText: \"\(progressText)\", blurConfig: BlurConfig(blur1Width: \(blurConfig_blur1Width), blur1Height: \(blurConfig_blur1Height), blur1Radius: \(blurConfig_blur1Radius), blur1OffsetX: \(blurConfig_blur1OffsetX), blur1OffsetY: \(blurConfig_blur1OffsetY), blur1Opacity: \(blurConfig_blur1Opacity), blur2Width: \(blurConfig_blur2Width), blur2Height: \(blurConfig_blur2Height), blur2Radius: \(blurConfig_blur2Radius), blur2OffsetX: \(blurConfig_blur2OffsetX), blur2OffsetY: \(blurConfig_blur2OffsetY), blur2Opacity: \(blurConfig_blur2Opacity), blur3Width: \(blurConfig_blur3Width), blur3Height: \(blurConfig_blur3Height), blur3Radius: \(blurConfig_blur3Radius), blur3OffsetX: \(blurConfig_blur3OffsetX), blur3OffsetY: \(blurConfig_blur3OffsetY), blur3Opacity: \(blurConfig_blur3Opacity), cornerRadius: \(blurConfig_cornerRadius)))"
         case .title_description_4:
-            initCode = "DetailedListItem(title: \"\(title)\", description: \"\(description)\", leftInfo: \(leftInfo), rightInfo: \(rightInfo), action: {}, progress: \(progress), size: \(size), showText: \(showText), animated: \(animated), blurConfig: \(blurConfig))"
+            initCode = "DetailedListItem(title: \"\(title)\", description: \"\(description)\", leftInfo: DetailedListItemInfo(title: \(leftInfo_title), description: \(leftInfo_description)), rightInfo: DetailedListItemInfo(title: \(rightInfo_title), description: \(rightInfo_description)), action: {}, progress: \(progress), size: \(size), showText: \(showText), animated: \(animated), blurConfig: BlurConfig(blur1Width: \(blurConfig_blur1Width), blur1Height: \(blurConfig_blur1Height), blur1Radius: \(blurConfig_blur1Radius), blur1OffsetX: \(blurConfig_blur1OffsetX), blur1OffsetY: \(blurConfig_blur1OffsetY), blur1Opacity: \(blurConfig_blur1Opacity), blur2Width: \(blurConfig_blur2Width), blur2Height: \(blurConfig_blur2Height), blur2Radius: \(blurConfig_blur2Radius), blur2OffsetX: \(blurConfig_blur2OffsetX), blur2OffsetY: \(blurConfig_blur2OffsetY), blur2Opacity: \(blurConfig_blur2Opacity), blur3Width: \(blurConfig_blur3Width), blur3Height: \(blurConfig_blur3Height), blur3Radius: \(blurConfig_blur3Radius), blur3OffsetX: \(blurConfig_blur3OffsetX), blur3OffsetY: \(blurConfig_blur3OffsetY), blur3Opacity: \(blurConfig_blur3Opacity), cornerRadius: \(blurConfig_cornerRadius)))"
         case .title_description_5:
-            initCode = "DetailedListItem(title: \"\(title)\", description: \"\(description)\", leftInfo: \(leftInfo), rightInfo: \(rightInfo), action: {})"
+            initCode = "DetailedListItem(title: \"\(title)\", description: \"\(description)\", leftInfo: DetailedListItemInfo(title: \(leftInfo_title), description: \(leftInfo_description)), rightInfo: DetailedListItemInfo(title: \(rightInfo_title), description: \(rightInfo_description)), action: {})"
         case .title_description_6:
-            initCode = "DetailedListItem(title: \"\(title)\", description: \"\(description)\", leftInfo: \(leftInfo), rightInfo: \(rightInfo), action: {}, blurConfig: \(blurConfig))"
+            initCode = "DetailedListItem(title: \"\(title)\", description: \"\(description)\", leftInfo: DetailedListItemInfo(title: \(leftInfo_title), description: \(leftInfo_description)), rightInfo: DetailedListItemInfo(title: \(rightInfo_title), description: \(rightInfo_description)), action: {}, blurConfig: BlurConfig(blur1Width: \(blurConfig_blur1Width), blur1Height: \(blurConfig_blur1Height), blur1Radius: \(blurConfig_blur1Radius), blur1OffsetX: \(blurConfig_blur1OffsetX), blur1OffsetY: \(blurConfig_blur1OffsetY), blur1Opacity: \(blurConfig_blur1Opacity), blur2Width: \(blurConfig_blur2Width), blur2Height: \(blurConfig_blur2Height), blur2Radius: \(blurConfig_blur2Radius), blur2OffsetX: \(blurConfig_blur2OffsetX), blur2OffsetY: \(blurConfig_blur2OffsetY), blur2Opacity: \(blurConfig_blur2Opacity), blur3Width: \(blurConfig_blur3Width), blur3Height: \(blurConfig_blur3Height), blur3Radius: \(blurConfig_blur3Radius), blur3OffsetX: \(blurConfig_blur3OffsetX), blur3OffsetY: \(blurConfig_blur3OffsetY), blur3Opacity: \(blurConfig_blur3Opacity), cornerRadius: \(blurConfig_cornerRadius)))"
         case .title_description_7:
-            initCode = "DetailedListItem(title: \"\(title)\", description: \"\(description)\", leftInfo: \(leftInfo), rightInfo: \(rightInfo), action: {}, blurConfig: \(blurConfig))"
+            initCode = "DetailedListItem(title: \"\(title)\", description: \"\(description)\", leftInfo: DetailedListItemInfo(title: \(leftInfo_title), description: \(leftInfo_description)), rightInfo: DetailedListItemInfo(title: \(rightInfo_title), description: \(rightInfo_description)), action: {}, blurConfig: BlurConfig(blur1Width: \(blurConfig_blur1Width), blur1Height: \(blurConfig_blur1Height), blur1Radius: \(blurConfig_blur1Radius), blur1OffsetX: \(blurConfig_blur1OffsetX), blur1OffsetY: \(blurConfig_blur1OffsetY), blur1Opacity: \(blurConfig_blur1Opacity), blur2Width: \(blurConfig_blur2Width), blur2Height: \(blurConfig_blur2Height), blur2Radius: \(blurConfig_blur2Radius), blur2OffsetX: \(blurConfig_blur2OffsetX), blur2OffsetY: \(blurConfig_blur2OffsetY), blur2Opacity: \(blurConfig_blur2Opacity), blur3Width: \(blurConfig_blur3Width), blur3Height: \(blurConfig_blur3Height), blur3Radius: \(blurConfig_blur3Radius), blur3OffsetX: \(blurConfig_blur3OffsetX), blur3OffsetY: \(blurConfig_blur3OffsetY), blur3Opacity: \(blurConfig_blur3Opacity), cornerRadius: \(blurConfig_cornerRadius)))"
         case .title_description_8:
-            initCode = "DetailedListItem(title: \"\(title)\", description: \"\(description)\", leftInfo: \(leftInfo), rightInfo: \(rightInfo), action: {}, blurConfig: \(blurConfig), trailingContent: {})"
+            initCode = "DetailedListItem(title: \"\(title)\", description: \"\(description)\", leftInfo: DetailedListItemInfo(title: \(leftInfo_title), description: \(leftInfo_description)), rightInfo: DetailedListItemInfo(title: \(rightInfo_title), description: \(rightInfo_description)), action: {}, blurConfig: BlurConfig(blur1Width: \(blurConfig_blur1Width), blur1Height: \(blurConfig_blur1Height), blur1Radius: \(blurConfig_blur1Radius), blur1OffsetX: \(blurConfig_blur1OffsetX), blur1OffsetY: \(blurConfig_blur1OffsetY), blur1Opacity: \(blurConfig_blur1Opacity), blur2Width: \(blurConfig_blur2Width), blur2Height: \(blurConfig_blur2Height), blur2Radius: \(blurConfig_blur2Radius), blur2OffsetX: \(blurConfig_blur2OffsetX), blur2OffsetY: \(blurConfig_blur2OffsetY), blur2Opacity: \(blurConfig_blur2Opacity), blur3Width: \(blurConfig_blur3Width), blur3Height: \(blurConfig_blur3Height), blur3Radius: \(blurConfig_blur3Radius), blur3OffsetX: \(blurConfig_blur3OffsetX), blur3OffsetY: \(blurConfig_blur3OffsetY), blur3Opacity: \(blurConfig_blur3Opacity), cornerRadius: \(blurConfig_cornerRadius)), trailingContent: {})"
         }
 
         code += """
