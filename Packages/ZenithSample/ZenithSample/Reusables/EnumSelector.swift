@@ -42,7 +42,6 @@ struct EnumSelector<T: Hashable>: View, @preconcurrency BaseThemeDependencies {
         VStack(alignment: .leading) {
             Text(title)
                 .textStyle(.largeBold(.contentA))
-                .padding(.horizontal)
             
             ScrollView(.vertical, showsIndicators: false) {
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: columnsCount), spacing: 8) {
@@ -50,7 +49,6 @@ struct EnumSelector<T: Hashable>: View, @preconcurrency BaseThemeDependencies {
                         itemButton(for: item)
                     }
                 }
-                .padding(.horizontal, 4)
             }
             .frame(minHeight: 40, maxHeight: height)
         }

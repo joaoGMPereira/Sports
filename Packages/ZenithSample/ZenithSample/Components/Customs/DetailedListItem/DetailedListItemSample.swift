@@ -185,21 +185,17 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
     // Área de configuração
     private var configurationSection: some View {
         VStack(spacing: 16) {
-            VStack(alignment: .leading) {
-                Text("DetailedListItem Inicializadores")
-                    .font(fonts.smallBold)
-                    .foregroundColor(colors.contentA)
-                    .padding(.horizontal, 8)
-
+            SectionView(title: "DetailedListItem Inicializadores") {
                 EnumSelector<GenerateDetailedListItemInitEnum>(
                     title: "Selecione um inicializador",
                     selection: $selectedInit,
                     columnsCount: 1,
-                    height: 160
+                    height: 200
                 )
-                .background(colors.backgroundB.opacity(0.5))
             }
             .padding(.horizontal)
+            .background(colors.backgroundB.opacity(0.5))
+            .cornerRadius(8)
             EnumSelector<GenerateDetailedListItemSampleEnum>(
                 title: "DetailedListItem Estilos",
                 selection: $style,
@@ -245,7 +241,6 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                     }
                 }
             }
-            .padding()
             .background(colors.backgroundB.opacity(0.5))
             .cornerRadius(8)
             .padding(.horizontal)
@@ -274,7 +269,6 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                     }
                 }
             }
-            .padding()
             .background(colors.backgroundB.opacity(0.5))
             .cornerRadius(8)
             .padding(.horizontal)
@@ -473,7 +467,6 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                     }
                 }
             }
-            .padding()
             .background(colors.backgroundB.opacity(0.5))
             .cornerRadius(8)
             .padding(.horizontal)

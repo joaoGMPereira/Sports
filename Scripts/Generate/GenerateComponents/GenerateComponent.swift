@@ -454,21 +454,17 @@ final class GenerateComponent {
         var initSelector = ""
         if componentInfo.hasMultipleInits {
             initSelector = """
-            VStack(alignment: .leading) {
-                Text("\(componentInfo.name) Inicializadores")
-                    .font(fonts.smallBold)
-                    .foregroundColor(colors.contentA)
-                    .padding(.horizontal, 8)
-                
+            SectionView(title: "\(componentInfo.name) Inicializadores") {
                 EnumSelector<Generate\(componentInfo.name)InitEnum>(
                     title: "Selecione um inicializador",
                     selection: $selectedInit,
                     columnsCount: 1,
-                    height: 160
+                    height: 200
                 )
-                .background(colors.backgroundB.opacity(0.5))
             }
             .padding(.horizontal)
+            .background(colors.backgroundB.opacity(0.5))
+            .cornerRadius(8)
             """
         }
         
@@ -785,7 +781,6 @@ final class GenerateComponent {
             
             }
         }
-        .padding()
         .background(colors.backgroundB.opacity(0.5))
         .cornerRadius(8)
         .padding(.horizontal)\n

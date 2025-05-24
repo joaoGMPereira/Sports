@@ -27,6 +27,7 @@ struct SectionView<T: View>: View, @preconcurrency BaseThemeDependencies {
     var body: some View {
         Section(isExpanded: $isExpanded) {
             content
+                .padding()
         } header: {
             HStack(alignment: .center) {
                 Image(systemSymbol: .chevronDown)
@@ -37,6 +38,7 @@ struct SectionView<T: View>: View, @preconcurrency BaseThemeDependencies {
                     .padding(.top, 4)
                 Spacer()
             }
+            .padding()
             .animation(.smooth, value: $isExpanded.wrappedValue)
             .onTapGesture {
                 withAnimation {
