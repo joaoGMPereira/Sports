@@ -7,7 +7,7 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
     @Dependency(\.themeConfigurator) var themeConfigurator
     @State private var style: GenerateDetailedListItemSampleEnum = .default
 
-    @State private var selectedInit: GenerateDetailedListItemInitEnum = .title_description_0
+    @State private var selectedInit: GenerateDetailedListItemInitEnum = .title_description_leftInfo_rightInfo_blurConfig_action_0
 
     @State private var title: String = "Sample text"
 
@@ -197,10 +197,7 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                     columnsCount: 1,
                     height: 160
                 )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(colors.highlightA.opacity(0.3), lineWidth: 1)
-                )
+                .background(colors.backgroundB.opacity(0.5))
             }
             .padding(.horizontal)
             EnumSelector<GenerateDetailedListItemSampleEnum>(
@@ -223,15 +220,7 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
             TextField("", text: $description)
                 .textFieldStyle(.contentA(), placeholder: "description")
                 .padding(.horizontal)
-            VStack(alignment: .leading, spacing: 8) {
-                Text("leftInfo")
-                    .font(fonts.mediumBold)
-                    .foregroundColor(colors.contentA)
-
-                Text("DetailedListItemInfo")
-                    .font(fonts.small)
-                    .foregroundColor(colors.contentB)
-
+            SectionView(title: "leftInfo: DetailedListItemInfo") {
                 // Campos para propriedades internas
                 VStack(alignment: .leading, spacing: 12) {
                     VStack(alignment: .leading, spacing: 4) {
@@ -257,18 +246,10 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                 }
             }
             .padding()
-            .background(colors.backgroundA.opacity(0.5))
+            .background(colors.backgroundB.opacity(0.5))
             .cornerRadius(8)
             .padding(.horizontal)
-            VStack(alignment: .leading, spacing: 8) {
-                Text("rightInfo")
-                    .font(fonts.mediumBold)
-                    .foregroundColor(colors.contentA)
-
-                Text("DetailedListItemInfo")
-                    .font(fonts.small)
-                    .foregroundColor(colors.contentB)
-
+            SectionView(title: "rightInfo: DetailedListItemInfo") {
                 // Campos para propriedades internas
                 VStack(alignment: .leading, spacing: 12) {
                     VStack(alignment: .leading, spacing: 4) {
@@ -294,18 +275,10 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                 }
             }
             .padding()
-            .background(colors.backgroundA.opacity(0.5))
+            .background(colors.backgroundB.opacity(0.5))
             .cornerRadius(8)
             .padding(.horizontal)
-            VStack(alignment: .leading, spacing: 8) {
-                Text("blurConfig")
-                    .font(fonts.mediumBold)
-                    .foregroundColor(colors.contentA)
-
-                Text("BlurConfig")
-                    .font(fonts.small)
-                    .foregroundColor(colors.contentB)
-
+            SectionView(title: "blurConfig: BlurConfig") {
                 // Campos para propriedades internas
                 VStack(alignment: .leading, spacing: 12) {
                     VStack(alignment: .leading, spacing: 4) {
@@ -501,7 +474,7 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
                 }
             }
             .padding()
-            .background(colors.backgroundA.opacity(0.5))
+            .background(colors.backgroundB.opacity(0.5))
             .cornerRadius(8)
             .padding(.horizontal)
             TextField("", text: $progressText)
@@ -577,21 +550,21 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
         // Gerar código para o inicializador selecionado
         var initCode = ""
         switch selectedInit {
-        case .title_description_0:
+        case .title_description_leftInfo_rightInfo_blurConfig_action_0:
             initCode = "DetailedListItem(title: \"\(title)\", description: \"\(description)\", leftInfo: DetailedListItemInfo(title: \"\(leftInfo_title)\", description: \"\(leftInfo_description)\"), rightInfo: DetailedListItemInfo(title: \"\(rightInfo_title)\", description: \"\(rightInfo_description)\"), blurConfig: BlurConfig(blur1Width: \(blurConfig_blur1Width), blur1Height: \(blurConfig_blur1Height), blur1Radius: \(blurConfig_blur1Radius), blur1OffsetX: \(blurConfig_blur1OffsetX), blur1OffsetY: \(blurConfig_blur1OffsetY), blur1Opacity: \(blurConfig_blur1Opacity), blur2Width: \(blurConfig_blur2Width), blur2Height: \(blurConfig_blur2Height), blur2Radius: \(blurConfig_blur2Radius), blur2OffsetX: \(blurConfig_blur2OffsetX), blur2OffsetY: \(blurConfig_blur2OffsetY), blur2Opacity: \(blurConfig_blur2Opacity), blur3Width: \(blurConfig_blur3Width), blur3Height: \(blurConfig_blur3Height), blur3Radius: \(blurConfig_blur3Radius), blur3OffsetX: \(blurConfig_blur3OffsetX), blur3OffsetY: \(blurConfig_blur3OffsetY), blur3Opacity: \(blurConfig_blur3Opacity), cornerRadius: \(blurConfig_cornerRadius)), action: {})"
-        case .title_description_2:
+        case .title_description_leftInfo_rightInfo_blurConfig_action_trailingContent_2:
             initCode = "DetailedListItem(title: \"\(title)\", description: \"\(description)\", leftInfo: DetailedListItemInfo(title: \"\(leftInfo_title)\", description: \"\(leftInfo_description)\"), rightInfo: DetailedListItemInfo(title: \"\(rightInfo_title)\", description: \"\(rightInfo_description)\"), blurConfig: BlurConfig(blur1Width: \(blurConfig_blur1Width), blur1Height: \(blurConfig_blur1Height), blur1Radius: \(blurConfig_blur1Radius), blur1OffsetX: \(blurConfig_blur1OffsetX), blur1OffsetY: \(blurConfig_blur1OffsetY), blur1Opacity: \(blurConfig_blur1Opacity), blur2Width: \(blurConfig_blur2Width), blur2Height: \(blurConfig_blur2Height), blur2Radius: \(blurConfig_blur2Radius), blur2OffsetX: \(blurConfig_blur2OffsetX), blur2OffsetY: \(blurConfig_blur2OffsetY), blur2Opacity: \(blurConfig_blur2Opacity), blur3Width: \(blurConfig_blur3Width), blur3Height: \(blurConfig_blur3Height), blur3Radius: \(blurConfig_blur3Radius), blur3OffsetX: \(blurConfig_blur3OffsetX), blur3OffsetY: \(blurConfig_blur3OffsetY), blur3Opacity: \(blurConfig_blur3Opacity), cornerRadius: \(blurConfig_cornerRadius)), action: {}, trailingContent: {})"
-        case .title_description_3:
+        case .title_description_leftInfo_rightInfo_action_progressText_blurConfig_3:
             initCode = "DetailedListItem(title: \"\(title)\", description: \"\(description)\", leftInfo: DetailedListItemInfo(title: \"\(leftInfo_title)\", description: \"\(leftInfo_description)\"), rightInfo: DetailedListItemInfo(title: \"\(rightInfo_title)\", description: \"\(rightInfo_description)\"), action: {}, progressText: \"\(progressText)\", blurConfig: BlurConfig(blur1Width: \(blurConfig_blur1Width), blur1Height: \(blurConfig_blur1Height), blur1Radius: \(blurConfig_blur1Radius), blur1OffsetX: \(blurConfig_blur1OffsetX), blur1OffsetY: \(blurConfig_blur1OffsetY), blur1Opacity: \(blurConfig_blur1Opacity), blur2Width: \(blurConfig_blur2Width), blur2Height: \(blurConfig_blur2Height), blur2Radius: \(blurConfig_blur2Radius), blur2OffsetX: \(blurConfig_blur2OffsetX), blur2OffsetY: \(blurConfig_blur2OffsetY), blur2Opacity: \(blurConfig_blur2Opacity), blur3Width: \(blurConfig_blur3Width), blur3Height: \(blurConfig_blur3Height), blur3Radius: \(blurConfig_blur3Radius), blur3OffsetX: \(blurConfig_blur3OffsetX), blur3OffsetY: \(blurConfig_blur3OffsetY), blur3Opacity: \(blurConfig_blur3Opacity), cornerRadius: \(blurConfig_cornerRadius)))"
-        case .title_description_4:
+        case .title_description_leftInfo_rightInfo_action_progress_size_showText_animated_blurConfig_4:
             initCode = "DetailedListItem(title: \"\(title)\", description: \"\(description)\", leftInfo: DetailedListItemInfo(title: \"\(leftInfo_title)\", description: \"\(leftInfo_description)\"), rightInfo: DetailedListItemInfo(title: \"\(rightInfo_title)\", description: \"\(rightInfo_description)\"), action: {}, progress: \(progress), size: \(size), showText: \(showText), animated: \(animated), blurConfig: BlurConfig(blur1Width: \(blurConfig_blur1Width), blur1Height: \(blurConfig_blur1Height), blur1Radius: \(blurConfig_blur1Radius), blur1OffsetX: \(blurConfig_blur1OffsetX), blur1OffsetY: \(blurConfig_blur1OffsetY), blur1Opacity: \(blurConfig_blur1Opacity), blur2Width: \(blurConfig_blur2Width), blur2Height: \(blurConfig_blur2Height), blur2Radius: \(blurConfig_blur2Radius), blur2OffsetX: \(blurConfig_blur2OffsetX), blur2OffsetY: \(blurConfig_blur2OffsetY), blur2Opacity: \(blurConfig_blur2Opacity), blur3Width: \(blurConfig_blur3Width), blur3Height: \(blurConfig_blur3Height), blur3Radius: \(blurConfig_blur3Radius), blur3OffsetX: \(blurConfig_blur3OffsetX), blur3OffsetY: \(blurConfig_blur3OffsetY), blur3Opacity: \(blurConfig_blur3Opacity), cornerRadius: \(blurConfig_cornerRadius)))"
-        case .title_description_5:
+        case .title_description_leftInfo_rightInfo_action_5:
             initCode = "DetailedListItem(title: \"\(title)\", description: \"\(description)\", leftInfo: DetailedListItemInfo(title: \"\(leftInfo_title)\", description: \"\(leftInfo_description)\"), rightInfo: DetailedListItemInfo(title: \"\(rightInfo_title)\", description: \"\(rightInfo_description)\"), action: {})"
-        case .title_description_6:
+        case .title_description_leftInfo_rightInfo_action_blurConfig_6:
             initCode = "DetailedListItem(title: \"\(title)\", description: \"\(description)\", leftInfo: DetailedListItemInfo(title: \"\(leftInfo_title)\", description: \"\(leftInfo_description)\"), rightInfo: DetailedListItemInfo(title: \"\(rightInfo_title)\", description: \"\(rightInfo_description)\"), action: {}, blurConfig: BlurConfig(blur1Width: \(blurConfig_blur1Width), blur1Height: \(blurConfig_blur1Height), blur1Radius: \(blurConfig_blur1Radius), blur1OffsetX: \(blurConfig_blur1OffsetX), blur1OffsetY: \(blurConfig_blur1OffsetY), blur1Opacity: \(blurConfig_blur1Opacity), blur2Width: \(blurConfig_blur2Width), blur2Height: \(blurConfig_blur2Height), blur2Radius: \(blurConfig_blur2Radius), blur2OffsetX: \(blurConfig_blur2OffsetX), blur2OffsetY: \(blurConfig_blur2OffsetY), blur2Opacity: \(blurConfig_blur2Opacity), blur3Width: \(blurConfig_blur3Width), blur3Height: \(blurConfig_blur3Height), blur3Radius: \(blurConfig_blur3Radius), blur3OffsetX: \(blurConfig_blur3OffsetX), blur3OffsetY: \(blurConfig_blur3OffsetY), blur3Opacity: \(blurConfig_blur3Opacity), cornerRadius: \(blurConfig_cornerRadius)))"
-        case .title_description_7:
+        case .title_description_leftInfo_rightInfo_action_blurConfig_7:
             initCode = "DetailedListItem(title: \"\(title)\", description: \"\(description)\", leftInfo: DetailedListItemInfo(title: \"\(leftInfo_title)\", description: \"\(leftInfo_description)\"), rightInfo: DetailedListItemInfo(title: \"\(rightInfo_title)\", description: \"\(rightInfo_description)\"), action: {}, blurConfig: BlurConfig(blur1Width: \(blurConfig_blur1Width), blur1Height: \(blurConfig_blur1Height), blur1Radius: \(blurConfig_blur1Radius), blur1OffsetX: \(blurConfig_blur1OffsetX), blur1OffsetY: \(blurConfig_blur1OffsetY), blur1Opacity: \(blurConfig_blur1Opacity), blur2Width: \(blurConfig_blur2Width), blur2Height: \(blurConfig_blur2Height), blur2Radius: \(blurConfig_blur2Radius), blur2OffsetX: \(blurConfig_blur2OffsetX), blur2OffsetY: \(blurConfig_blur2OffsetY), blur2Opacity: \(blurConfig_blur2Opacity), blur3Width: \(blurConfig_blur3Width), blur3Height: \(blurConfig_blur3Height), blur3Radius: \(blurConfig_blur3Radius), blur3OffsetX: \(blurConfig_blur3OffsetX), blur3OffsetY: \(blurConfig_blur3OffsetY), blur3Opacity: \(blurConfig_blur3Opacity), cornerRadius: \(blurConfig_cornerRadius)))"
-        case .title_description_8:
+        case .title_description_leftInfo_rightInfo_action_blurConfig_trailingContent_8:
             initCode = "DetailedListItem(title: \"\(title)\", description: \"\(description)\", leftInfo: DetailedListItemInfo(title: \"\(leftInfo_title)\", description: \"\(leftInfo_description)\"), rightInfo: DetailedListItemInfo(title: \"\(rightInfo_title)\", description: \"\(rightInfo_description)\"), action: {}, blurConfig: BlurConfig(blur1Width: \(blurConfig_blur1Width), blur1Height: \(blurConfig_blur1Height), blur1Radius: \(blurConfig_blur1Radius), blur1OffsetX: \(blurConfig_blur1OffsetX), blur1OffsetY: \(blurConfig_blur1OffsetY), blur1Opacity: \(blurConfig_blur1Opacity), blur2Width: \(blurConfig_blur2Width), blur2Height: \(blurConfig_blur2Height), blur2Radius: \(blurConfig_blur2Radius), blur2OffsetX: \(blurConfig_blur2OffsetX), blur2OffsetY: \(blurConfig_blur2OffsetY), blur2Opacity: \(blurConfig_blur2Opacity), blur3Width: \(blurConfig_blur3Width), blur3Height: \(blurConfig_blur3Height), blur3Radius: \(blurConfig_blur3Radius), blur3OffsetX: \(blurConfig_blur3OffsetX), blur3OffsetY: \(blurConfig_blur3OffsetY), blur3Opacity: \(blurConfig_blur3Opacity), cornerRadius: \(blurConfig_cornerRadius)), trailingContent: {})"
         }
 
@@ -604,21 +577,21 @@ struct DetailedListItemSample: View, @preconcurrency BaseThemeDependencies {
 
     private func getDetailedListItemInit(_ initType: String) -> some View {
         switch initType {
-        case "title_description_0":
+        case "title_description_leftInfo_rightInfo_blurConfig_action_0":
             DetailedListItem(title: title, description: description, leftInfo: leftInfo, rightInfo: rightInfo, blurConfig: blurConfig, action: action)
-        case "title_description_2":
+        case "title_description_leftInfo_rightInfo_blurConfig_action_trailingContent_2":
             DetailedListItem(title: title, description: description, leftInfo: leftInfo, rightInfo: rightInfo, blurConfig: blurConfig, action: action, trailingContent: trailingContent)
-        case "title_description_3":
+        case "title_description_leftInfo_rightInfo_action_progressText_blurConfig_3":
             DetailedListItem(title: title, description: description, leftInfo: leftInfo, rightInfo: rightInfo, action: action, progressText: progressText, blurConfig: blurConfig)
-        case "title_description_4":
+        case "title_description_leftInfo_rightInfo_action_progress_size_showText_animated_blurConfig_4":
             DetailedListItem(title: title, description: description, leftInfo: leftInfo, rightInfo: rightInfo, action: action, progress: progress, size: size, showText: showText, animated: animated, blurConfig: blurConfig)
-        case "title_description_5":
+        case "title_description_leftInfo_rightInfo_action_5":
             DetailedListItem(title: title, description: description, leftInfo: leftInfo, rightInfo: rightInfo, action: action)
-        case "title_description_6":
+        case "title_description_leftInfo_rightInfo_action_blurConfig_6":
             DetailedListItem(title: title, description: description, leftInfo: leftInfo, rightInfo: rightInfo, action: action, blurConfig: blurConfig)
-        case "title_description_7":
+        case "title_description_leftInfo_rightInfo_action_blurConfig_7":
             DetailedListItem(title: title, description: description, leftInfo: leftInfo, rightInfo: rightInfo, action: action, blurConfig: blurConfig)
-        case "title_description_8":
+        case "title_description_leftInfo_rightInfo_action_blurConfig_trailingContent_8":
             DetailedListItem(title: title, description: description, leftInfo: leftInfo, rightInfo: rightInfo, action: action, blurConfig: blurConfig, trailingContent: trailingContent)
         default:
             DetailedListItem(title: title, description: description, leftInfo: leftInfo, rightInfo: rightInfo, blurConfig: blurConfig, action: action)
@@ -646,12 +619,12 @@ enum GenerateDetailedListItemSampleEnum: String, CaseIterable, Identifiable {
 enum GenerateDetailedListItemInitEnum: String, CaseIterable, Identifiable {
     public var id: Self { self }
 
-    case title_description_0
-    case title_description_2
-    case title_description_3
-    case title_description_4
-    case title_description_5
-    case title_description_6
-    case title_description_7
-    case title_description_8
+    case title_description_leftInfo_rightInfo_blurConfig_action_0
+    case title_description_leftInfo_rightInfo_blurConfig_action_trailingContent_2
+    case title_description_leftInfo_rightInfo_action_progressText_blurConfig_3
+    case title_description_leftInfo_rightInfo_action_progress_size_showText_animated_blurConfig_4
+    case title_description_leftInfo_rightInfo_action_5
+    case title_description_leftInfo_rightInfo_action_blurConfig_6
+    case title_description_leftInfo_rightInfo_action_blurConfig_7
+    case title_description_leftInfo_rightInfo_action_blurConfig_trailingContent_8
 }

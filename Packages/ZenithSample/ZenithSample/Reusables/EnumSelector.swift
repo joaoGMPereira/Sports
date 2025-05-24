@@ -67,6 +67,7 @@ struct EnumSelector<T: Hashable>: View, @preconcurrency BaseThemeDependencies {
                 .foregroundColor(selectedItem == item ? colors.highlightA : colors.contentA)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 8)
+                .padding(.horizontal, 4)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
                         .fill(selectedItem == item ? colors.highlightA.opacity(0.2) : colors.backgroundB)

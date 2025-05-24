@@ -24,7 +24,7 @@ struct InitializerInfo {
             self.name = "padrao"
         } else {
             // Para evitar nomes duplicados, incluir o índice no nome do inicializador
-            let significantParams = parameters.prefix(2).map { $0.name }.joined(separator: "_")
+            let significantParams = parameters.map { $0.name }.joined(separator: "_")
             self.name = significantParams.isEmpty ? "init\(index)" : "\(significantParams)_\(index)"
         }
     }

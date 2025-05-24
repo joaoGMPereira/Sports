@@ -20,7 +20,6 @@ struct BaseSampleView<Content: View>: View, @preconcurrency BaseThemeDependencie
     let title: String
     let viewType: SampleViewType
     let content: Content
-    @State private var isExpanded: Bool = false
     let backgroundColor: Color?
     let overrideList: Bool
     
@@ -64,7 +63,6 @@ struct BaseSampleView<Content: View>: View, @preconcurrency BaseThemeDependencie
         Section {
             SectionView(
                 title: title,
-                isExpanded: $isExpanded,
                 backgroundColor: backgroundColor
             ) {
                 content

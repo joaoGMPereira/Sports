@@ -466,10 +466,7 @@ final class GenerateComponent {
                     columnsCount: 1,
                     height: 160
                 )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(colors.highlightA.opacity(0.3), lineWidth: 1)
-                )
+                .background(colors.backgroundB.opacity(0.5))
             }
             .padding(.horizontal)
             """
@@ -674,15 +671,7 @@ final class GenerateComponent {
     // Cria um editor para tipos complexos usando seus innerParameters
     private func createComplexParameterEditor(_ parameter: ParameterProtocol, _ innerParams: [ComponentProperty]) -> String {
         var editor = """
-        VStack(alignment: .leading, spacing: 8) {
-            Text("\(parameter.name)")
-                .font(fonts.mediumBold)
-                .foregroundColor(colors.contentA)
-            
-            Text("\(parameter.component.name)")
-                .font(fonts.small)
-                .foregroundColor(colors.contentB)
-            
+        SectionView(title: "\(parameter.name): \(parameter.component.name)") {
             // Campos para propriedades internas
             VStack(alignment: .leading, spacing: 12) {
         """
@@ -797,7 +786,7 @@ final class GenerateComponent {
             }
         }
         .padding()
-        .background(colors.backgroundA.opacity(0.5))
+        .background(colors.backgroundB.opacity(0.5))
         .cornerRadius(8)
         .padding(.horizontal)\n
         """
